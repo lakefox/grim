@@ -42,10 +42,10 @@ html {
 .a {
     background-color: orange;
     line-height: 100px;
-    border: 20px dashed aqua;
-    border-left: 10px dashed blue;
-    border-right: 10px dashed green;
-    border-bottom: 20px dashed purple;
+    border: 20px outset aqua;
+    border-left: 10px outset blue;
+    border-right: 10px outset green;
+    border-bottom: 20px outset purple;
     border-radius: 50px;
     text-decoration: underline;
     text-align: center;

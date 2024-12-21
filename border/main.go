@@ -1,6 +1,7 @@
 package border
 
 import (
+	"fmt"
 	"gui/canvas"
 	"gui/color"
 	"gui/element"
@@ -192,46 +193,156 @@ func Draw(n *element.State, shelf *library.Shelf) {
 				int(n.Y+n.Height+n.Border.Top.Width+n.Border.Bottom.Width))
 			ctx.SetStrokeStyle(0, 0, 0, 255)
 			if n.Border.Top.Width > 0 {
-				drawBorderSide(ctx, "top", n.Border.Top, n)
+				drawBorderSide(ctx, "top", n.Border.Top, n, n.Border.Top.Style)
 			}
 			if n.Border.Right.Width > 0 {
-				drawBorderSide(ctx, "right", n.Border.Right, n)
+				drawBorderSide(ctx, "right", n.Border.Right, n, n.Border.Right.Style)
 			}
 			if n.Border.Bottom.Width > 0 {
-				drawBorderSide(ctx, "bottom", n.Border.Bottom, n)
+				drawBorderSide(ctx, "bottom", n.Border.Bottom, n, n.Border.Bottom.Style)
 			}
 			if n.Border.Left.Width > 0 {
-				drawBorderSide(ctx, "left", n.Border.Left, n)
+				drawBorderSide(ctx, "left", n.Border.Left, n, n.Border.Left.Style)
 			}
 			n.Textures = append(n.Textures, shelf.Set(key, ctx.RGBA))
 		}
 
 	}
 
-	// fmt.Println(time.Since(lastChange))
 }
 
-func drawBorderSide(ctx *canvas.Canvas, side string, border element.BorderSide, s *element.State) {
-	switch border.Style {
-	case "solid":
-		drawSolidBorder(ctx, side, border, s)
-	case "dashed":
-		drawDashedBorder(ctx, side, border, s)
-	case "dotted":
-		// drawDottedBorder(ctx, side, border, s)
-	case "double":
-		// drawDoubleBorder(ctx, side, border, s)
-	case "groove":
-		// drawGrooveBorder(ctx, side, border, s)
-	case "ridge":
-		// drawRidgeBorder(ctx, side, border, s)
-	case "inset":
-		// drawInsetBorder(ctx, side, border, s)
-	case "outset":
-		// drawOutsetBorder(ctx, side, border, s)
-	default:
-		drawSolidBorder(ctx, side, border, s)
+func drawBorderSide(ctx *canvas.Canvas, side string, border element.BorderSide, s *element.State, style string) {
+	fmt.Println(style)
+	if style == "" {
+		style = "solid"
 	}
+
+	ctx.SetFillStyle(border.Color.R, border.Color.G, border.Color.B, border.Color.A)
+
+	width := float64(s.Width + s.Border.Left.Width + s.Border.Right.Width)
+	height := float64(s.Height + s.Border.Top.Width + s.Border.Bottom.Width)
+
+	ctx.BeginPath()
+	ctx.Save()
+
+	switch side {
+	case "top":
+		v1 := math.Max(float64(s.Border.Radius.TopLeft), 1)
+		v2 := math.Max(float64(s.Border.Radius.TopRight), 1)
+		switch style {
+		case "solid":
+			genSolidBorder(ctx, width, v1, v2, border, s.Border.Left, s.Border.Right)
+			if border.Width == 1 {
+				ctx.Stroke()
+			} else {
+				ctx.Fill()
+			}
+		case "dashed":
+			genDashedBorder(ctx, width, v1, v2, border, s.Border.Left, s.Border.Right)
+		case "dotted":
+			genDottedBorder(ctx, width, v1, v2, border, s.Border.Left, s.Border.Right)
+		case "double":
+			genDoubleBorder(ctx, width, v1, v2, border, s.Border.Left, s.Border.Right)
+		case "groove":
+			genGrooveBorder(ctx, width, v1, v2, border, s.Border.Left, s.Border.Right, "top")
+		case "ridge":
+			genRidgeBorder(ctx, width, v1, v2, border, s.Border.Left, s.Border.Right, "top")
+		case "inset":
+			genInsetBorder(ctx, width, v1, v2, border, s.Border.Left, s.Border.Right, "top")
+		case "outset":
+			genOutsetBorder(ctx, width, v1, v2, border, s.Border.Left, s.Border.Right, "top")
+		}
+
+	case "right":
+		v1 := math.Max(float64(s.Border.Radius.TopRight), 1)
+		v2 := math.Max(float64(s.Border.Radius.BottomRight), 1)
+		ctx.Translate(width, 0)
+		ctx.Rotate(math.Pi / 2)
+		switch style {
+		case "solid":
+			genSolidBorder(ctx, height, v1, v2, border, s.Border.Top, s.Border.Bottom)
+			if border.Width == 1 {
+				ctx.Stroke()
+			} else {
+				ctx.Fill()
+			}
+		case "dashed":
+			genDashedBorder(ctx, height, v1, v2, border, s.Border.Top, s.Border.Bottom)
+		case "dotted":
+			genDottedBorder(ctx, height, v1, v2, border, s.Border.Top, s.Border.Bottom)
+		case "double":
+			genDoubleBorder(ctx, height, v1, v2, border, s.Border.Top, s.Border.Bottom)
+		case "groove":
+			genGrooveBorder(ctx, height, v1, v2, border, s.Border.Top, s.Border.Bottom, "right")
+		case "ridge":
+			genRidgeBorder(ctx, height, v1, v2, border, s.Border.Top, s.Border.Bottom, "right")
+		case "inset":
+			genInsetBorder(ctx, height, v1, v2, border, s.Border.Top, s.Border.Bottom, "right")
+		case "outset":
+			genOutsetBorder(ctx, height, v1, v2, border, s.Border.Top, s.Border.Bottom, "right")
+		}
+
+	case "bottom":
+		v1 := math.Max(float64(s.Border.Radius.BottomLeft), 1)
+		v2 := math.Max(float64(s.Border.Radius.BottomRight), 1)
+		ctx.Translate(float64(width), float64(height))
+		ctx.Rotate(math.Pi)
+		switch style {
+		case "solid":
+			genSolidBorder(ctx, width, v2, v1, border, s.Border.Right, s.Border.Left)
+			if border.Width == 1 {
+				ctx.Stroke()
+			} else {
+				ctx.Fill()
+			}
+		case "dashed":
+			genDashedBorder(ctx, width, v2, v1, border, s.Border.Right, s.Border.Left)
+		case "dotted":
+			genDottedBorder(ctx, width, v2, v1, border, s.Border.Right, s.Border.Left)
+		case "double":
+			genDoubleBorder(ctx, width, v2, v1, border, s.Border.Right, s.Border.Left)
+		case "groove":
+			genGrooveBorder(ctx, width, v2, v1, border, s.Border.Right, s.Border.Left, "bottom")
+		case "ridge":
+			genRidgeBorder(ctx, width, v2, v1, border, s.Border.Right, s.Border.Left, "bottom")
+		case "inset":
+			genInsetBorder(ctx, width, v2, v1, border, s.Border.Right, s.Border.Left, "bottom")
+		case "outset":
+			genOutsetBorder(ctx, width, v2, v1, border, s.Border.Right, s.Border.Left, "bottom")
+		}
+
+	case "left":
+		v1 := math.Max(float64(s.Border.Radius.TopLeft), 1)
+		v2 := math.Max(float64(s.Border.Radius.BottomLeft), 1)
+		ctx.Translate(0, float64(height))
+		ctx.Rotate(-math.Pi / 2)
+		switch style {
+		case "solid":
+			genSolidBorder(ctx, height, v2, v1, border, s.Border.Bottom, s.Border.Top)
+			if border.Width == 1 {
+				ctx.Stroke()
+			} else {
+				ctx.Fill()
+			}
+		case "dashed":
+			genDashedBorder(ctx, height, v2, v1, border, s.Border.Bottom, s.Border.Top)
+		case "dotted":
+			genDottedBorder(ctx, height, v2, v1, border, s.Border.Bottom, s.Border.Top)
+		case "double":
+			genDoubleBorder(ctx, height, v2, v1, border, s.Border.Bottom, s.Border.Top)
+		case "groove":
+			genGrooveBorder(ctx, height, v2, v1, border, s.Border.Bottom, s.Border.Top, "left")
+		case "ridge":
+			genRidgeBorder(ctx, height, v2, v1, border, s.Border.Bottom, s.Border.Top, "left")
+		case "inset":
+			genInsetBorder(ctx, height, v2, v1, border, s.Border.Bottom, s.Border.Top, "left")
+		case "outset":
+			genOutsetBorder(ctx, height, v2, v1, border, s.Border.Bottom, s.Border.Top, "left")
+		}
+	}
+
+	ctx.Reset()
+	ctx.ClosePath()
 }
 
 // Helper function to determine if a component is a width value
@@ -244,100 +355,12 @@ func isWidthComponent(component string, suffixes []string) bool {
 	return false
 }
 
-func drawSolidBorder(ctx *canvas.Canvas, side string, border element.BorderSide, s *element.State) {
-	ctx.SetFillStyle(border.Color.R, border.Color.G, border.Color.B, border.Color.A)
-
-	width := float64(s.Width + s.Border.Left.Width + s.Border.Right.Width)
-	height := float64(s.Height + s.Border.Top.Width + s.Border.Bottom.Width)
-
-	ctx.BeginPath()
-	ctx.Save()
-
-	switch side {
-	case "top":
-		v1 := math.Max(float64(s.Border.Radius.TopLeft), 1)
-		v2 := math.Max(float64(s.Border.Radius.TopRight), 1)
-		genSolidBorder(ctx, width, v1, v2, border, s.Border.Left, s.Border.Right)
-
-	case "right":
-		v1 := math.Max(float64(s.Border.Radius.TopRight), 1)
-		v2 := math.Max(float64(s.Border.Radius.BottomRight), 1)
-		ctx.Translate(width, 0)
-		ctx.Rotate(math.Pi / 2)
-		genSolidBorder(ctx, height, v1, v2, border, s.Border.Top, s.Border.Bottom)
-
-	case "bottom":
-		v1 := math.Max(float64(s.Border.Radius.BottomLeft), 1)
-		v2 := math.Max(float64(s.Border.Radius.BottomRight), 1)
-		ctx.Translate(float64(width), float64(height))
-		ctx.Rotate(math.Pi)
-		genSolidBorder(ctx, width, v2, v1, border, s.Border.Right, s.Border.Left)
-
-	case "left":
-		v1 := math.Max(float64(s.Border.Radius.TopLeft), 1)
-		v2 := math.Max(float64(s.Border.Radius.BottomLeft), 1)
-		ctx.Translate(0, float64(height))
-		ctx.Rotate(-math.Pi / 2)
-		genSolidBorder(ctx, height, v2, v1, border, s.Border.Bottom, s.Border.Top)
-	}
-
-	if border.Width == 1 {
-		ctx.Stroke()
-	} else {
-		ctx.Fill()
-	}
-	ctx.Reset()
-	ctx.ClosePath()
-}
-
-func drawDashedBorder(ctx *canvas.Canvas, side string, border element.BorderSide, s *element.State) {
-	ctx.SetFillStyle(border.Color.R, border.Color.G, border.Color.B, border.Color.A)
-
-	width := float64(s.Width + s.Border.Left.Width + s.Border.Right.Width)
-	height := float64(s.Height + s.Border.Top.Width + s.Border.Bottom.Width)
-
-	ctx.BeginPath()
-	ctx.Save()
-
-	switch side {
-	case "top":
-		v1 := math.Max(float64(s.Border.Radius.TopLeft), 1)
-		v2 := math.Max(float64(s.Border.Radius.TopRight), 1)
-		genDashedBorder(ctx, width, v1, v2, border, s.Border.Left, s.Border.Right)
-
-	case "right":
-		v1 := math.Max(float64(s.Border.Radius.TopRight), 1)
-		v2 := math.Max(float64(s.Border.Radius.BottomRight), 1)
-		ctx.Translate(width, 0)
-		ctx.Rotate(math.Pi / 2)
-		genDashedBorder(ctx, height, v1, v2, border, s.Border.Top, s.Border.Bottom)
-
-	case "bottom":
-		v1 := math.Max(float64(s.Border.Radius.BottomLeft), 1)
-		v2 := math.Max(float64(s.Border.Radius.BottomRight), 1)
-		ctx.Translate(float64(width), float64(height))
-		ctx.Rotate(math.Pi)
-		genDashedBorder(ctx, width, v2, v1, border, s.Border.Right, s.Border.Left)
-
-	case "left":
-		v1 := math.Max(float64(s.Border.Radius.TopLeft), 1)
-		v2 := math.Max(float64(s.Border.Radius.BottomLeft), 1)
-		ctx.Translate(0, float64(height))
-		ctx.Rotate(-math.Pi / 2)
-		genDashedBorder(ctx, height, v2, v1, border, s.Border.Bottom, s.Border.Top)
-	}
-
-	// ctx.Stroke()
-	ctx.Reset()
-	ctx.ClosePath()
-}
-
 func genSolidBorder(ctx *canvas.Canvas, width float64, v1, v2 float64, border, side1, side2 element.BorderSide) {
 	s1w := math.Max(float64(side1.Width), 1)
 	s2w := math.Max(float64(side2.Width), 1)
 
 	ctx.SetLineWidth(1)
-	splX, splY, sprX, sprY := genTopLine(ctx, s1w, s2w, float64(border.Width), v1, v2, width, 0, 0, 0)
+	splX, splY, sprX, sprY := genTopLine(ctx, s1w, s2w, float64(border.Width), v1, v2, width, 0, 0)
 
 	if border.Width == 1 {
 		return
@@ -389,7 +412,6 @@ func genSolidBorder(ctx *canvas.Canvas, width float64, v1, v2 float64, border, s
 
 	// Left flat line
 	ctx.ClosePath()
-
 }
 
 func genDashedBorder(ctx *canvas.Canvas, width float64, v1, v2 float64, border, side1, side2 element.BorderSide) {
@@ -401,15 +423,164 @@ func genDashedBorder(ctx *canvas.Canvas, width float64, v1, v2 float64, border, 
 	ctx.Clip()
 
 	ctx.Context.SetLineCapSquare()
-	// !ISSUE: Doesn't fill up the clipping region, also this is a CSS prop
-	w := math.Max(float64(border.Width), math.Max(s1w, s2w))
-	ctx.SetLineWidth(w)
-	ctx.SetLineDash(50)
-	genTopLine(ctx, s1w, s2w, float64(border.Width), v1, v2, width, s1w/2, float64(border.Width)/2, s2w/2)
+	// !ISSUE: Doesn't fill clipped area
+	ctx.SetLineWidth(float64(border.Width))
+	ctx.SetLineDash(float64(border.Width), float64(border.Width)*2)
+	genTopLine(ctx, s1w, s2w, float64(border.Width), v1, v2, width, float64(border.Width)/2, float64(border.Width)/2)
 	ctx.Stroke()
 }
 
-func genTopLine(ctx *canvas.Canvas, s1w, s2w, borderWidth, v1, v2, width, o1, o2, o3 float64) (float64, float64, float64, float64) {
+func genDottedBorder(ctx *canvas.Canvas, width float64, v1, v2 float64, border, side1, side2 element.BorderSide) {
+	s1w := math.Max(float64(side1.Width), 1)
+	s2w := math.Max(float64(side2.Width), 1)
+
+	ctx.BeginPath()
+	genSolidBorder(ctx, width, v1, v2, border, side1, side2)
+	ctx.Clip()
+
+	ctx.SetLineWidth(float64(border.Width))
+	ctx.SetLineDash(1, float64(border.Width)*2)
+	genTopLine(ctx, s1w, s2w, float64(border.Width), v1, v2, width, float64(border.Width)/2, float64(border.Width)/2)
+	ctx.Stroke()
+}
+
+// !ISSUE: Needs work
+func genDoubleBorder(ctx *canvas.Canvas, width float64, v1, v2 float64, border, side1, side2 element.BorderSide) {
+	s1w := math.Max(float64(side1.Width), 1)
+	s2w := math.Max(float64(side2.Width), 1)
+
+	ctx.BeginPath()
+	genSolidBorder(ctx, width, v1, v2, border, side1, side2)
+	ctx.Clip()
+
+	ctx.Context.SetLineCapSquare()
+	// Top line
+	ctx.SetLineWidth((float64(border.Width) / 3) * 2)
+	var l, r float64
+	if s1w < float64(border.Width) {
+		l = float64(border.Width) / 6
+	}
+	if s2w < float64(border.Width) {
+		r = float64(border.Width) / 6
+	}
+
+	if s1w > float64(border.Width) {
+		l = -(float64(s1w) / 6)
+	}
+	if s2w > float64(border.Width) {
+		r = -(float64(s2w) / 6)
+	}
+
+	genTopLine(ctx, s1w, s2w, float64(border.Width), v1-l, v2-r, width, 0, 0)
+	ctx.Stroke()
+
+	ctx.Save()
+
+	// Bottom line
+	ctx.SetLineWidth((float64(border.Width) / 3) * 2)
+
+	ctx.Translate(0, float64(border.Width))
+	genTopLine(ctx, s1w, s2w, float64(border.Width), v1+(s1w/3), v2+(s2w/3), width, 0, 0)
+	ctx.Stroke()
+	ctx.Reset()
+
+}
+
+func genRidgeBorder(ctx *canvas.Canvas, width float64, v1, v2 float64, border, side1, side2 element.BorderSide, side string) {
+	red, g, b := CalculateGrooveColor(border.Color.R, border.Color.G, border.Color.B)
+	br := border
+	br.Width = br.Width / 2
+	s1 := side1
+	s1.Width = s1.Width / 2
+	s2 := side2
+	s2.Width = s2.Width / 2
+
+	if side == "top" || side == "left" {
+		ctx.SetFillStyle(border.Color.R, border.Color.G, border.Color.B, border.Color.A)
+	} else {
+		ctx.SetFillStyle(red, g, b, border.Color.A)
+	}
+
+	genSolidBorder(ctx, width, v1, v2, border, side1, side2)
+	ctx.Fill()
+
+	ctx.Save()
+
+	// Bottom line
+
+	if side == "bottom" || side == "right" {
+		ctx.SetFillStyle(border.Color.R, border.Color.G, border.Color.B, border.Color.A)
+	} else {
+		ctx.SetFillStyle(red, g, b, border.Color.A)
+	}
+
+	ctx.Translate(((float64(s1.Width) + float64(s2.Width)) / 2), float64(border.Width)/2)
+	genSolidBorder(ctx, width-(float64(s1.Width)+float64(s2.Width)), v1-(float64(s1.Width)), v2-(float64(s2.Width)), br, s1, s2)
+	ctx.Fill()
+	ctx.Reset()
+}
+
+func genGrooveBorder(ctx *canvas.Canvas, width float64, v1, v2 float64, border, side1, side2 element.BorderSide, side string) {
+	red, g, b := CalculateGrooveColor(border.Color.R, border.Color.G, border.Color.B)
+	br := border
+	br.Width = br.Width / 2
+	s1 := side1
+	s1.Width = s1.Width / 2
+	s2 := side2
+	s2.Width = s2.Width / 2
+
+	if side == "top" || side == "left" {
+		ctx.SetFillStyle(red, g, b, border.Color.A)
+	} else {
+		ctx.SetFillStyle(border.Color.R, border.Color.G, border.Color.B, border.Color.A)
+	}
+
+	genSolidBorder(ctx, width, v1, v2, border, side1, side2)
+	ctx.Fill()
+
+	ctx.Save()
+
+	// Bottom line
+
+	if side == "bottom" || side == "right" {
+		ctx.SetFillStyle(red, g, b, border.Color.A)
+	} else {
+		ctx.SetFillStyle(border.Color.R, border.Color.G, border.Color.B, border.Color.A)
+	}
+
+	ctx.Translate(((float64(s1.Width) + float64(s2.Width)) / 2), float64(border.Width)/2)
+	genSolidBorder(ctx, width-(float64(s1.Width)+float64(s2.Width)), v1-(float64(s1.Width)), v2-(float64(s2.Width)), br, s1, s2)
+	ctx.Fill()
+	ctx.Reset()
+}
+
+func genInsetBorder(ctx *canvas.Canvas, width float64, v1, v2 float64, border, side1, side2 element.BorderSide, side string) {
+	red, g, b := CalculateGrooveColor(border.Color.R, border.Color.G, border.Color.B)
+
+	if side == "top" || side == "left" {
+		ctx.SetFillStyle(red, g, b, border.Color.A)
+	} else {
+		ctx.SetFillStyle(border.Color.R, border.Color.G, border.Color.B, border.Color.A)
+	}
+
+	genSolidBorder(ctx, width, v1, v2, border, side1, side2)
+	ctx.Fill()
+}
+
+func genOutsetBorder(ctx *canvas.Canvas, width float64, v1, v2 float64, border, side1, side2 element.BorderSide, side string) {
+	red, g, b := CalculateGrooveColor(border.Color.R, border.Color.G, border.Color.B)
+
+	if side == "top" || side == "left" {
+		ctx.SetFillStyle(border.Color.R, border.Color.G, border.Color.B, border.Color.A)
+	} else {
+		ctx.SetFillStyle(red, g, b, border.Color.A)
+	}
+
+	genSolidBorder(ctx, width, v1, v2, border, side1, side2)
+	ctx.Fill()
+}
+
+func genTopLine(ctx *canvas.Canvas, s1w, s2w, borderWidth, v1, v2, width, o1, o2 float64) (float64, float64, float64, float64) {
 	// Top-left corner arc
 	startAngleLeft := FindBorderStopAngle(
 		image.Point{X: 0, Y: 0},
@@ -421,17 +592,17 @@ func genTopLine(ctx *canvas.Canvas, s1w, s2w, borderWidth, v1, v2, width, o1, o2
 	// Reversed to get startpoint
 	splX, splY := PointAtAngle(v1, v1, v1-o1, startAngleLeft[0]-math.Pi)
 	// top line
-	ctx.LineTo(width-v2-o3, o3)
+	ctx.LineTo(width-v2-o2, o2)
 
 	// Top-right corner arc
 	startAngleRight := FindBorderStopAngle(
 		image.Point{X: int(width), Y: 0},
 		image.Point{X: int(width - s2w), Y: int(borderWidth)},
 		image.Point{X: int(width - v2), Y: int(v2)},
-		v2-o3,
+		v2-o2,
 	)
-	ctx.Arc(width-v2, v2, v2-o3, -math.Pi/2, startAngleRight[0]-math.Pi)
-	sprX, sprY := PointAtAngle(width-v2, v2, v2-o3, startAngleRight[0]-math.Pi)
+	ctx.Arc(width-v2, v2, v2-o2, -math.Pi/2, startAngleRight[0]-math.Pi)
+	sprX, sprY := PointAtAngle(width-v2, v2, v2-o2, startAngleRight[0]-math.Pi)
 	return splX, splY, sprX, sprY
 }
 
@@ -584,4 +755,8 @@ func PointAtAngle(x, y, radius, endAngle float64) (float64, float64) {
 	endY := y + radius*math.Sin(endAngle)
 
 	return endX, endY
+}
+
+func CalculateGrooveColor(r, g, b uint8) (uint8, uint8, uint8) {
+	return uint8(float64(r) * 0.5), uint8(float64(g) * 0.5), uint8(float64(b) * 0.5)
 }
