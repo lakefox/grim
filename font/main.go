@@ -1,6 +1,7 @@
 package font
 
 import (
+	"fmt"
 	"gui/element"
 	"image"
 	"image/color"
@@ -157,43 +158,6 @@ func getWeightName(weight int) string {
 }
 
 var allFonts = getSystemFonts()
-
-// func tryLoadSystemFont(fontName string, bold, italic bool) string {
-// 	font := fontName
-// 	if bold {
-// 		font += " Bold"
-// 	}
-// 	if italic {
-// 		font += " Italic"
-// 	}
-// 	slash := "/"
-
-// 	if runtime.GOOS == "windows" {
-// 		slash = "\\"
-// 	}
-
-// 	for _, v := range allFonts {
-// 		if strings.Contains(strings.ToLower(v), strings.ToLower(slash+font)) {
-// 			return v
-// 		}
-// 	}
-
-// 	font = fontName
-// 	if bold {
-// 		font += "b"
-// 	}
-// 	if italic {
-// 		font += "i"
-// 	}
-
-// 	for _, v := range allFonts {
-// 		if strings.Contains(strings.ToLower(v), strings.ToLower(slash+font)) {
-// 			return v
-// 		}
-// 	}
-
-// 	return ""
-// }
 
 func sortByLength(strings []string) {
 	sort.Slice(strings, func(i, j int) bool {
@@ -366,7 +330,7 @@ func Render(t *element.Text) (*image.RGBA, int) {
 	// fmt.Println(t.Width, t.LineHeight, (len(lines)))
 
 	r, g, b, a := t.Color.RGBA()
-
+	fmt.Println(r, g, b, a)
 	draw.Draw(img, img.Bounds(), &image.Uniform{color.RGBA{uint8(r), uint8(g), uint8(b), uint8(0)}}, image.Point{}, draw.Over)
 	// fmt.Println(int(t.Font.Metrics().Ascent))
 	dot := fixed.Point26_6{X: fixed.I(0), Y: (fixed.I(t.LineHeight+(t.EM/2)) / 2)}

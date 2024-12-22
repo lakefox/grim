@@ -232,7 +232,7 @@ func (m *Monitor) GetEvents(data *EventData) {
 	drag := false
 	if m.Drag.Position != nil {
 		if m.Drag.Position[0] > -1 && m.Drag.Position[1] > -1 {
-			// !ISSUE: Y only also does only fire on only draggable
+			// !ISSUE: works Y only also it should only fire on only draggable
 			drag = true
 		}
 	}

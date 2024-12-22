@@ -62,7 +62,7 @@ func Init() cstyle.Transformer {
 			// Y scrollbar
 
 			if (n.Style["overflow-y"] == "scroll" || n.Style["overflow-y"] == "auto") && n.ScrollHeight > 0 {
-				scrollbar := n.CreateElement("grim-scrollbar")
+				scrollbar := n.CreateElement("grim-track")
 
 				scrollbar.Style["position"] = "absolute"
 				scrollbar.Style["top"] = "0"
@@ -80,6 +80,20 @@ func Init() cstyle.Transformer {
 				thumb.Style["height"] = "20px"
 				thumb.Style["background"] = thumbColor
 				thumb.Style["cursor"] = "pointer"
+
+				for k, v := range n.PseudoElements["::-webkit-scrollbar"] {
+					scrollbar.Style[k] = v
+					thumb.Style[k] = v
+				}
+
+				for k, v := range n.PseudoElements["::-webkit-scrollbar-track"] {
+					scrollbar.Style[k] = v
+				}
+
+				for k, v := range n.PseudoElements["::-webkit-scrollbar-thumb"] {
+					thumb.Style[k] = v
+				}
+
 				scrollbar.AppendChild(&thumb)
 
 				n.Style["width"] = "calc(" + n.Style["width"] + "-" + width + ")"

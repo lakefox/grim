@@ -27,7 +27,7 @@ func Init() cstyle.Plugin {
 			contentHeight := float32(self.ScrollHeight)
 
 			for _, v := range n.Children {
-				if v.TagName == "grim-scrollbar" {
+				if v.TagName == "grim-track" {
 					if containerHeight < contentHeight {
 						p := s[v.Children[0].Properties.Id]
 
@@ -63,7 +63,7 @@ func Init() cstyle.Plugin {
 			}
 
 			for _, v := range n.Children {
-				if v.Style["position"] == "fixed" || v.TagName == "grim-scrollbar" {
+				if v.Style["position"] == "fixed" || v.TagName == "grim-track" {
 					continue
 				}
 				child := s[v.Properties.Id]

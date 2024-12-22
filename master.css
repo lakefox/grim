@@ -325,7 +325,7 @@ input[type="hidden" i] {
 input {
     padding: 1px;
     background-color: white;
-    border: 2px inset;
+    border: 1px inset;
     user-select: text;
     cursor: text;
     height: 1em;

@@ -290,7 +290,6 @@ func (c *CSS) ComputeNodeStyle(n *element.Node, state *map[string]element.State,
 
 	// Cache the style map
 	style := n.Style
-
 	self.Background = color.Parse(style, "background")
 	self.Border, _ = border.Parse(style, self, parent)
 	border.Draw(&self, shelf)
@@ -401,9 +400,9 @@ func (c *CSS) ComputeNodeStyle(n *element.Node, state *map[string]element.State,
 	(*state)[n.Properties.Id] = self
 
 	if !utils.ChildrenHaveText(n) && len(n.InnerText) > 0 {
+		fmt.Println(n.TagName, n.InnerText)
 		n.InnerText = strings.TrimSpace(n.InnerText)
 		self = genTextNode(n, state, c, shelf)
-
 	}
 
 	// Load canvas into textures

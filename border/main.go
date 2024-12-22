@@ -1,7 +1,6 @@
 package border
 
 import (
-	"fmt"
 	"gui/canvas"
 	"gui/color"
 	"gui/element"
@@ -117,21 +116,23 @@ func Parse(cssProperties map[string]string, self, parent element.State) (element
 	width := self.Width + self.Border.Left.Width + self.Border.Right.Width
 	height := self.Height + self.Border.Top.Width + self.Border.Bottom.Width
 
-	if topLeftRadius+topRightRadius > width {
-		topLeftRadius = width / 2
-		topRightRadius = width / 2
-	}
-	if bottomLeftRadius+bottomRightRadius > width {
-		bottomLeftRadius = width / 2
-		bottomRightRadius = width / 2
-	}
-	if topLeftRadius+bottomLeftRadius > height {
-		topLeftRadius = height / 2
-		bottomLeftRadius = height / 2
-	}
-	if topRightRadius+bottomRightRadius > height {
-		topRightRadius = height / 2
-		bottomRightRadius = height / 2
+	if width > 0 && height > 0 {
+		if topLeftRadius+topRightRadius > width {
+			topLeftRadius = width / 2
+			topRightRadius = width / 2
+		}
+		if bottomLeftRadius+bottomRightRadius > width {
+			bottomLeftRadius = width / 2
+			bottomRightRadius = width / 2
+		}
+		if topLeftRadius+bottomLeftRadius > height {
+			topLeftRadius = height / 2
+			bottomLeftRadius = height / 2
+		}
+		if topRightRadius+bottomRightRadius > height {
+			topRightRadius = height / 2
+			bottomRightRadius = height / 2
+		}
 	}
 
 	return element.Border{
@@ -212,7 +213,6 @@ func Draw(n *element.State, shelf *library.Shelf) {
 }
 
 func drawBorderSide(ctx *canvas.Canvas, side string, border element.BorderSide, s *element.State, style string) {
-	fmt.Println(style)
 	if style == "" {
 		style = "solid"
 	}

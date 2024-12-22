@@ -218,8 +218,12 @@ func (c *Canvas) Ellipse(x, y, radiusX, radiusY, rotation, startAngle, endAngle 
 	c.Arc(0, 0, 1, startAngle, endAngle)
 	c.Reset()
 }
+func (c *Canvas) MeasureText(s string) (w, h float64) {
+	return c.Context.MeasureString(s)
+}
 func (c *Canvas) FillText(text string, x, y float64) {
 	c.Context.DrawStringAnchored(text, x, y, 0, 0)
+	c.Context.Fill()
 }
 func (c *Canvas) StrokeText(text string, x, y float64) {
 	c.Context.DrawStringAnchored(text, x, y, 0, 0)

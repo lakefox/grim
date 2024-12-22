@@ -15,6 +15,7 @@ import (
 	"gui/cstyle/plugins/inline"
 	"gui/cstyle/plugins/textAlign"
 	"gui/cstyle/transformers/background"
+	"gui/cstyle/transformers/banda"
 	flexprep "gui/cstyle/transformers/flex"
 	marginblock "gui/cstyle/transformers/margin-block"
 	"gui/cstyle/transformers/ol"
@@ -83,6 +84,7 @@ func New(adapterFunction *adapter.Adapter) Window {
 	css.AddPlugin(flex.Init())
 	css.AddPlugin(crop.Init())
 
+	css.AddTransformer(banda.Init())
 	css.AddTransformer(scrollbar.Init())
 	css.AddTransformer(flexprep.Init())
 	css.AddTransformer(marginblock.Init())
@@ -337,20 +339,12 @@ func View(data *Window, width, height int) {
 		if !bytes.Equal(hash, newHash) || resize {
 			// Updating the document here allow new element to be included into the event loop
 			hash = newHash
-			// fmt.Println("########################")
-			// lastChange := time.Now()
-			// lastChange1 := time.Now()
 
 			newDoc := AddStyles(data.CSS, data.Document.Children[0], &data.Document)
-
-			// fmt.Println("Copy Node: ", time.Since(lastChange1))
-			// lastChange1 = time.Now()
 
 			// This is where the document needs to be updated at
 			newDoc = data.CSS.Transform(newDoc)
 			// monitor.Document = newDoc
-			// fmt.Println("Transform: ", time.Since(lastChange1))
-			// lastChange1 = time.Now()
 
 			state["ROOT"] = element.State{
 				Width:  float32(width),
@@ -358,33 +352,20 @@ func View(data *Window, width, height int) {
 			}
 
 			data.CSS.ComputeNodeStyle(newDoc, &state, &shelf) // speed up
-			// fmt.Println("Compute Node Style: ", time.Since(lastChange1))
-			// lastChange1 = time.Now()
 
 			rd = data.Render(newDoc, &state, &shelf)
-			// fmt.Println("Render: ", time.Since(lastChange1))
-			// lastChange1 = time.Now()
 
 			data.Adapter.Load(rd) // speed up
-			// fmt.Println("Load: ", time.Since(lastChange1))
-			// lastChange1 = time.Now()
 
 			AddHTMLAndAttrs(&data.Document, &state)
-			// fmt.Println("Add HTML: ", time.Since(lastChange1))
-
+			// AddHTMLAndAttrs(newDoc, &state)
+			// fmt.Println(newDoc.OuterHTML)
 			data.Scripts.Run(&data.Document)
-			// fmt.Println("#", time.Since(lastChange))
 			shelf.Clean()
 		}
 
 		monitor.RunEvents(data.Document.Children[0])
-		// if monitor.Focus != nil {
-		// 	fmt.Println("FOCUS")
-		// 	monitor.Focus.Focus()
-		// }
 		data.Adapter.Render(rd)
-		// fmt.Println("#", time.Since(lastChange))
-
 	}
 }
 
