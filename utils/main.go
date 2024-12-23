@@ -3,7 +3,7 @@ package utils
 import (
 	"bytes"
 	"fmt"
-	"gui/element"
+	"grim/element"
 	ic "image/color"
 	"math"
 	"reflect"

@@ -1,8 +1,8 @@
 package ul
 
 import (
-	"gui/cstyle"
-	"gui/element"
+	"grim/cstyle"
+	"grim/element"
 )
 
 func Init() cstyle.Transformer {

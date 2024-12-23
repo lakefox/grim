@@ -2,10 +2,10 @@ package ol
 
 import (
 	"fmt"
-	"gui/cstyle"
-	"gui/element"
-	"gui/font"
-	"gui/utils"
+	"grim/cstyle"
+	"grim/element"
+	"grim/font"
+	"grim/utils"
 	"strconv"
 
 	imgFont "golang.org/x/image/font"

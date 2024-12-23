@@ -1,8 +1,8 @@
 package raylib
 
 import (
-	adapter "gui/adapters"
-	"gui/element"
+	adapter "grim/adapters"
+	"grim/element"
 	"slices"
 	"sort"
 
@@ -11,35 +11,8 @@ import (
 
 func Init() *adapter.Adapter {
 	a := adapter.Adapter{}
-	a.AddEventListener("cursor", func(e element.Event) {
-		switch e.Data.(string) {
-		case "":
-			rl.SetMouseCursor(0)
-		case "text":
-			rl.SetMouseCursor(2)
-		case "crosshair":
-			rl.SetMouseCursor(3)
-		case "pointer":
-			rl.SetMouseCursor(4)
-		case "ew-resize":
-			rl.SetMouseCursor(5)
-		case "ns-resize":
-			rl.SetMouseCursor(6)
-		case "nwse-resize":
-			rl.SetMouseCursor(7)
-		case "nesw-resize":
-			rl.SetMouseCursor(8)
-		case "grab":
-			rl.SetMouseCursor(9)
-		case "not-allowed":
-			rl.SetMouseCursor(10)
-		}
-	})
-	a.Options = adapter.Options{
-		RenderText:     true,
-		RenderElements: true,
-		RenderBorders:  true,
-	}
+	a.AddEventListener("cursor", handleCursorEvent)
+
 	wm := NewWindowManager(&a)
 	a.Init = func(width, height int) {
 		wm.OpenWindow(int32(width), int32(height))
@@ -59,6 +32,26 @@ func Init() *adapter.Adapter {
 		wm.Draw(state)
 	}
 	return &a
+}
+
+// handleCursorEvent sets the mouse cursor based on the event data
+func handleCursorEvent(e element.Event) {
+	cursorMap := map[string]rl.MouseCursor{
+		"":            rl.MouseCursorArrow,
+		"text":        rl.MouseCursorIBeam,
+		"crosshair":   rl.MouseCursorCrosshair,
+		"pointer":     rl.MouseCursorPointingHand,
+		"ew-resize":   rl.MouseCursorResizeEW,
+		"ns-resize":   rl.MouseCursorResizeNS,
+		"nwse-resize": rl.MouseCursorResizeNWSE,
+		"nesw-resize": rl.MouseCursorResizeNESW,
+		"grab":        9,
+		"not-allowed": rl.MouseCursorNotAllowed,
+	}
+
+	if cursor, found := cursorMap[e.Data.(string)]; found {
+		rl.SetMouseCursor(cursor)
+	}
 }
 
 // WindowManager manages the window and rectangles
@@ -94,11 +87,6 @@ func (wm *WindowManager) OpenWindow(width, height int32) {
 	wm.Height = height
 	// Enable window resizing
 	rl.SetWindowState(rl.FlagWindowResizable)
-}
-
-func (wm *WindowManager) SetFPS(fps int) {
-	wm.FPS = int32(fps)
-	rl.SetTargetFPS(int32(fps))
 }
 
 func (wm *WindowManager) LoadTextures(nodes []element.State) {
@@ -145,13 +133,7 @@ func (wm *WindowManager) Draw(nodes []element.State) {
 			if node.Hidden {
 				continue
 			}
-			// fmt.Println("X: ", node.X, "Y: ", node.Y, "Width: ", node.Width, "Height: ", node.Height, "Z: ", node.Z)
 			if node.Z == indexes[a] {
-				// DrawRoundedRect(node.X,
-				// 	node.Y,
-				// 	node.Width+node.Border.Left.Width+node.Border.Right.Width,
-				// 	node.Height+node.Border.Top.Width+node.Border.Bottom.Width,
-				// 	node.Border.Radius.TopLeft, node.Border.Radius.TopRight, node.Border.Radius.BottomLeft, node.Border.Radius.BottomRight, node.Background)
 
 				// Draw the border based on the style for each side
 
@@ -173,14 +155,12 @@ func (wm *WindowManager) Draw(nodes []element.State) {
 									Width:  float32(node.Crop.Width),
 									Height: float32(node.Crop.Height),
 								}
-								// fmt.Println(sourceRec)
 							}
 
 							rl.DrawTextureRec(*texture, sourceRec, rl.Vector2{
 								X: node.X,
 								Y: node.Y + float32(node.Crop.Y),
 							}, rl.White)
-							// rl.DrawTexture(*texture, int32(node.X), int32(node.Y), rl.White)
 						}
 					}
 				}
@@ -196,26 +176,6 @@ func (wm *WindowManager) Draw(nodes []element.State) {
 	}
 
 	rl.EndDrawing()
-}
-
-func DrawRoundedRect(x, y, width, height float32, topLeftRadius, topRightRadius, bottomLeftRadius, bottomRightRadius float32, color rl.Color) {
-	// Draw the main rectangle excluding corners
-	rl.DrawRectangle(int32(x+topLeftRadius), int32(y), int32(width-topLeftRadius-topRightRadius), int32(height), color)
-	rl.DrawRectangle(int32(x), int32(y+topLeftRadius), int32(topLeftRadius), int32(height-topLeftRadius-bottomLeftRadius), color)
-	rl.DrawRectangle(int32(x+width-topRightRadius), int32(y+topRightRadius), int32(topRightRadius), int32(height-topRightRadius-bottomRightRadius), color)
-	rl.DrawRectangle(int32(x+bottomLeftRadius), int32(y+height-bottomLeftRadius), int32(width-bottomLeftRadius-bottomRightRadius), int32(bottomLeftRadius), color)
-
-	// Draw the corner circles
-	rl.DrawCircleSector(rl.Vector2{X: x + topLeftRadius, Y: y + topLeftRadius}, topLeftRadius, 180, 270, 16, color)
-	rl.DrawCircleSector(rl.Vector2{X: x + width - topRightRadius, Y: y + topRightRadius}, topRightRadius, 270, 360, 16, color)
-	rl.DrawCircleSector(rl.Vector2{X: x + width - bottomRightRadius, Y: y + height - bottomRightRadius}, bottomRightRadius, 0, 90, 16, color)
-	rl.DrawCircleSector(rl.Vector2{X: x + bottomLeftRadius, Y: y + height - bottomLeftRadius}, bottomLeftRadius, 90, 180, 16, color)
-
-	// Draw rectangle parts to fill the gaps
-	rl.DrawRectangle(int32(x+topLeftRadius), int32(y), int32(width-topLeftRadius-topRightRadius), int32(topLeftRadius), color)                                     // Top
-	rl.DrawRectangle(int32(x), int32(y+topLeftRadius), int32(topLeftRadius), int32(height-topLeftRadius-bottomLeftRadius), color)                                  // Left
-	rl.DrawRectangle(int32(x+width-topRightRadius), int32(y+topRightRadius), int32(topRightRadius), int32(height-topRightRadius-bottomRightRadius), color)         // Right
-	rl.DrawRectangle(int32(x+bottomLeftRadius), int32(y+height-bottomLeftRadius), int32(width-bottomLeftRadius-bottomRightRadius), int32(bottomLeftRadius), color) // Bottom
 }
 
 func (wm *WindowManager) GetEvents() {

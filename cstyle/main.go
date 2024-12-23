@@ -2,15 +2,14 @@ package cstyle
 
 import (
 	"fmt"
-	adapter "gui/adapters"
-	"gui/border"
-	"gui/color"
-	"gui/element"
-	"gui/font"
-	"gui/library"
-	"gui/parser"
-	"gui/selector"
-	"gui/utils"
+	"grim/border"
+	"grim/color"
+	"grim/element"
+	"grim/font"
+	"grim/library"
+	"grim/parser"
+	"grim/selector"
+	"grim/utils"
 	"image"
 	"os"
 	"sort"
@@ -40,7 +39,6 @@ type CSS struct {
 	Document     *element.Node
 	Fonts        map[string]imgFont.Face
 	StyleMap     map[string][]*parser.StyleMap
-	Options      adapter.Options
 }
 
 func (c *CSS) Transform(n *element.Node) *element.Node {
@@ -400,7 +398,6 @@ func (c *CSS) ComputeNodeStyle(n *element.Node, state *map[string]element.State,
 	(*state)[n.Properties.Id] = self
 
 	if !utils.ChildrenHaveText(n) && len(n.InnerText) > 0 {
-		fmt.Println(n.TagName, n.InnerText)
 		n.InnerText = strings.TrimSpace(n.InnerText)
 		self = genTextNode(n, state, c, shelf)
 	}
@@ -463,10 +460,6 @@ func (c *CSS) ComputeNodeStyle(n *element.Node, state *map[string]element.State,
 		if v.Selector(n) {
 			v.Handler(n, state)
 		}
-	}
-
-	if n.Properties.Id == "input7" {
-		fmt.Println(n.Properties.Id, self.Width, self.Border)
 	}
 
 	return n

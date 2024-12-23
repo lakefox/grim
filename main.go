@@ -1,4 +1,4 @@
-package gui
+package grim
 
 import (
 	"bufio"
@@ -7,30 +7,30 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
-	adapter "gui/adapters"
-	"gui/canvas"
-	"gui/cstyle"
-	"gui/cstyle/plugins/crop"
-	"gui/cstyle/plugins/flex"
-	"gui/cstyle/plugins/inline"
-	"gui/cstyle/plugins/textAlign"
-	"gui/cstyle/transformers/background"
-	"gui/cstyle/transformers/banda"
-	flexprep "gui/cstyle/transformers/flex"
-	marginblock "gui/cstyle/transformers/margin-block"
-	"gui/cstyle/transformers/ol"
-	"gui/cstyle/transformers/scrollbar"
-	"gui/cstyle/transformers/text"
-	"gui/cstyle/transformers/ul"
-	"gui/font"
-	"gui/library"
-	"gui/scripts"
-	"gui/scripts/a"
+	adapter "grim/adapters"
+	"grim/canvas"
+	"grim/cstyle"
+	"grim/cstyle/plugins/crop"
+	"grim/cstyle/plugins/flex"
+	"grim/cstyle/plugins/inline"
+	"grim/cstyle/plugins/textAlign"
+	"grim/cstyle/transformers/background"
+	"grim/cstyle/transformers/banda"
+	flexprep "grim/cstyle/transformers/flex"
+	marginblock "grim/cstyle/transformers/margin-block"
+	"grim/cstyle/transformers/ol"
+	"grim/cstyle/transformers/scrollbar"
+	"grim/cstyle/transformers/text"
+	"grim/cstyle/transformers/ul"
+	"grim/font"
+	"grim/library"
+	"grim/scripts"
+	"grim/scripts/a"
 	"image"
 
-	"gui/element"
-	"gui/events"
-	"gui/utils"
+	"grim/element"
+	"grim/events"
+	"grim/utils"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -53,8 +53,7 @@ type Window struct {
 	Scripts  scripts.Scripts
 }
 
-func Open(path string, adapterFunction *adapter.Adapter) Window {
-	window := New(adapterFunction)
+func (window *Window) Path(path string) {
 
 	styleSheets, styleTags, htmlNodes := parseHTMLFromFile(path)
 
@@ -67,8 +66,6 @@ func Open(path string, adapterFunction *adapter.Adapter) Window {
 	}
 
 	CreateNode(htmlNodes, &window.Document)
-
-	return window
 }
 
 func New(adapterFunction *adapter.Adapter) Window {
@@ -137,49 +134,47 @@ func (w *Window) Render(doc *element.Node, state *map[string]element.State, shel
 		}
 	}
 
-	if w.CSS.Options.RenderElements {
-		for k, self := range store {
-			// Option: Have Grim render all elements
-			wbw := int(self.Width + self.Border.Left.Width + self.Border.Right.Width)
-			hbw := int(self.Height + self.Border.Top.Width + self.Border.Bottom.Width)
+	for k, self := range store {
+		// Option: Have Grim render all elements
+		wbw := int(self.Width + self.Border.Left.Width + self.Border.Right.Width)
+		hbw := int(self.Height + self.Border.Top.Width + self.Border.Bottom.Width)
 
-			key := strconv.Itoa(wbw) + strconv.Itoa(hbw) + utils.RGBAtoString(self.Background)
+		key := strconv.Itoa(wbw) + strconv.Itoa(hbw) + utils.RGBAtoString(self.Background)
 
-			exists := shelf.Check(key)
-			bounds := shelf.Bounds(key)
-			// fmt.Println(n.Properties.Id, self.Width, self.Height, bounds)
+		exists := shelf.Check(key)
+		bounds := shelf.Bounds(key)
+		// fmt.Println(n.Properties.Id, self.Width, self.Height, bounds)
 
-			if exists && bounds[0] == int(wbw) && bounds[1] == int(hbw) {
-				lookup := make(map[string]struct{}, len(self.Textures))
-				for _, v := range self.Textures {
-					lookup[v] = struct{}{}
-				}
+		if exists && bounds[0] == int(wbw) && bounds[1] == int(hbw) {
+			lookup := make(map[string]struct{}, len(self.Textures))
+			for _, v := range self.Textures {
+				lookup[v] = struct{}{}
+			}
 
-				if _, found := lookup[key]; !found {
-					self.Textures = append([]string{key}, self.Textures...)
-					store[k] = self
-				}
-			} else if self.Background.A > 0 {
-				lookup := make(map[string]struct{}, len(self.Textures))
-				for _, v := range self.Textures {
-					lookup[v] = struct{}{}
-				}
+			if _, found := lookup[key]; !found {
+				self.Textures = append([]string{key}, self.Textures...)
+				store[k] = self
+			}
+		} else if self.Background.A > 0 {
+			lookup := make(map[string]struct{}, len(self.Textures))
+			for _, v := range self.Textures {
+				lookup[v] = struct{}{}
+			}
 
-				if _, found := lookup[key]; !found {
-					// Only make the drawing if it's not found
-					can := canvas.NewCanvas(wbw, hbw)
-					can.BeginPath()
-					can.SetFillStyle(self.Background.R, self.Background.G, self.Background.B, self.Background.A)
-					can.SetLineWidth(10)
-					can.RoundedRect(0, 0, float64(wbw), float64(hbw),
-						[]float64{float64(self.Border.Radius.TopLeft), float64(self.Border.Radius.TopRight), float64(self.Border.Radius.BottomRight), float64(self.Border.Radius.BottomLeft)})
-					can.Fill()
-					can.ClosePath()
+			if _, found := lookup[key]; !found {
+				// Only make the drawing if it's not found
+				can := canvas.NewCanvas(wbw, hbw)
+				can.BeginPath()
+				can.SetFillStyle(self.Background.R, self.Background.G, self.Background.B, self.Background.A)
+				can.SetLineWidth(10)
+				can.RoundedRect(0, 0, float64(wbw), float64(hbw),
+					[]float64{float64(self.Border.Radius.TopLeft), float64(self.Border.Radius.TopRight), float64(self.Border.Radius.BottomRight), float64(self.Border.Radius.BottomLeft)})
+				can.Fill()
+				can.ClosePath()
 
-					shelf.Set(key, can.RGBA)
-					self.Textures = append([]string{key}, self.Textures...)
-					store[k] = self
-				}
+				shelf.Set(key, can.RGBA)
+				self.Textures = append([]string{key}, self.Textures...)
+				store[k] = self
 			}
 		}
 	}
@@ -201,7 +196,7 @@ func flatten(n *element.Node) []*element.Node {
 	return nodes
 }
 
-func View(data *Window, width, height int) {
+func Open(data *Window, width, height int) {
 	shelf := library.Shelf{
 		Textures:   map[string]*image.RGBA{},
 		References: map[string]bool{},
@@ -213,7 +208,6 @@ func View(data *Window, width, height int) {
 
 	data.Adapter.Library = &shelf
 	data.Adapter.Init(width, height)
-	// wm.FPSCounterOn = true
 
 	state := map[string]element.State{}
 	state["ROOT"] = element.State{
@@ -224,12 +218,7 @@ func View(data *Window, width, height int) {
 	shouldStop := false
 
 	var hash []byte
-
-	// data.Document.Children[0] = AddStyles(data.CSS, data.Document.Children[0], &data.Document)
-
 	var rd []element.State
-
-	data.CSS.Options = data.Adapter.Options
 
 	// Load init font
 	if data.CSS.Fonts == nil {
@@ -313,7 +302,6 @@ func View(data *Window, width, height int) {
 
 	// Main game loop
 	for !shouldStop {
-		// lastChange := time.Now()
 
 		if !shouldStop && debug {
 			shouldStop = true
@@ -337,25 +325,20 @@ func View(data *Window, width, height int) {
 		newHash, _ := hashStruct(&data.Document.Children[0])
 
 		if !bytes.Equal(hash, newHash) || resize {
-			// Updating the document here allow new element to be included into the event loop
 			hash = newHash
-
 			newDoc := AddStyles(data.CSS, data.Document.Children[0], &data.Document)
-
-			// This is where the document needs to be updated at
 			newDoc = data.CSS.Transform(newDoc)
-			// monitor.Document = newDoc
 
 			state["ROOT"] = element.State{
 				Width:  float32(width),
 				Height: float32(height),
 			}
 
-			data.CSS.ComputeNodeStyle(newDoc, &state, &shelf) // speed up
+			data.CSS.ComputeNodeStyle(newDoc, &state, &shelf)
 
 			rd = data.Render(newDoc, &state, &shelf)
 
-			data.Adapter.Load(rd) // speed up
+			data.Adapter.Load(rd)
 
 			AddHTMLAndAttrs(&data.Document, &state)
 			// AddHTMLAndAttrs(newDoc, &state)

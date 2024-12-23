@@ -1,8 +1,8 @@
 package textAlign
 
 import (
-	"gui/cstyle"
-	"gui/element"
+	"grim/cstyle"
+	"grim/element"
 )
 
 func Init() cstyle.Plugin {

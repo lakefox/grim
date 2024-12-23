@@ -1,8 +1,8 @@
 package adapter
 
 import (
-	"gui/element"
-	"gui/library"
+	"grim/element"
+	"grim/library"
 	"sort"
 )
 
@@ -17,14 +17,7 @@ type Adapter struct {
 	Load      func(state []element.State)
 	events    map[string][]func(element.Event)
 	Library   *library.Shelf
-	Options   Options
 	FilePaths []string
-}
-
-type Options struct {
-	RenderText     bool
-	RenderElements bool
-	RenderBorders  bool
 }
 
 func (a *Adapter) AddEventListener(name string, callback func(element.Event)) {

@@ -1,9 +1,9 @@
 package events
 
 import (
-	adapter "gui/adapters"
-	"gui/cstyle"
-	"gui/element"
+	adapter "grim/adapters"
+	"grim/cstyle"
+	"grim/element"
 	"sort"
 	"strconv"
 	"strings"

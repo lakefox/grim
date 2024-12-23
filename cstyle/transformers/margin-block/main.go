@@ -1,8 +1,8 @@
 package marginblock
 
 import (
-	"gui/cstyle"
-	"gui/element"
+	"grim/cstyle"
+	"grim/element"
 	"strings"
 )
 

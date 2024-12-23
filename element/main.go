@@ -2,8 +2,8 @@ package element
 
 import (
 	"fmt"
-	"gui/canvas"
-	"gui/selector"
+	"grim/canvas"
+	"grim/selector"
 	ic "image/color"
 	"math"
 	"slices"
@@ -343,7 +343,7 @@ func (n *Node) InsertBefore(c, tgt *Node) {
 			break
 		}
 	}
-	fmt.Println(nodeIndex)
+
 	if nodeIndex > 0 {
 		n.Children = append(n.Children[:nodeIndex], append([]*Node{c}, n.Children[nodeIndex:]...)...)
 	} else {

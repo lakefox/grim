@@ -2,8 +2,8 @@ package flexprep
 
 import (
 	"fmt"
-	"gui/cstyle"
-	"gui/element"
+	"grim/cstyle"
+	"grim/element"
 	"strconv"
 	"strings"
 )

@@ -1,6 +1,6 @@
 package scripts
 
-import "gui/element"
+import "grim/element"
 
 type Scripts struct {
 	scripts []Script

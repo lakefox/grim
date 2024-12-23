@@ -1,9 +1,9 @@
 package text
 
 import (
-	"gui/cstyle"
-	"gui/element"
-	"gui/utils"
+	"grim/cstyle"
+	"grim/element"
+	"grim/utils"
 	"html"
 	"strings"
 )

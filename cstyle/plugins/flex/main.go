@@ -1,10 +1,10 @@
 package flex
 
 import (
-	"gui/cstyle"
-	"gui/cstyle/plugins/inline"
-	"gui/element"
-	"gui/utils"
+	"grim/cstyle"
+	"grim/cstyle/plugins/inline"
+	"grim/element"
+	"grim/utils"
 	"sort"
 	"strings"
 )

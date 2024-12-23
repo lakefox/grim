@@ -1,8 +1,7 @@
 package font
 
 import (
-	"fmt"
-	"gui/element"
+	"grim/element"
 	"image"
 	"image/color"
 	"image/draw"
@@ -330,7 +329,7 @@ func Render(t *element.Text) (*image.RGBA, int) {
 	// fmt.Println(t.Width, t.LineHeight, (len(lines)))
 
 	r, g, b, a := t.Color.RGBA()
-	fmt.Println(r, g, b, a)
+
 	draw.Draw(img, img.Bounds(), &image.Uniform{color.RGBA{uint8(r), uint8(g), uint8(b), uint8(0)}}, image.Point{}, draw.Over)
 	// fmt.Println(int(t.Font.Metrics().Ascent))
 	dot := fixed.Point26_6{X: fixed.I(0), Y: (fixed.I(t.LineHeight+(t.EM/2)) / 2)}

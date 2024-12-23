@@ -1,7 +1,7 @@
 package parser
 
 import (
-	"gui/selector"
+	"grim/selector"
 	"regexp"
 	"strings"
 )

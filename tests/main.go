@@ -1,8 +1,8 @@
 package main
 
 import (
-	"gui"
-	"gui/adapters/raylib"
+	"grim"
+	"grim/adapters/raylib"
 	// "github.com/pkg/profile"
 )
 
@@ -14,7 +14,8 @@ func main() {
 	// defer profile.Start(profile.MemProfile, profile.ProfilePath(".")).Stop() // Memory
 	// defaults read ~/Library/Preferences/.GlobalPreferences.plist
 	// !ISSUE: Flex2 doesn't work anymore
-	window := gui.Open("./src/index.html", raylib.Init())
+	window := grim.New(raylib.Init())
+	window.Path("./src/index.html")
 
 	// document := window.Document
 
@@ -45,7 +46,7 @@ func main() {
 	// ctx.ClosePath()
 	// body.AppendChild(&canvas)
 
-	gui.View(&window, 850, 400)
+	grim.Open(&window, 850, 400)
 }
 
 // func tgt(e *element.Node) {

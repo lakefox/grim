@@ -2,8 +2,8 @@ package a
 
 import (
 	"fmt"
-	"gui/element"
-	"gui/scripts"
+	"grim/element"
+	"grim/scripts"
 	"os/exec"
 	"runtime"
 )

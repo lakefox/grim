@@ -1,11 +1,11 @@
 package border
 
 import (
-	"gui/canvas"
-	"gui/color"
-	"gui/element"
-	"gui/library"
-	"gui/utils"
+	"grim/canvas"
+	"grim/color"
+	"grim/element"
+	"grim/library"
+	"grim/utils"
 	"image"
 	"math"
 	"strconv"

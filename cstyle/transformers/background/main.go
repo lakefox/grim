@@ -1,8 +1,8 @@
 package background
 
 import (
-	"gui/cstyle"
-	"gui/element"
+	"grim/cstyle"
+	"grim/element"
 	"regexp"
 	"strings"
 )
