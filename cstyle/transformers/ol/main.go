@@ -64,7 +64,7 @@ func Init() cstyle.Transformer {
 				fid := n.Style["font-family"] + fmt.Sprint(em, n.Style["font-weight"], italic)
 				if c.Fonts[fid] == nil {
 					weight, _ := strconv.Atoi(n.Style["font-weight"])
-					f, _ := font.LoadFont(n.Style["font-family"], int(em), weight, italic)
+					f, _ := font.LoadFont(n.Style["font-family"], int(em), weight, italic, &c.Adapter.FileSystem)
 					c.Fonts[fid] = f
 				}
 				fnt := c.Fonts[fid]

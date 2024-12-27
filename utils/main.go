@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"grim/element"
 	ic "image/color"
-	"math"
-	"reflect"
 	"strconv"
 	"strings"
 
@@ -327,21 +325,6 @@ func evaluateCalcExpression(expression string, em, max float32) float32 {
 	return result
 }
 
-func Merge(m1, m2 map[string]string) map[string]string {
-	// Create a new map and copy m1 into it
-	result := make(map[string]string)
-	for k, v := range m1 {
-		result[k] = v
-	}
-
-	// Merge m2 into the new map
-	for k, v := range m2 {
-		result[k] = v
-	}
-
-	return result
-}
-
 func Max(a, b float32) float32 {
 	if a > b {
 		return a
@@ -356,52 +339,6 @@ func Min(a, b float32) float32 {
 	} else {
 		return b
 	}
-}
-
-// getStructField uses reflection to get the value of a struct field by name
-func GetStructField(data interface{}, fieldName string) interface{} {
-	val := reflect.ValueOf(data)
-
-	// Make sure we have a pointer to a struct
-	if val.Kind() != reflect.Ptr || val.Elem().Kind() != reflect.Struct {
-		return nil
-	}
-
-	// Get the struct field by name
-	field := val.Elem().FieldByName(fieldName)
-
-	// Check if the field exists
-	if !field.IsValid() {
-		return nil
-	}
-
-	return field.Interface()
-}
-
-func SetStructFieldValue(data interface{}, fieldName string, newValue interface{}) {
-	val := reflect.ValueOf(data)
-
-	// Make sure we have a pointer to a struct
-	if val.Kind() != reflect.Ptr || val.Elem().Kind() != reflect.Struct {
-		return
-	}
-
-	// Get the struct field by name
-	field := val.Elem().FieldByName(fieldName)
-
-	// Check if the field exists
-	if !field.IsValid() {
-		return
-	}
-
-	// Check if the new value type is assignable to the field type
-	if !reflect.ValueOf(newValue).Type().AssignableTo(field.Type()) {
-		return
-	}
-
-	// Set the new value
-	field.Set(reflect.ValueOf(newValue))
-
 }
 
 func GetInnerText(n *html.Node) string {
@@ -582,12 +519,6 @@ func InnerHTML(node *element.Node) string {
 	return buffer.String()
 }
 
-func ReverseSlice[T any](s []T) {
-	for i, j := 0, len(s)-1; i < j; i, j = i+1, j-1 {
-		s[i], s[j] = s[j], s[i]
-	}
-}
-
 func ParentStyleProp(n *element.Node, prop string, selector func(string) bool) bool {
 	if n.Parent != nil {
 		if selector(n.Parent.Style[prop]) {
@@ -600,8 +531,4 @@ func ParentStyleProp(n *element.Node, prop string, selector func(string) bool) b
 }
 func RGBAtoString(c ic.RGBA) string {
 	return fmt.Sprintf("R%d%d%d%d", c.R, c.G, c.B, c.A)
-}
-
-func Distance(x1, y1, x2, y2 float64) float64 {
-	return math.Sqrt(math.Pow(x2-x1, 2) + math.Pow(y2-y1, 2))
 }

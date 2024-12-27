@@ -264,6 +264,12 @@ func (c *Canvas) SetLineCap(cap string) {
 func (c *Canvas) SetGlobalAlpha(alpha float64) {
 	c.Context.SetRGBA(1, 1, 1, alpha)
 }
+
+func (c *Canvas) LoadImage(path string) image.Image {
+	i, _ := gg.LoadImage(path)
+	return i
+}
+
 func (c *Canvas) DrawImage(img image.Image, x, y float64) {
 	c.Context.DrawImage(img, int(x), int(y))
 }

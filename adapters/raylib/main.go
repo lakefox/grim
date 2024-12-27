@@ -3,6 +3,9 @@ package raylib
 import (
 	adapter "grim/adapters"
 	"grim/element"
+	"os"
+	"path/filepath"
+	"runtime"
 	"slices"
 	"sort"
 
@@ -31,6 +34,18 @@ func Init() *adapter.Adapter {
 		}
 		wm.Draw(state)
 	}
+
+	fs := adapter.FileSystem{}
+	fs.ReadFile = func(path string) ([]byte, error) {
+		data, err := os.ReadFile(path)
+		return data, err
+	}
+	fs.WriteFile = func(path string, data []byte) {
+		os.WriteFile(path, data, 0644)
+	}
+	getSystemFonts(&fs)
+
+	a.FileSystem = fs
 	return &a
 }
 
@@ -262,5 +277,28 @@ func (wm *WindowManager) GetEvents() {
 			Name: "scroll",
 			Data: int(wd * 3),
 		})
+	}
+}
+
+func getSystemFonts(fs *adapter.FileSystem) {
+
+	switch runtime.GOOS {
+	case "windows":
+		// System Fonts
+		fs.AddDir("C:\\Windows\\Fonts")
+		// User Fonts
+		fs.AddDir("%APPDATA%\\Microsoft\\Windows\\Fonts")
+	case "darwin":
+		// System Fonts
+		fs.AddDir("/System/Library/Fonts")
+		fs.AddDir("/Library/Fonts")
+		// User Fonts
+		fs.AddDir(filepath.Join(os.Getenv("HOME"), "Library/Fonts"))
+	case "linux":
+		// System Fonts
+		fs.AddDir("/usr/share/fonts")
+		fs.AddDir("/usr/local/share/fonts")
+		// User Fonts
+		fs.AddDir(filepath.Join(os.Getenv("HOME"), ".fonts"))
 	}
 }

@@ -85,8 +85,7 @@ type Crop struct {
 type Properties struct {
 	Id             string
 	EventListeners map[string][]func(Event) `json:"-"`
-	Events         []string
-	Hover          bool
+	// Events         []string
 	// !TODO: After focus
 	Selected []float32
 }
@@ -163,7 +162,6 @@ type Text struct {
 	EM                  int
 	X                   int
 	LoadedFont          string
-	// Last                bool
 }
 
 type Shadow struct {
@@ -223,7 +221,6 @@ func (n *Node) CreateElement(name string) Node {
 		Properties: Properties{
 			Id:             "",
 			EventListeners: make(map[string][]func(Event)),
-			Hover:          false,
 			Selected:       []float32{},
 		},
 	}
@@ -440,9 +437,10 @@ func (node *Node) AddEventListener(name string, callback func(Event)) {
 	}
 }
 
-func (node *Node) DispatchEvent(event string) {
-	// I want to use dispatch event to dispatch a scroll event if the user scrolls too far on a container from crop
-	node.Properties.Events = append(node.Properties.Events, event)
+func (node *Node) DispatchEvent(event Event) {
+	for _, v := range node.Properties.EventListeners[event.Name] {
+		v(event)
+	}
 }
 
 func funcInSlice(f func(Event), slice []func(Event)) bool {

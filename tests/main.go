@@ -36,12 +36,12 @@ func main() {
 	// ctx := canvas.GetContext(300, 300)
 
 	// ctx.BeginPath()
-	// // ctx.MoveTo(0, 0)
-	// // ctx.LineTo(100, 100)
-	// ctx.LineWidth = 10
-	// ctx.RoundedRect(10, 10, 100, 100, []int{50, 40})
-	// ctx.FillStyle = color.RGBA{255, 0, 0, 255}
-	// ctx.StrokeStyle = color.RGBA{255, 0, 0, 255}
+	// ctx.MoveTo(0, 0)
+	// ctx.LineTo(100, 100)
+	// ctx.SetLineWidth(10)
+	// ctx.RoundedRect(10, 10, 100, 100, []float64{50, 40, 50, 40})
+	// ctx.SetFillStyle(255, 0, 0, 255)
+	// ctx.SetStrokeStyle(255, 0, 0, 255)
 	// ctx.Stroke()
 	// ctx.ClosePath()
 	// body.AppendChild(&canvas)

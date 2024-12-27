@@ -49,8 +49,8 @@ var mastercss string
 type Window struct {
 	CSS      cstyle.CSS
 	Document element.Node
-	Adapter  *adapter.Adapter
-	Scripts  scripts.Scripts
+
+	Scripts scripts.Scripts
 }
 
 func (window *Window) Path(path string) {
@@ -70,8 +70,9 @@ func (window *Window) Path(path string) {
 
 func New(adapterFunction *adapter.Adapter) Window {
 	css := cstyle.CSS{
-		Width:  800,
-		Height: 450,
+		Width:   800,
+		Height:  450,
+		Adapter: adapterFunction,
 	}
 
 	css.StyleTag(mastercss)
@@ -103,7 +104,6 @@ func New(adapterFunction *adapter.Adapter) Window {
 		CSS:      css,
 		Document: document,
 		Scripts:  s,
-		Adapter:  adapterFunction,
 	}
 }
 
@@ -206,8 +206,8 @@ func Open(data *Window, width, height int) {
 	data.Document.Style["width"] = strconv.Itoa(int(width)) + "px"
 	data.Document.Style["height"] = strconv.Itoa(int(height)) + "px"
 
-	data.Adapter.Library = &shelf
-	data.Adapter.Init(width, height)
+	data.CSS.Adapter.Library = &shelf
+	data.CSS.Adapter.Init(width, height)
 
 	state := map[string]element.State{}
 	state["ROOT"] = element.State{
@@ -226,7 +226,7 @@ func Open(data *Window, width, height int) {
 	}
 	fid := "Georgia 16px false false"
 	if data.CSS.Fonts[fid] == nil {
-		f, _ := font.LoadFont("Georgia", 16, 400, false)
+		f, _ := font.LoadFont("Georgia", 16, 400, false, &data.CSS.Adapter.FileSystem)
 		data.CSS.Fonts[fid] = f
 	}
 
@@ -234,7 +234,7 @@ func Open(data *Window, width, height int) {
 
 	monitor := events.Monitor{
 		EventMap: make(map[string]element.Event),
-		Adapter:  data.Adapter,
+		Adapter:  data.CSS.Adapter,
 		State:    &state,
 		CSS:      &data.CSS,
 		Focus: events.Focus{
@@ -245,57 +245,57 @@ func Open(data *Window, width, height int) {
 		},
 	}
 
-	data.Adapter.AddEventListener("windowresize", func(e element.Event) {
+	data.CSS.Adapter.AddEventListener("windowresize", func(e element.Event) {
 		wh := e.Data.(map[string]int)
 		newWidth = wh["width"]
 		newHeight = wh["height"]
 	})
 
-	data.Adapter.AddEventListener("close", func(e element.Event) {
+	data.CSS.Adapter.AddEventListener("close", func(e element.Event) {
 		shouldStop = true
 	})
 
 	currentEvent := events.EventData{}
 
-	data.Adapter.AddEventListener("keydown", func(e element.Event) {
+	data.CSS.Adapter.AddEventListener("keydown", func(e element.Event) {
 		currentEvent.Key = e.Data.(int)
 		currentEvent.KeyState = true
 		monitor.GetEvents(&currentEvent)
 	})
-	data.Adapter.AddEventListener("keyup", func(e element.Event) {
+	data.CSS.Adapter.AddEventListener("keyup", func(e element.Event) {
 		currentEvent.Key = 0
 		currentEvent.KeyState = false
 		monitor.GetEvents(&currentEvent)
 	})
 
-	data.Adapter.AddEventListener("mousemove", func(e element.Event) {
+	data.CSS.Adapter.AddEventListener("mousemove", func(e element.Event) {
 		pos := e.Data.([]int)
 		currentEvent.Position = pos
 		monitor.GetEvents(&currentEvent)
 	})
 
-	data.Adapter.AddEventListener("scroll", func(e element.Event) {
+	data.CSS.Adapter.AddEventListener("scroll", func(e element.Event) {
 		currentEvent.Scroll = e.Data.(int)
 		monitor.GetEvents(&currentEvent)
 		currentEvent.Scroll = 0
 	})
 
-	data.Adapter.AddEventListener("mousedown", func(e element.Event) {
+	data.CSS.Adapter.AddEventListener("mousedown", func(e element.Event) {
 		currentEvent.Click = true
 		monitor.GetEvents(&currentEvent)
 	})
 
-	data.Adapter.AddEventListener("mouseup", func(e element.Event) {
+	data.CSS.Adapter.AddEventListener("mouseup", func(e element.Event) {
 		currentEvent.Click = false
 		monitor.GetEvents(&currentEvent)
 	})
 
-	data.Adapter.AddEventListener("contextmenudown", func(e element.Event) {
+	data.CSS.Adapter.AddEventListener("contextmenudown", func(e element.Event) {
 		currentEvent.Context = true
 		monitor.GetEvents(&currentEvent)
 	})
 
-	data.Adapter.AddEventListener("contextmenuup", func(e element.Event) {
+	data.CSS.Adapter.AddEventListener("contextmenuup", func(e element.Event) {
 		currentEvent.Context = true
 		monitor.GetEvents(&currentEvent)
 	})
@@ -334,11 +334,11 @@ func Open(data *Window, width, height int) {
 				Height: float32(height),
 			}
 
-			data.CSS.ComputeNodeStyle(newDoc, &state, &shelf)
+			data.CSS.ComputeNodeStyle(newDoc, &state)
 
 			rd = data.Render(newDoc, &state, &shelf)
 
-			data.Adapter.Load(rd)
+			data.CSS.Adapter.Load(rd)
 
 			AddHTMLAndAttrs(&data.Document, &state)
 			// AddHTMLAndAttrs(newDoc, &state)
@@ -348,7 +348,7 @@ func Open(data *Window, width, height int) {
 		}
 
 		monitor.RunEvents(data.Document.Children[0])
-		data.Adapter.Render(rd)
+		data.CSS.Adapter.Render(rd)
 	}
 }
 
@@ -425,6 +425,7 @@ func AddHTMLAndAttrs(n *element.Node, state *map[string]element.State) {
 }
 
 func parseHTMLFromFile(path string) ([]string, []string, *html.Node) {
+	// !ISSUE: Remove fs access
 	file, _ := os.Open(path)
 	defer file.Close()
 

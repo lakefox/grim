@@ -2,16 +2,15 @@ package cstyle
 
 import (
 	"fmt"
+	adapter "grim/adapters"
 	"grim/border"
 	"grim/color"
 	"grim/element"
 	"grim/font"
-	"grim/library"
 	"grim/parser"
 	"grim/selector"
 	"grim/utils"
 	"image"
-	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -39,6 +38,7 @@ type CSS struct {
 	Document     *element.Node
 	Fonts        map[string]imgFont.Face
 	StyleMap     map[string][]*parser.StyleMap
+	Adapter      *adapter.Adapter
 }
 
 func (c *CSS) Transform(n *element.Node) *element.Node {
@@ -58,8 +58,8 @@ func (c *CSS) Transform(n *element.Node) *element.Node {
 
 func (c *CSS) StyleSheet(path string) {
 	// Parse the CSS file
-	dat, _ := os.ReadFile(path)
-	styles, styleMaps := parser.ParseCSS(string(dat))
+	data, _ := c.Adapter.FileSystem.ReadFile(path)
+	styles, styleMaps := parser.ParseCSS(string(data))
 
 	if c.StyleMap == nil {
 		c.StyleMap = map[string][]*parser.StyleMap{}
@@ -275,7 +275,8 @@ func (c *CSS) AddTransformer(transformer Transformer) {
 	c.Transformers = append(c.Transformers, transformer)
 }
 
-func (c *CSS) ComputeNodeStyle(n *element.Node, state *map[string]element.State, shelf *library.Shelf) *element.Node {
+func (c *CSS) ComputeNodeStyle(n *element.Node, state *map[string]element.State) *element.Node {
+	shelf := c.Adapter.Library
 	// Head is not renderable
 	if utils.IsParent(*n, "head") {
 		return n
@@ -399,7 +400,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node, state *map[string]element.State,
 
 	if !utils.ChildrenHaveText(n) && len(n.InnerText) > 0 {
 		n.InnerText = strings.TrimSpace(n.InnerText)
-		self = genTextNode(n, state, c, shelf)
+		self = genTextNode(n, state, c)
 	}
 
 	// Load canvas into textures
@@ -429,7 +430,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node, state *map[string]element.State,
 	for i := 0; i < len(n.Children); i++ {
 		v := n.Children[i]
 		v.Parent = n
-		n.Children[i] = c.ComputeNodeStyle(v, state, shelf)
+		n.Children[i] = c.ComputeNodeStyle(v, state)
 		cState := (*state)[n.Children[i].Properties.Id]
 		if style["height"] == "" && style["max-height"] == "" {
 			if v.Style["position"] != "absolute" && cState.Y+cState.Height > childYOffset {
@@ -465,7 +466,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node, state *map[string]element.State,
 	return n
 }
 
-func genTextNode(n *element.Node, state *map[string]element.State, css *CSS, shelf *library.Shelf) element.State {
+func genTextNode(n *element.Node, state *map[string]element.State, css *CSS) element.State {
 	s := *state
 	self := s[n.Properties.Id]
 	parent := s[n.Parent.Properties.Id]
@@ -499,7 +500,7 @@ func genTextNode(n *element.Node, state *map[string]element.State, css *CSS, she
 	fid := n.Style["font-family"] + fmt.Sprint(self.EM, n.Style["font-weight"], italic)
 	if css.Fonts[fid] == nil {
 		weight, _ := strconv.Atoi(n.Style["font-weight"])
-		f, _ := font.LoadFont(n.Style["font-family"], int(self.EM), weight, italic)
+		f, _ := font.LoadFont(n.Style["font-family"], int(self.EM), weight, italic, &css.Adapter.FileSystem)
 		css.Fonts[fid] = f
 	}
 	fnt := css.Fonts[fid]
@@ -564,7 +565,7 @@ func genTextNode(n *element.Node, state *map[string]element.State, css *CSS, she
 	key := text.Text + utils.RGBAtoString(text.Color) + utils.RGBAtoString(text.DecorationColor) + text.Align + text.WordBreak + strconv.Itoa(text.WordSpacing) + strconv.Itoa(text.LetterSpacing) + text.WhiteSpace + strconv.Itoa(text.DecorationThickness) + strconv.Itoa(text.EM)
 	key += strconv.FormatBool(text.Overlined) + strconv.FormatBool(text.Underlined) + strconv.FormatBool(text.LineThrough)
 
-	exists := shelf.Check(key)
+	exists := css.Adapter.Library.Check(key)
 	var width int
 	if exists {
 		lookup := make(map[string]struct{}, len(self.Textures))
@@ -579,7 +580,7 @@ func genTextNode(n *element.Node, state *map[string]element.State, css *CSS, she
 	} else {
 		var data *image.RGBA
 		data, width = font.Render(&text)
-		self.Textures = append(self.Textures, shelf.Set(key, data))
+		self.Textures = append(self.Textures, css.Adapter.Library.Set(key, data))
 	}
 
 	if n.Style["height"] == "" && n.Style["min-height"] == "" {

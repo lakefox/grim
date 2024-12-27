@@ -3,6 +3,8 @@ package adapter
 import (
 	"grim/element"
 	"grim/library"
+	"os"
+	"path/filepath"
 	"sort"
 )
 
@@ -12,12 +14,12 @@ import (
 // + Option 2: at build time fetch all files needed and bundle them
 
 type Adapter struct {
-	Init      func(width int, height int)
-	Render    func(state []element.State)
-	Load      func(state []element.State)
-	events    map[string][]func(element.Event)
-	Library   *library.Shelf
-	FilePaths []string
+	Init       func(width int, height int)
+	Render     func(state []element.State)
+	Load       func(state []element.State)
+	events     map[string][]func(element.Event)
+	Library    *library.Shelf
+	FileSystem FileSystem
 }
 
 func (a *Adapter) AddEventListener(name string, callback func(element.Event)) {
@@ -36,8 +38,28 @@ func (a *Adapter) DispatchEvent(event element.Event) {
 	}
 }
 
-func (a *Adapter) AddFilePath(path string) {
-	a.FilePaths = append(a.FilePaths, path)
+type FileSystem struct {
+	Paths     []string
+	ReadFile  func(path string) ([]byte, error)
+	WriteFile func(path string, data []byte)
+}
+
+func (fs *FileSystem) AddFile(path string) {
+	fs.Paths = append(fs.Paths, path)
+}
+
+func (fs *FileSystem) AddDir(path string) error {
+	// Walk through the directory and collect all file paths
+	err := filepath.Walk(path, func(filePath string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() { // Only add files, not directories
+			fs.Paths = append(fs.Paths, filePath)
+		}
+		return nil
+	})
+	return err
 }
 
 // Levenshtein Distance Function (no external packages)
@@ -92,12 +114,12 @@ type fileWithDistance struct {
 }
 
 // Fuzzy search function that returns the closest matches, sorted by Levenshtein distance
-func (a *Adapter) FindFile(query string) string {
+func (fs *FileSystem) FindFile(query string) string {
 	var fileDistances []fileWithDistance
 
 	// Calculate the Levenshtein distance for each file path
-	for _, path := range a.FilePaths {
-		distance := Levenshtein(query, path)
+	for _, path := range fs.Paths {
+		distance := Levenshtein(query, filepath.Base(path))
 		fileDistances = append(fileDistances, fileWithDistance{path, distance})
 	}
 
