@@ -3,7 +3,6 @@ package crop
 import (
 	"grim/cstyle"
 	"grim/element"
-	"strings"
 )
 
 func Init() cstyle.Plugin {
@@ -15,8 +14,7 @@ func Init() cstyle.Plugin {
 				return false
 			}
 		},
-		Level: 1,
-		Handler: func(n *element.Node, state *map[string]element.State) {
+		Handler: func(n *element.Node, state *map[string]element.State, c *cstyle.CSS) {
 			// !TODO: Needs to find crop bounds for X
 			s := *state
 			self := s[n.Properties.Id]
@@ -106,33 +104,6 @@ func updateChildren(n *element.Node, state *map[string]element.State, offset int
 	for _, v := range n.Children {
 		updateChildren(v, state, offset)
 	}
-}
-
-func findBounds(n *element.Node, state *map[string]element.State) (float32, float32) {
-	s := *state
-	var minY, maxY float32
-	minY = 10e10
-	for _, v := range n.Children {
-		if strings.HasPrefix(v.TagName, "grim") {
-			continue
-		}
-		child := s[v.Properties.Id]
-		if child.Y < minY {
-			minY = child.Y
-		}
-		if child.Y+child.Height > maxY {
-			maxY = child.Y + child.Height
-		}
-		nMinY, nMaxY := findBounds(v, state)
-
-		if nMinY < minY {
-			minY = nMinY
-		}
-		if nMaxY > maxY {
-			maxY = nMaxY
-		}
-	}
-	return minY, maxY
 }
 
 func findScroll(n *element.Node) int {

@@ -24,8 +24,7 @@ func Init() cstyle.Plugin {
 
 			return matches
 		},
-		Level: 4,
-		Handler: func(n *element.Node, state *map[string]element.State) {
+		Handler: func(n *element.Node, state *map[string]element.State, c *cstyle.CSS) {
 			s := *state
 			self := s[n.Properties.Id]
 
@@ -157,7 +156,7 @@ func Init() cstyle.Plugin {
 
 						(*state)[v.Properties.Id] = vState
 						deInline(v, state)
-						applyInline(v, state)
+						applyInline(v, state, c)
 						applyBlock(v, state)
 						_, h := getInnerSize(v, state)
 						h = utils.Max(h, vState.Height)
@@ -228,7 +227,7 @@ func Init() cstyle.Plugin {
 
 						(*state)[v.Properties.Id] = vState
 						deInline(v, state)
-						applyInline(v, state)
+						applyInline(v, state, c)
 						applyBlock(v, state)
 						_, h := getInnerSize(v, state)
 						h = utils.Max(h, vState.Height)
@@ -485,17 +484,17 @@ func deInline(n *element.Node, state *map[string]element.State) {
 
 }
 
-func applyInline(n *element.Node, state *map[string]element.State) {
+func applyInline(n *element.Node, state *map[string]element.State, c *cstyle.CSS) {
 	pl := inline.Init()
 	for i := 0; i < len(n.Children); i++ {
 		v := n.Children[i]
 
 		if len(v.Children) > 0 {
-			applyInline(v, state)
+			applyInline(v, state, c)
 		}
 
 		if pl.Selector(v) {
-			pl.Handler(v, state)
+			pl.Handler(v, state, c)
 		}
 	}
 }

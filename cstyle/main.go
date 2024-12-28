@@ -11,17 +11,17 @@ import (
 	"grim/selector"
 	"grim/utils"
 	"image"
-	"sort"
 	"strconv"
 	"strings"
+
+	"golang.org/x/image/draw"
 
 	imgFont "golang.org/x/image/font"
 )
 
 type Plugin struct {
 	Selector func(*element.Node) bool
-	Level    int
-	Handler  func(*element.Node, *map[string]element.State)
+	Handler  func(*element.Node, *map[string]element.State, *CSS)
 }
 
 type Transformer struct {
@@ -39,6 +39,7 @@ type CSS struct {
 	Fonts        map[string]imgFont.Face
 	StyleMap     map[string][]*parser.StyleMap
 	Adapter      *adapter.Adapter
+	Path         string
 }
 
 func (c *CSS) Transform(n *element.Node) *element.Node {
@@ -263,12 +264,7 @@ func (c *CSS) GetStyles(n *element.Node) (map[string]string, map[string]map[stri
 }
 
 func (c *CSS) AddPlugin(plugin Plugin) {
-	plugins := c.Plugins
-	plugins = append(plugins, plugin)
-	sort.Slice(plugins, func(i, j int) bool {
-		return plugins[i].Level < plugins[j].Level
-	})
-	c.Plugins = plugins
+	c.Plugins = append(c.Plugins, plugin)
 }
 
 func (c *CSS) AddTransformer(transformer Transformer) {
@@ -454,6 +450,13 @@ func (c *CSS) ComputeNodeStyle(n *element.Node, state *map[string]element.State)
 					found = true
 				}
 			}
+
+			if n.Canvas.RGBA.Bounds().Dx() != int(self.Width) || n.Canvas.RGBA.Bounds().Dy() != int(self.Height) {
+				resized := image.NewRGBA(image.Rect(0, 0, int(self.Width), int(self.Height)))
+				draw.CatmullRom.Scale(resized, resized.Bounds(), n.Canvas.RGBA, n.Canvas.RGBA.Bounds(), draw.Over, &draw.Options{})
+				n.Canvas.RGBA = resized
+			}
+
 			can := shelf.Set(key, n.Canvas.RGBA)
 			if !found {
 				self.Textures = append(self.Textures, can)
@@ -500,7 +503,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node, state *map[string]element.State)
 
 	for _, v := range plugins {
 		if v.Selector(n) {
-			v.Handler(n, state)
+			v.Handler(n, state, c)
 		}
 	}
 

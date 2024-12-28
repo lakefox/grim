@@ -277,6 +277,8 @@ func ConvertToPixels(value string, em, max float32) float32 {
 					return float32(numericValue) * em
 				case "%", "vw", "vh":
 					return float32(numericValue) * (max / 100)
+				case "pt":
+					return (float32(numericValue) * 96) / 72
 				}
 			}
 			return float32(numericValue) * float32(factor)

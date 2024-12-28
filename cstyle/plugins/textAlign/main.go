@@ -19,8 +19,7 @@ func Init() cstyle.Plugin {
 			}
 			return matches
 		},
-		Level: 3,
-		Handler: func(n *element.Node, state *map[string]element.State) {
+		Handler: func(n *element.Node, state *map[string]element.State, c *cstyle.CSS) {
 			s := *state
 			self := s[n.Properties.Id]
 			minX := float32(9e15)

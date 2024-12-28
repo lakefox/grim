@@ -16,6 +16,7 @@ import (
 	"grim/cstyle/transformers/background"
 	"grim/cstyle/transformers/banda"
 	flexprep "grim/cstyle/transformers/flex"
+	img "grim/cstyle/transformers/image"
 	marginblock "grim/cstyle/transformers/margin-block"
 	"grim/cstyle/transformers/ol"
 	"grim/cstyle/transformers/scrollbar"
@@ -63,6 +64,8 @@ func (window *Window) Path(path string) {
 		window.CSS.StyleTag(v)
 	}
 
+	window.CSS.Path = filepath.Dir(path)
+
 	CreateNode(htmlNodes, &window.Document)
 }
 
@@ -88,6 +91,7 @@ func New(adapterFunction *adapter.Adapter) Window {
 	css.AddTransformer(ol.Init())
 	css.AddTransformer(text.Init())
 	css.AddTransformer(background.Init())
+	css.AddTransformer(img.Init())
 
 	el := element.Node{}
 	document := el.CreateElement("ROOT")
@@ -423,7 +427,6 @@ func AddHTMLAndAttrs(n *element.Node, state *map[string]element.State) {
 }
 
 func parseHTMLFromFile(path string, fs adapter.FileSystem) ([]string, []string, *html.Node) {
-	// !ISSUE: Remove fs access
 	file, _ := fs.ReadFile(path)
 
 	htmlContent := removeHTMLComments(string(file))

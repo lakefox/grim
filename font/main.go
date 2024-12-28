@@ -166,8 +166,8 @@ func LoadFont(fontName string, fontSize int, bold string, italic bool, fs *adapt
 	}
 
 	options := truetype.Options{
-		Size:    float64(fontSize),
-		DPI:     65,
+		Size:    (float64(fontSize) * 72) / 96,
+		DPI:     96,
 		Hinting: font.HintingNone,
 	}
 

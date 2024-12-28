@@ -20,8 +20,7 @@ func Init() cstyle.Plugin {
 			}
 			return matches
 		},
-		Level: 2,
-		Handler: func(n *element.Node, state *map[string]element.State) {
+		Handler: func(n *element.Node, state *map[string]element.State, c *cstyle.CSS) {
 			s := *state
 			self := s[n.Properties.Id]
 			parent := s[n.Parent.Properties.Id]
