@@ -1,7 +1,6 @@
 package font
 
 import (
-	"fmt"
 	adapter "grim/adapters"
 	"grim/canvas"
 	"grim/element"
@@ -74,12 +73,10 @@ func GetFontPath(fontName string, bold string, italic bool, fs *adapter.FileSyst
 		}
 
 		if fontPath != "" {
-			fmt.Println(fontPath)
 			return fontPath
 		}
 
 	}
-	fmt.Println(findFont("Georgia", bold, italic, paths))
 	// Default to serif if none of the specified fonts are found
 	return findFont("Georgia", bold, italic, paths)
 }
@@ -156,8 +153,6 @@ func LoadFont(fontName string, fontSize int, bold string, italic bool, fs *adapt
 	// Use a TrueType font file for the specified font name
 	fontFile := GetFontPath(fontName, bold, italic, fs)
 
-	// fontFile := fs.FindFile(fontName)
-
 	// Read the font file
 	fontData, err := fs.ReadFile(fontFile)
 	if err != nil {
@@ -171,9 +166,8 @@ func LoadFont(fontName string, fontSize int, bold string, italic bool, fs *adapt
 	}
 
 	options := truetype.Options{
-		Size: float64(fontSize),
-		// !ISSUE: Play with this
-		DPI:     70,
+		Size:    float64(fontSize),
+		DPI:     65,
 		Hinting: font.HintingNone,
 	}
 
@@ -274,7 +268,6 @@ func GetMetaData(n *element.Node, state *map[string]element.State, font *font.Fa
 }
 
 func Render(text *MetaData) (*image.RGBA, int) {
-	// var data *image.RGBA
 	if text.LineHeight == 0 {
 		text.LineHeight = text.EM + 3
 	}
@@ -282,7 +275,6 @@ func Render(text *MetaData) (*image.RGBA, int) {
 	width, _ := MeasureText(text, text.Text+" ")
 
 	ctx := canvas.NewCanvas(width, text.LineHeight)
-	ctx.Context.Clear()
 	r, g, b, a := text.Color.RGBA()
 
 	ctx.SetFillStyle(uint8(r), uint8(g), uint8(b), uint8(a))

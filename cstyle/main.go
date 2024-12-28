@@ -434,7 +434,6 @@ func (c *CSS) ComputeNodeStyle(n *element.Node, state *map[string]element.State)
 			data, width = font.Render(metadata)
 			self.Textures = append(self.Textures, c.Adapter.Library.Set(key, data))
 		}
-		// 	self.Textures = append(self.Textures, css.Adapter.Library.Set(key, data))
 
 		if n.Style["height"] == "" && n.Style["min-height"] == "" {
 			self.Height = float32(metadata.LineHeight)

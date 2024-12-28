@@ -8,11 +8,6 @@ import (
 	"sort"
 )
 
-// !TODO: For things like fonts the file system interaction works fine, but if you want to run grim on a pi pico it doesn't have the file system int like
-// + computers have
-// + Option 1: make a file system adapter where authors can control how data is read
-// + Option 2: at build time fetch all files needed and bundle them
-
 type Adapter struct {
 	Init       func(width int, height int)
 	Render     func(state []element.State)

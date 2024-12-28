@@ -423,7 +423,7 @@ func genDashedBorder(ctx *canvas.Canvas, width float64, v1, v2 float64, border, 
 	ctx.Clip()
 
 	ctx.Context.SetLineCapSquare()
-	// !ISSUE: Doesn't fill clipped area
+
 	ctx.SetLineWidth(float64(border.Width))
 	ctx.SetLineDash(float64(border.Width), float64(border.Width)*2)
 	genTopLine(ctx, s1w, s2w, float64(border.Width), v1, v2, width, float64(border.Width)/2, float64(border.Width)/2)
@@ -444,7 +444,6 @@ func genDottedBorder(ctx *canvas.Canvas, width float64, v1, v2 float64, border, 
 	ctx.Stroke()
 }
 
-// !ISSUE: Needs work
 func genDoubleBorder(ctx *canvas.Canvas, width float64, v1, v2 float64, border, side1, side2 element.BorderSide) {
 	s1w := math.Max(float64(side1.Width), 1)
 	s2w := math.Max(float64(side2.Width), 1)

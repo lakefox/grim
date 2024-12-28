@@ -75,7 +75,6 @@ func Init() cstyle.Plugin {
 					child.Hidden = false
 					yCrop := 0
 					height := int(child.Height)
-					// !ISSUE: Text got messed up after the cropping? also in the raylib adapter with add the drawrect crop thing
 					if child.Y-float32(scrollTop) < (self.Y) {
 						yCrop = int((self.Y) - (child.Y - float32(scrollTop)))
 						height = int(child.Height) - yCrop

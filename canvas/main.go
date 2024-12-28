@@ -230,6 +230,7 @@ func (c *Canvas) StrokeText(text string, x, y float64) {
 	c.Context.Stroke()
 }
 func (c *Canvas) SetFont(fontPath string, fontSize float64) error {
+	// !ISSUE: Breaks the fs rulesz
 	font, err := gg.LoadFontFace(fontPath, fontSize)
 	if err != nil {
 		return err

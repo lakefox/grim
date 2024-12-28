@@ -1,7 +1,6 @@
 package grim
 
 import (
-	"bufio"
 	"bytes"
 	"crypto/sha256"
 	_ "embed"
@@ -32,7 +31,6 @@ import (
 	"grim/events"
 	"grim/utils"
 	"net/url"
-	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -55,7 +53,7 @@ type Window struct {
 
 func (window *Window) Path(path string) {
 
-	styleSheets, styleTags, htmlNodes := parseHTMLFromFile(path)
+	styleSheets, styleTags, htmlNodes := parseHTMLFromFile(path, window.CSS.Adapter.FileSystem)
 
 	for _, v := range styleSheets {
 		window.CSS.StyleSheet(v)
@@ -424,19 +422,11 @@ func AddHTMLAndAttrs(n *element.Node, state *map[string]element.State) {
 	}
 }
 
-func parseHTMLFromFile(path string) ([]string, []string, *html.Node) {
+func parseHTMLFromFile(path string, fs adapter.FileSystem) ([]string, []string, *html.Node) {
 	// !ISSUE: Remove fs access
-	file, _ := os.Open(path)
-	defer file.Close()
+	file, _ := fs.ReadFile(path)
 
-	scanner := bufio.NewScanner(file)
-	var htmlContent string
-
-	for scanner.Scan() {
-		htmlContent += scanner.Text() + "\n"
-	}
-
-	htmlContent = removeHTMLComments(htmlContent)
+	htmlContent := removeHTMLComments(string(file))
 	htmlContent = string(ConvertSelfClosingTags([]byte(htmlContent)))
 
 	doc, _ := html.Parse(strings.NewReader(encapsulateText(removeWhitespaceBetweenTags(htmlContent))))
