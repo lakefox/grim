@@ -912,23 +912,6 @@ func justifyRow(rows [][]int, n *element.Node, state *map[string]element.State, 
 					(*state)[n.Children[i].Properties.Id] = vState
 				}
 			}
-			//  else {
-
-			// this is/was causing issues, removed and it fixed its self
-
-			// if there is one element move left
-			// vState := s[n.Children[(row[1]-1)-row[0]].Properties.Id]
-			// var offset float32
-
-			// if !reversed {
-			// 	offset = parent.X + parent.Padding.Left + f.Margin.Left + f.Border.Width
-			// 	propagateOffsets(&n.Children[(row[1]-1)-row[0]], vState.X, vState.Y, offset, vState.Y, state)
-			// 	vState.X = offset
-
-			// 	(*state)[n.Children[(row[1]-1)-row[0]].Properties.Id] = vState
-			// }
-
-			// }
 
 		} else if justify == "space-evenly" {
 			// get width of row then center (by getting last x + w + mr + b)

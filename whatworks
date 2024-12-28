@@ -12,9 +12,9 @@ text decroation
 bold underline overline italic
 ul
 ol
+scroll
+borders
 
 
 needs: 
-scroll
-borders
 inline-block

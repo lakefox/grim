@@ -10,8 +10,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-
-	"golang.org/x/image/font"
 )
 
 type Node struct {
@@ -139,36 +137,6 @@ type BorderRadius struct {
 	TopRight    float32
 	BottomLeft  float32
 	BottomRight float32
-}
-
-type Text struct {
-	Font                *font.Face
-	Color               ic.RGBA
-	Text                string
-	Underlined          bool
-	Overlined           bool
-	LineThrough         bool
-	DecorationColor     ic.RGBA
-	DecorationThickness int
-	Align               string
-	Indent              int // very low priority
-	LetterSpacing       int
-	LineHeight          int
-	WordSpacing         int
-	WhiteSpace          string
-	Shadows             []Shadow // need
-	Width               int
-	WordBreak           string
-	EM                  int
-	X                   int
-	LoadedFont          string
-}
-
-type Shadow struct {
-	X     int
-	Y     int
-	Blur  int
-	Color ic.RGBA
 }
 
 func (n *Node) GetAttribute(name string) string {

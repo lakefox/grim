@@ -37,19 +37,6 @@ func Init() cstyle.Transformer {
 
 				italic := false
 
-				if n.Style["font-weight"] == "bold" {
-					n.Style["font-weight"] = "700"
-				}
-				if n.Style["font-weight"] == "bolder" {
-					n.Style["font-weight"] = "900"
-				}
-				if n.Style["font-weight"] == "lighter" {
-					n.Style["font-weight"] = "200"
-				}
-				if n.Style["font-weight"] == "normal" {
-					n.Style["font-weight"] = "400"
-				}
-
 				if n.Style["font-style"] == "italic" {
 					italic = true
 				}
@@ -63,12 +50,11 @@ func Init() cstyle.Transformer {
 
 				fid := n.Style["font-family"] + fmt.Sprint(em, n.Style["font-weight"], italic)
 				if c.Fonts[fid] == nil {
-					weight, _ := strconv.Atoi(n.Style["font-weight"])
-					f, _ := font.LoadFont(n.Style["font-family"], int(em), weight, italic, &c.Adapter.FileSystem)
+					f, _ := font.LoadFont(n.Style["font-family"], int(em), n.Style["font-weight"], italic, &c.Adapter.FileSystem)
 					c.Fonts[fid] = f
 				}
 				fnt := c.Fonts[fid]
-				w := font.MeasureText(&element.Text{Font: &fnt}, strconv.Itoa(i+1)+".")
+				w, _ := font.MeasureText(&font.MetaData{Font: &fnt}, strconv.Itoa(i+1)+".")
 				widths = append(widths, w)
 				if w > maxOS {
 					maxOS = w

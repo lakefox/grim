@@ -61,7 +61,7 @@ func Init() cstyle.Transformer {
 
 			// Y scrollbar
 
-			if (n.Style["overflow-y"] == "scroll" || n.Style["overflow-y"] == "auto") && n.ScrollHeight > 0 {
+			if (n.Style["overflow-y"] == "scroll" || n.Style["overflow-y"] == "auto") && ((n.ScrollHeight > int(c.Height) && n.TagName == "html") || n.ScrollHeight > 0) {
 				scrollbar := n.CreateElement("grim-track")
 
 				scrollbar.Style["position"] = "absolute"

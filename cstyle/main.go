@@ -400,7 +400,49 @@ func (c *CSS) ComputeNodeStyle(n *element.Node, state *map[string]element.State)
 
 	if !utils.ChildrenHaveText(n) && len(n.InnerText) > 0 {
 		n.InnerText = strings.TrimSpace(n.InnerText)
-		self = genTextNode(n, state, c)
+		italic := false
+
+		if n.Style["font-style"] == "italic" {
+			italic = true
+		}
+
+		if c.Fonts == nil {
+			c.Fonts = map[string]imgFont.Face{}
+		}
+		fid := n.Style["font-family"] + fmt.Sprint(self.EM, n.Style["font-weight"], italic)
+		if c.Fonts[fid] == nil {
+			f, _ := font.LoadFont(n.Style["font-family"], int(self.EM), n.Style["font-weight"], italic, &c.Adapter.FileSystem)
+			c.Fonts[fid] = f
+		}
+		fnt := c.Fonts[fid]
+		metadata := font.GetMetaData(n, state, &fnt)
+		key := font.Key(metadata)
+		exists := c.Adapter.Library.Check(key)
+		var width int
+		if exists {
+			lookup := make(map[string]struct{}, len(self.Textures))
+			for _, v := range self.Textures {
+				lookup[v] = struct{}{}
+			}
+
+			if _, found := lookup[key]; !found {
+				self.Textures = append(self.Textures, key)
+			}
+			width, _ = font.MeasureText(metadata, metadata.Text+" ")
+		} else {
+			var data *image.RGBA
+			data, width = font.Render(metadata)
+			self.Textures = append(self.Textures, c.Adapter.Library.Set(key, data))
+		}
+		// 	self.Textures = append(self.Textures, css.Adapter.Library.Set(key, data))
+
+		if n.Style["height"] == "" && n.Style["min-height"] == "" {
+			self.Height = float32(metadata.LineHeight)
+		}
+
+		if n.Style["width"] == "" && n.Style["min-width"] == "" {
+			self.Width = float32(width)
+		}
 	}
 
 	// Load canvas into textures
@@ -464,132 +506,4 @@ func (c *CSS) ComputeNodeStyle(n *element.Node, state *map[string]element.State)
 	}
 
 	return n
-}
-
-func genTextNode(n *element.Node, state *map[string]element.State, css *CSS) element.State {
-	s := *state
-	self := s[n.Properties.Id]
-	parent := s[n.Parent.Properties.Id]
-
-	self.Textures = []string{}
-
-	text := element.Text{}
-
-	italic := false
-
-	if n.Style["font-weight"] == "bold" {
-		n.Style["font-weight"] = "700"
-	}
-	if n.Style["font-weight"] == "bolder" {
-		n.Style["font-weight"] = "900"
-	}
-	if n.Style["font-weight"] == "lighter" {
-		n.Style["font-weight"] = "200"
-	}
-	if n.Style["font-weight"] == "normal" {
-		n.Style["font-weight"] = "400"
-	}
-
-	if n.Style["font-style"] == "italic" {
-		italic = true
-	}
-
-	if css.Fonts == nil {
-		css.Fonts = map[string]imgFont.Face{}
-	}
-	fid := n.Style["font-family"] + fmt.Sprint(self.EM, n.Style["font-weight"], italic)
-	if css.Fonts[fid] == nil {
-		weight, _ := strconv.Atoi(n.Style["font-weight"])
-		f, _ := font.LoadFont(n.Style["font-family"], int(self.EM), weight, italic, &css.Adapter.FileSystem)
-		css.Fonts[fid] = f
-	}
-	fnt := css.Fonts[fid]
-	text.Font = &fnt
-
-	letterSpacing := utils.ConvertToPixels(n.Style["letter-spacing"], self.EM, parent.Width)
-	wordSpacing := utils.ConvertToPixels(n.Style["word-spacing"], self.EM, parent.Width)
-	lineHeight := utils.ConvertToPixels(n.Style["line-height"], self.EM, parent.Width)
-
-	if lineHeight == 0 {
-		lineHeight = self.EM + 3
-	}
-
-	text.LineHeight = int(lineHeight)
-	text.WordSpacing = int(wordSpacing)
-	text.LetterSpacing = int(letterSpacing)
-	wb := " "
-
-	if n.Style["word-wrap"] == "break-word" {
-		wb = ""
-	}
-
-	if n.Style["text-wrap"] == "wrap" || n.Style["text-wrap"] == "balance" {
-		wb = ""
-	}
-
-	var dt float32
-
-	if n.Style["text-decoration-thickness"] == "auto" || n.Style["text-decoration-thickness"] == "" {
-		dt = self.EM / 7
-	} else {
-		dt = utils.ConvertToPixels(n.Style["text-decoration-thickness"], self.EM, parent.Width)
-	}
-
-	col := color.Parse(n.Style, "font")
-
-	if n.Style["text-decoration-color"] == "" {
-		n.Style["text-decoration-color"] = n.Style["color"]
-	}
-
-	// self.Color = col
-
-	text.Color = col
-	text.DecorationColor = color.Parse(n.Style, "decoration")
-	text.Align = n.Style["text-align"]
-	text.WordBreak = wb
-	text.WordSpacing = int(wordSpacing)
-	text.LetterSpacing = int(letterSpacing)
-	text.WhiteSpace = n.Style["white-space"]
-	text.DecorationThickness = int(dt)
-	text.Overlined = n.Style["text-decoration"] == "overline"
-	text.Underlined = n.Style["text-decoration"] == "underline"
-	text.LineThrough = n.Style["text-decoration"] == "linethrough"
-	text.EM = int(self.EM)
-	text.Width = int(parent.Width)
-	text.Text = n.InnerText
-	// text.Last = n.GetAttribute("last") == "true"
-
-	if n.Style["word-spacing"] == "" {
-		text.WordSpacing = font.MeasureSpace(&text)
-	}
-	key := text.Text + utils.RGBAtoString(text.Color) + utils.RGBAtoString(text.DecorationColor) + text.Align + text.WordBreak + strconv.Itoa(text.WordSpacing) + strconv.Itoa(text.LetterSpacing) + text.WhiteSpace + strconv.Itoa(text.DecorationThickness) + strconv.Itoa(text.EM)
-	key += strconv.FormatBool(text.Overlined) + strconv.FormatBool(text.Underlined) + strconv.FormatBool(text.LineThrough)
-
-	exists := css.Adapter.Library.Check(key)
-	var width int
-	if exists {
-		lookup := make(map[string]struct{}, len(self.Textures))
-		for _, v := range self.Textures {
-			lookup[v] = struct{}{}
-		}
-
-		if _, found := lookup[key]; !found {
-			self.Textures = append(self.Textures, key)
-		}
-		width = font.MeasureText(&text, text.Text+" ")
-	} else {
-		var data *image.RGBA
-		data, width = font.Render(&text)
-		self.Textures = append(self.Textures, css.Adapter.Library.Set(key, data))
-	}
-
-	if n.Style["height"] == "" && n.Style["min-height"] == "" {
-		self.Height = float32(text.LineHeight)
-	}
-
-	if n.Style["width"] == "" && n.Style["min-width"] == "" {
-		self.Width = float32(width)
-	}
-
-	return self
 }

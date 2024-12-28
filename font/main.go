@@ -3,170 +3,156 @@ package font
 import (
 	"fmt"
 	adapter "grim/adapters"
+	"grim/canvas"
 	"grim/element"
+	"grim/utils"
 	"image"
 	"image/color"
-	"image/draw"
-	"runtime"
-	"sort"
+	"path/filepath"
+	"regexp"
+	"strconv"
 	"strings"
+
+	cc "grim/color"
 
 	"github.com/golang/freetype/truetype"
 	"golang.org/x/image/font"
-	"golang.org/x/image/math/fixed"
 )
 
-func sortByLength(strings []string) []string {
-	sort.Slice(strings, func(i, j int) bool {
-		return len(strings[i]) < len(strings[j])
-	})
-	return strings
+type MetaData struct {
+	Font                *font.Face
+	Color               color.RGBA
+	Text                string
+	Underlined          bool
+	Overlined           bool
+	LineThrough         bool
+	DecorationColor     color.RGBA
+	DecorationThickness int
+	Align               string
+	Indent              int // very low priority
+	LetterSpacing       int
+	LineHeight          int
+	WordSpacing         int
+	WhiteSpace          string
+	Shadows             []Shadow // need
+	Width               int
+	WordBreak           string
+	EM                  int
+	X                   int
+	UnderlineOffset     int
+}
+
+type Shadow struct {
+	X     int
+	Y     int
+	Blur  int
+	Color color.RGBA
 }
 
 // LoadSystemFont loads a font from the system fonts directory or loads a specific font by name
-func GetFontPath(fontName string, bold int, italic bool, fs *adapter.FileSystem) string {
+func GetFontPath(fontName string, bold string, italic bool, fs *adapter.FileSystem) string {
 	if len(fontName) == 0 {
 		fontName = "serif"
 	}
 
 	fonts := strings.Split(fontName, ",")
-	paths := sortByLength(fs.Paths)
+	paths := fs.Paths
 	for _, font := range fonts {
 		font = strings.TrimSpace(font)
-		fontPath := tryLoadSystemFontWithBestWeight(font, bold, italic, paths)
-
-		if fontPath != "" {
-			return fontPath
-		}
+		var fontPath string
 
 		// Check special font families only if it's the first font in the list
 		switch font {
 		case "sans-serif":
-			fontPath = tryLoadSystemFontWithBestWeight("Arial", bold, italic, paths)
+			fontPath = findFont("Arial", bold, italic, paths)
 		case "monospace":
-			fontPath = tryLoadSystemFontWithBestWeight("Andale Mono", bold, italic, paths)
+			fontPath = findFont("Andale Mono", bold, italic, paths)
 		case "serif":
-			fontPath = tryLoadSystemFontWithBestWeight("Georgia", bold, italic, paths)
+			fontPath = findFont("Georgia", bold, italic, paths)
+		default:
+			fontPath = findFont(font, bold, italic, paths)
 		}
 
-		fmt.Println(fontPath)
-
 		if fontPath != "" {
+			fmt.Println(fontPath)
 			return fontPath
 		}
 
 	}
-
+	fmt.Println(findFont("Georgia", bold, italic, paths))
 	// Default to serif if none of the specified fonts are found
-	return tryLoadSystemFontWithBestWeight("Georgia", bold, italic, paths)
+	return findFont("Georgia", bold, italic, paths)
 }
 
-func tryLoadSystemFontWithBestWeight(fontName string, desiredWeight int, italic bool, paths []string) string {
-	font := fontName
-	if italic {
-		font += " Italic"
-	}
-	slash := "/"
-
-	if runtime.GOOS == "windows" {
-		slash = "\\"
-	}
-
-	availableWeights := getAvailableWeights(fontName, italic, paths)
-	closestWeight := findClosestWeight(availableWeights, desiredWeight)
-
-	// Get the closest weight name and attempt to load the font
-	weightName := getWeightName(closestWeight)
-	fontWithWeight := fontName + " " + weightName
-	fontWithWeight = strings.TrimSpace(fontWithWeight)
-	if italic {
-		fontWithWeight += " Italic"
-	}
-
+func findFont(name string, bold string, italic bool, paths []string) string {
+	namePattern := `(?i)\b` + regexp.QuoteMeta(strings.ToLower(name)) + `\b` // Match 'name' as a word, case-insensitive
 	for _, v := range paths {
-		if strings.Contains(strings.ToLower(v), strings.ToLower(slash+fontWithWeight)) {
-			return v
+		fileName := filepath.Base(strings.ToLower(v))
+		matched, _ := regexp.MatchString(namePattern, fileName)
+		if matched {
+			weightName := GetWeightName(bold)
+			if bold == "" {
+				wns := []string{"thin",
+					"extralight",
+					"light",
+					"medium",
+					"semibold",
+					"bold",
+					"extrabold",
+					"black"}
+				doesContain := false
+				for _, wn := range wns {
+					if strings.Contains(fileName, wn) {
+						doesContain = true
+					}
+				}
+				if doesContain {
+					continue
+				}
+			}
+			if !strings.Contains(fileName, weightName) {
+				continue
+			}
+			if italic {
+				if strings.Contains(fileName, "italic") {
+					return v
+				}
+			} else {
+				if !strings.Contains(fileName, "italic") {
+					return v
+				}
+			}
 		}
 	}
-
 	return ""
 }
 
-func getAvailableWeights(fontName string, italic bool, paths []string) []int {
-	weightMappings := []int{100, 200, 300, 400, 500, 600, 700, 800, 900}
-	availableWeights := []int{}
-
-	for _, weight := range weightMappings {
-		weightName := getWeightName(weight)
-		fontWithWeight := strings.TrimSpace(fontName + " " + weightName)
-		if italic {
-			fontWithWeight += " Italic"
-		}
-		if tryLoadFontExists(fontWithWeight, paths) {
-			availableWeights = append(availableWeights, weight)
-		}
-	}
-
-	return availableWeights
-}
-
-// var allFonts []string
-
-func tryLoadFontExists(fontWithWeight string, paths []string) bool {
-	slash := "/"
-	if runtime.GOOS == "windows" {
-		slash = "\\"
-	}
-
-	for _, v := range paths {
-		if strings.Contains(strings.ToLower(v), strings.ToLower(slash+fontWithWeight)) {
-			return true
-		}
-	}
-
-	return false
-}
-
-func findClosestWeight(availableWeights []int, desiredWeight int) int {
-	if len(availableWeights) == 0 {
-		return 400 // Default to "Regular" if no weights are available
-	}
-
-	closest := availableWeights[0]
-	for _, weight := range availableWeights {
-		if abs(weight-desiredWeight) < abs(closest-desiredWeight) {
-			closest = weight
-		}
-	}
-	return closest
-}
-
-func getWeightName(weight int) string {
+func GetWeightName(weight string) string {
 	switch weight {
-	case 100:
-		return "Thin"
-	case 200:
-		return "ExtraLight"
-	case 300:
-		return "Light"
-	case 400:
+	case "100":
+		return "thin"
+	case "200":
+		return "extralight"
+	case "300":
+		return "light"
+	case "400":
 		return ""
-	case 500:
-		return "Medium"
-	case 600:
-		return "SemiBold"
-	case 700:
-		return "Bold"
-	case 800:
-		return "ExtraBold"
-	case 900:
-		return "Black"
+	case "500":
+		return "medium"
+	case "600":
+		return "semibold"
+	case "700":
+		return "bold"
+	case "800":
+		return "extrabold"
+	case "900":
+		return "black"
 	default:
-		return ""
+		return weight
 	}
 }
 
-func LoadFont(fontName string, fontSize int, bold int, italic bool, fs *adapter.FileSystem) (font.Face, error) {
+func LoadFont(fontName string, fontSize int, bold string, italic bool, fs *adapter.FileSystem) (font.Face, error) {
 	// Use a TrueType font file for the specified font name
 	fontFile := GetFontPath(fontName, bold, italic, fs)
 
@@ -185,8 +171,9 @@ func LoadFont(fontName string, fontSize int, bold int, italic bool, fs *adapter.
 	}
 
 	options := truetype.Options{
-		Size:    float64(fontSize),
-		DPI:     72,
+		Size: float64(fontSize),
+		// !ISSUE: Play with this
+		DPI:     70,
 		Hinting: font.HintingNone,
 	}
 
@@ -194,148 +181,132 @@ func LoadFont(fontName string, fontSize int, bold int, italic bool, fs *adapter.
 	return truetype.NewFace(fnt, &options), nil
 }
 
-func MeasureText(t *element.Text, text string) int {
-	var width fixed.Int26_6
-
-	for _, runeValue := range text {
-		if runeValue == ' ' {
-			// Handle spaces separately, add word spacing
-			width += fixed.I(t.WordSpacing)
-		} else {
-			fnt := *t.Font
-			adv, ok := fnt.GlyphAdvance(runeValue)
-			if !ok {
-				continue
-			}
-
-			// Update the total width with the glyph advance and bounds
-			width += adv + fixed.I(t.LetterSpacing)
-		}
-	}
-
-	return width.Round()
+func MeasureText(t *MetaData, text string) (int, int) {
+	ctx := canvas.NewCanvas(0, 0)
+	ctx.Context.SetFontFace(*t.Font)
+	w, h := ctx.MeasureText(text)
+	return int(w), int(h)
 }
 
-func MeasureSpace(t *element.Text) int {
-	fnt := *t.Font
-	adv, _ := fnt.GlyphAdvance(' ')
-	return adv.Round()
+func MeasureSpace(t *MetaData) (int, int) {
+	ctx := canvas.NewCanvas(0, 0)
+	ctx.Context.SetFontFace(*t.Font)
+	w, h := ctx.MeasureText(" ")
+	return int(w), int(h)
 }
 
-func Render(t *element.Text) (*image.RGBA, int) {
-	if t.LineHeight == 0 {
-		t.LineHeight = t.EM + 3
-	}
-
-	width := MeasureText(t, t.Text+" ")
-
-	// Use fully transparent color for the background
-	img := image.NewRGBA(image.Rect(0, 0, width, t.LineHeight))
-
-	// fmt.Println(t.Width, t.LineHeight, (len(lines)))
-
-	r, g, b, a := t.Color.RGBA()
-
-	draw.Draw(img, img.Bounds(), &image.Uniform{color.RGBA{uint8(r), uint8(g), uint8(b), uint8(0)}}, image.Point{}, draw.Over)
-	// fmt.Println(int(t.Font.Metrics().Ascent))
-	dot := fixed.Point26_6{X: fixed.I(0), Y: (fixed.I(t.LineHeight+(t.EM/2)) / 2)}
-
-	dr := &font.Drawer{
-		Dst:  img,
-		Src:  &image.Uniform{color.RGBA{uint8(r), uint8(g), uint8(b), uint8(a)}},
-		Face: *t.Font,
-		Dot:  dot,
-	}
-
-	drawn := drawString(*t, dr, t.Text, width, img)
-
-	return drawn, width
+func Key(text *MetaData) string {
+	key := text.Text + utils.RGBAtoString(text.Color) + utils.RGBAtoString(text.DecorationColor) + text.Align + text.WordBreak + strconv.Itoa(text.WordSpacing) + strconv.Itoa(text.LetterSpacing) + text.WhiteSpace + strconv.Itoa(text.DecorationThickness) + strconv.Itoa(text.EM)
+	key += strconv.FormatBool(text.Overlined) + strconv.FormatBool(text.Underlined) + strconv.FormatBool(text.LineThrough)
+	return key
 }
 
-func drawString(t element.Text, dr *font.Drawer, v string, lineWidth int, img *image.RGBA) *image.RGBA {
-	underlinePosition := dr.Dot
-	for _, ch := range v {
-		if ch == ' ' {
-			// Handle spaces separately, add word spacing
-			dr.Dot.X += fixed.I(t.WordSpacing)
-		} else {
-			dr.DrawString(string(ch))
-			dr.Dot.X += fixed.I(t.LetterSpacing)
-		}
-	}
-	if t.Underlined || t.Overlined || t.LineThrough {
+func GetMetaData(n *element.Node, state *map[string]element.State, font *font.Face) *MetaData {
+	s := *state
+	self := s[n.Properties.Id]
+	parent := s[n.Parent.Properties.Id]
 
-		underlinePosition.X = 0
-		baseLineY := underlinePosition.Y
-		fnt := *t.Font
-		descent := fnt.Metrics().Descent
-		if t.Underlined {
-			underlinePosition.Y = baseLineY + descent
-			underlinePosition.Y = (underlinePosition.Y / 100) * 97
-			drawLine(img, underlinePosition, fixed.Int26_6(lineWidth), t.DecorationThickness, t.DecorationColor)
-		}
-		if t.LineThrough {
-			underlinePosition.Y = baseLineY - (descent)
-			drawLine(img, underlinePosition, fixed.Int26_6(lineWidth), t.DecorationThickness, t.DecorationColor)
-		}
-		if t.Overlined {
-			underlinePosition.Y = baseLineY - descent*3
-			drawLine(img, underlinePosition, fixed.Int26_6(lineWidth), t.DecorationThickness, t.DecorationColor)
-		}
-	}
-	return img
-}
+	// self.Textures = []string{}
 
-func drawLine(img draw.Image, start fixed.Point26_6, width fixed.Int26_6, thickness int, col color.Color) {
-	// Bresenham's line algorithm
-	x0, y0 := start.X.Round(), start.Y.Round()
-	x1 := x0 + int(width)
-	y1 := y0
-	dx := abs(x1 - x0)
-	dy := abs(y1 - y0)
-	sx, sy := 1, 1
+	text := MetaData{}
+	text.Font = font
+	letterSpacing := utils.ConvertToPixels(n.Style["letter-spacing"], self.EM, parent.Width)
+	wordSpacing := utils.ConvertToPixels(n.Style["word-spacing"], self.EM, parent.Width)
+	lineHeight := utils.ConvertToPixels(n.Style["line-height"], self.EM, parent.Width)
+	underlineoffset := utils.ConvertToPixels(n.Style["text-underline-offset"], self.EM, parent.Width)
 
-	if x0 > x1 {
-		sx = -1
-	}
-	if y0 > y1 {
-		sy = -1
+	if lineHeight == 0 {
+		lineHeight = self.EM + 3
 	}
 
-	err := dx - dy
+	text.LineHeight = int(lineHeight)
+	text.WordSpacing = int(wordSpacing)
+	text.LetterSpacing = int(letterSpacing)
+	wb := " "
 
-	for {
-		for i := 0; i < thickness; i++ {
-			img.Set(x0, (y0-(thickness/2))+i, col)
-		}
-
-		if x0 == x1 && y0 == y1 {
-			break
-		}
-
-		e2 := 2 * err
-		if e2 > -dy {
-			err -= dy
-			x0 += sx
-		}
-		if e2 < dx {
-			err += dx
-			y0 += sy
-		}
+	if n.Style["word-wrap"] == "break-word" {
+		wb = ""
 	}
-}
 
-func abs(x int) int {
-	if x < 0 {
-		return -x
+	if n.Style["text-wrap"] == "wrap" || n.Style["text-wrap"] == "balance" {
+		wb = ""
 	}
-	return x
-}
 
-func Min(a, b float32) float32 {
-	if a < b {
-		return a
+	var dt float32
+
+	if n.Style["text-decoration-thickness"] == "auto" || n.Style["text-decoration-thickness"] == "" {
+		dt = self.EM / 7
 	} else {
-		return b
+		dt = utils.ConvertToPixels(n.Style["text-decoration-thickness"], self.EM, parent.Width)
 	}
+
+	col := cc.Parse(n.Style, "font")
+
+	if n.Style["text-decoration-color"] == "" {
+		n.Style["text-decoration-color"] = n.Style["color"]
+	}
+
+	text.Color = col
+	text.DecorationColor = cc.Parse(n.Style, "decoration")
+	text.Align = n.Style["text-align"]
+	text.WordBreak = wb
+	text.WordSpacing = int(wordSpacing)
+	text.LetterSpacing = int(letterSpacing)
+	text.WhiteSpace = n.Style["white-space"]
+	text.DecorationThickness = int(dt)
+	text.Overlined = n.Style["text-decoration"] == "overline"
+	text.Underlined = n.Style["text-decoration"] == "underline"
+	text.LineThrough = n.Style["text-decoration"] == "line-through"
+	text.EM = int(self.EM)
+	text.Width = int(parent.Width)
+	text.Text = n.InnerText
+	text.UnderlineOffset = int(underlineoffset)
+
+	if n.Style["text-underline-offset"] == "" {
+		text.UnderlineOffset = 2
+	}
+
+	if n.Style["word-spacing"] == "" {
+		// !ISSUE: is word spacing actually impleamented
+		text.WordSpacing, _ = MeasureSpace(&text)
+	}
+	return &text
+}
+
+func Render(text *MetaData) (*image.RGBA, int) {
+	// var data *image.RGBA
+	if text.LineHeight == 0 {
+		text.LineHeight = text.EM + 3
+	}
+
+	width, _ := MeasureText(text, text.Text+" ")
+
+	ctx := canvas.NewCanvas(width, text.LineHeight)
+	ctx.Context.Clear()
+	r, g, b, a := text.Color.RGBA()
+
+	ctx.SetFillStyle(uint8(r), uint8(g), uint8(b), uint8(a))
+	ctx.Context.SetFontFace(*text.Font)
+	ctx.Context.DrawStringAnchored(text.Text, 0, float64(text.LineHeight)/2, 0, 0.3)
+
+	if text.Underlined || text.Overlined || text.LineThrough {
+		ctx.SetLineWidth(float64(text.DecorationThickness))
+		r, g, b, a = text.DecorationColor.RGBA()
+		ctx.SetStrokeStyle(uint8(r), uint8(g), uint8(b), uint8(a))
+		ctx.BeginPath()
+		var y float64
+		if text.Underlined {
+			y = (float64(text.LineHeight) / 2) + (float64(text.EM) / 2.5) + float64(text.UnderlineOffset)
+		}
+		if text.LineThrough {
+			y = (float64(text.LineHeight) / 2)
+		}
+		if text.Overlined {
+			y = (float64(text.LineHeight) / 2) - (float64(text.EM) / 2) - (float64(text.DecorationThickness) / 2)
+		}
+		ctx.MoveTo(0, y)
+		ctx.LineTo(float64(width), y)
+		ctx.Stroke()
+	}
+	return ctx.RGBA, width
 }

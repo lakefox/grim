@@ -226,7 +226,7 @@ func Open(data *Window, width, height int) {
 	}
 	fid := "Georgia 16px false false"
 	if data.CSS.Fonts[fid] == nil {
-		f, _ := font.LoadFont("Georgia", 16, 400, false, &data.CSS.Adapter.FileSystem)
+		f, _ := font.LoadFont("Georgia", 16, "", false, &data.CSS.Adapter.FileSystem)
 		data.CSS.Fonts[fid] = f
 	}
 

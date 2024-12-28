@@ -109,11 +109,3 @@ func propagateOffsets(n *element.Node, copyOfX, copyOfY float32, self element.St
 		(*state)[v.Properties.Id] = vState
 	}
 }
-
-// func colliderDetection(s1, s2 element.State) bool {
-// 	s1Min := s1.Y
-// 	s1Max := s1.Y + s1.Height
-// 	s2Min := s2.Y
-// 	s2Max := s2.Y + s2.Height
-// 	return s1Min > s2Min && s1Min < s2Max || s1Max > s2Min && s1Min < s2Max || s2Min > s1Min && s2Min < s1Max || s2Max > s1Min && s2Min < s1Max
-// }
