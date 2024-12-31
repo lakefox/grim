@@ -98,7 +98,7 @@ func GetWH(n element.Node, state *map[string]element.State) WidthHeight {
 		wh.Height += self.Padding.Top + self.Padding.Bottom
 	}
 
-	if wStyle == "100%" {
+	if wStyle == "100%" && n.Style["position"] != "absolute" {
 		wh.Width -= (self.Margin.Right + self.Margin.Left + self.Border.Left.Width + self.Border.Right.Width + parent.Padding.Left + parent.Padding.Right + self.Padding.Left + self.Padding.Right)
 	}
 

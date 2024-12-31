@@ -32,8 +32,9 @@ type Node struct {
 	ContentEditable bool
 
 	// !NOTE: ScrollHeight is the amount of scroll left, not the total amount of scroll
-	// + if you  want the smae scrollHeight like js the add the height of the element to it
+	// + if you  want the same scrollHeight like js the add the height of the element to it
 	ScrollHeight   int
+	ScrollWidth    int
 	Canvas         *canvas.Canvas
 	PseudoElements map[string]map[string]string
 
@@ -66,6 +67,7 @@ type State struct {
 	Crop            Crop
 	Hidden          bool
 	ScrollHeight    int
+	ScrollWidth     int
 	ContentEditable bool
 	Value           string
 	TabIndex        int
@@ -363,7 +365,8 @@ type Event struct {
 	X           int
 	Y           int
 	KeyCode     int
-	Scroll      int
+	ScrollX     int
+	ScrollY     int
 	Key         string
 	CtrlKey     bool
 	MetaKey     bool

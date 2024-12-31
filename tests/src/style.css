@@ -81,30 +81,9 @@ html {
     background: pink;
 }
 
-/* Width of the scrollbar */
-#paragraph::-webkit-scrollbar {
-    width: 14px;
-}
-
-/* Background of the scrollbar track */
-#paragraph::-webkit-scrollbar-track {
-    background: #fafafa;
-}
-
-/* Styling the scrollbar handle (thumb) */
-#paragraph::-webkit-scrollbar-thumb {
-    background: #c7c7c7;
-    border-radius: 6px;
-}
-
-/* Hover effect on the scrollbar thumb */
-#paragraph::-webkit-scrollbar-thumb:hover {
-    background: #c7c7c7;
-}
-
-#paragraph::before {
+/* #paragraph::before {
     content: "HI";
-}
+} */
 .border {
     border-top: solid 20px blue;
     border-bottom: solid 20px orange;

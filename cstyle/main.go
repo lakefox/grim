@@ -340,7 +340,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node, state *map[string]element.State)
 			right = true
 		}
 		if bottomVal := style["bottom"]; bottomVal != "" {
-			y = (base.Height - height) - utils.ConvertToPixels(bottomVal, self.EM, parent.Width)
+			y = base.Y + ((base.Height - height) - utils.ConvertToPixels(bottomVal, self.EM, parent.Width))
 			bottom = true
 		}
 	} else {
@@ -468,7 +468,9 @@ func (c *CSS) ComputeNodeStyle(n *element.Node, state *map[string]element.State)
 	self.TabIndex = n.TabIndex
 	(*state)[n.Properties.Id] = self
 	(*state)[n.Parent.Properties.Id] = parent
+
 	self.ScrollHeight = 0
+	self.ScrollWidth = 0
 	var childYOffset float32
 
 	for i := 0; i < len(n.Children); i++ {
@@ -485,10 +487,19 @@ func (c *CSS) ComputeNodeStyle(n *element.Node, state *map[string]element.State)
 		}
 		sh := int((cState.Y + cState.Height) - self.Y)
 		if self.ScrollHeight < sh {
-			self.ScrollHeight = sh
+			if n.Children[i].TagName != "grim-track" {
+				self.ScrollHeight = sh
+			}
 		}
 
-		if cState.Width > self.Width {
+		sw := int((cState.X + cState.Width) - self.X)
+		if self.ScrollWidth < sw {
+			if n.Children[i].TagName != "grim-track" {
+				self.ScrollWidth = sw
+			}
+		}
+
+		if cState.Width > self.Width && n.Style["width"] == "" {
 			self.Width = cState.Width
 		}
 	}
@@ -498,6 +509,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node, state *map[string]element.State)
 	}
 
 	self.ScrollHeight += int(self.Padding.Bottom)
+	self.ScrollWidth += int(self.Padding.Right)
 
 	(*state)[n.Properties.Id] = self
 

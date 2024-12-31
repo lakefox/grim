@@ -19,13 +19,16 @@ func Init() cstyle.Plugin {
 			s := *state
 			self := s[n.Properties.Id]
 
-			scrollTop := findScroll(n)
+			scrollTop, scrollLeft := findScroll(n)
 
 			containerHeight := self.Height
 			contentHeight := float32(self.ScrollHeight)
 
+			containerWidth := self.Width
+			contentWidth := float32(self.ScrollWidth)
+
 			for _, v := range n.Children {
-				if v.TagName == "grim-track" {
+				if v.TagName == "grim-track" && v.GetAttribute("direction") == "y" {
 					if containerHeight < contentHeight {
 						p := s[v.Children[0].Properties.Id]
 
@@ -42,22 +45,36 @@ func Init() cstyle.Plugin {
 						p.Hidden = true
 						(*state)[v.Children[0].Properties.Id] = p
 					}
-					break
+				}
+				if v.TagName == "grim-track" && v.GetAttribute("direction") == "x" {
+					if containerWidth < contentWidth {
+						p := s[v.Children[0].Properties.Id]
+
+						p.Width = (containerWidth / contentWidth) * containerWidth
+
+						p.X = self.X + float32(scrollLeft)
+
+						(*state)[v.Children[0].Properties.Id] = p
+					} else {
+						p := s[v.Properties.Id]
+						p.Hidden = true
+						(*state)[v.Properties.Id] = p
+						p = s[v.Children[0].Properties.Id]
+						p.Hidden = true
+						(*state)[v.Children[0].Properties.Id] = p
+					}
 				}
 			}
 
 			scrollTop = int((float32(scrollTop) / ((containerHeight / contentHeight) * containerHeight)) * containerHeight)
-
-			if containerHeight > contentHeight {
-				return
-			}
+			scrollLeft = int((float32(scrollLeft) / ((containerWidth / contentWidth) * containerWidth)) * containerWidth)
 
 			if n.Style["overflow-y"] == "hidden" || n.Style["overflow-y"] == "clip" {
 				scrollTop = 0
 			}
 
-			if n.Style["overflow-y"] == "visible" {
-				return
+			if n.Style["overflow-x"] == "hidden" || n.Style["overflow-x"] == "clip" {
+				scrollLeft = 0
 			}
 
 			for _, v := range n.Children {
@@ -65,14 +82,17 @@ func Init() cstyle.Plugin {
 					continue
 				}
 				child := s[v.Properties.Id]
-
-				if (child.Y+child.Height)-float32(scrollTop) < (self.Y) || (child.Y-float32(scrollTop)) > self.Y+self.Height {
+				if ((child.Y+child.Height)-float32(scrollTop) < (self.Y) || (child.Y-float32(scrollTop)) > self.Y+self.Height) ||
+					((child.X+child.Width)-float32(scrollLeft) < (self.X) || (child.X-float32(scrollLeft)) > self.X+self.Width) {
 					child.Hidden = true
 					(*state)[v.Properties.Id] = child
 				} else {
 					child.Hidden = false
+					xCrop := 0
 					yCrop := 0
+					width := int(child.Width)
 					height := int(child.Height)
+
 					if child.Y-float32(scrollTop) < (self.Y) {
 						yCrop = int((self.Y) - (child.Y - float32(scrollTop)))
 						height = int(child.Height) - yCrop
@@ -80,16 +100,29 @@ func Init() cstyle.Plugin {
 						diff := ((child.Y - float32(scrollTop)) + child.Height) - (self.Y + self.Height)
 						height = int(child.Height) - int(diff)
 					}
+
+					if child.X-float32(scrollLeft) < (self.X) {
+						xCrop = int((self.X) - (child.X - float32(scrollLeft)))
+						if self.Width < child.Width-float32(scrollLeft-int(self.X+self.Margin.Left)) {
+							width = int(self.Width)
+						} else {
+							width = int(child.Width) - (scrollLeft - int(self.X+self.Margin.Left))
+						}
+					} else if (child.X-float32(scrollLeft))+child.Width > self.X+self.Width {
+						diff := ((child.X - float32(scrollLeft)) + child.Width) - (self.X + self.Width)
+						width = int(child.Width) - int(diff)
+					}
+
 					// !ISSUE: Elements disappear when out of view during the resize, because the element is cropped to much
 					child.Crop = element.Crop{
-						X:      0,
+						X:      xCrop,
 						Y:      yCrop,
-						Width:  int(child.Width),
+						Width:  width,
 						Height: height,
 					}
 					(*state)[v.Properties.Id] = child
 
-					updateChildren(v, state, scrollTop)
+					updateChildren(v, state, scrollTop, scrollLeft)
 				}
 			}
 			(*state)[n.Properties.Id] = self
@@ -97,27 +130,28 @@ func Init() cstyle.Plugin {
 	}
 }
 
-func updateChildren(n *element.Node, state *map[string]element.State, offset int) {
+func updateChildren(n *element.Node, state *map[string]element.State, offsetY, offsetX int) {
 	self := (*state)[n.Properties.Id]
-	self.Y -= float32(offset)
+	self.X -= float32(offsetX)
+	self.Y -= float32(offsetY)
 	(*state)[n.Properties.Id] = self
 	for _, v := range n.Children {
-		updateChildren(v, state, offset)
+		updateChildren(v, state, offsetX, offsetY)
 	}
 }
 
-func findScroll(n *element.Node) int {
-	if n.ScrollTop != 0 {
-		return n.ScrollTop
+func findScroll(n *element.Node) (int, int) {
+	if n.ScrollTop != 0 || n.ScrollLeft != 0 {
+		return n.ScrollTop, n.ScrollLeft
 	} else {
 		for _, v := range n.Children {
 			if v.Style["overflow"] == "" && v.Style["overflow-x"] == "" && v.Style["overflow-y"] == "" {
-				s := findScroll(v)
-				if s != 0 {
-					return s
+				s, l := findScroll(v)
+				if s != 0 || l != 0 {
+					return s, l
 				}
 			}
 		}
-		return 0
+		return 0, 0
 	}
 }

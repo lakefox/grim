@@ -83,13 +83,13 @@ func New(adapterFunction *adapter.Adapter) Window {
 	css.AddPlugin(flex.Init())
 	css.AddPlugin(crop.Init())
 
+	css.AddTransformer(text.Init())
 	css.AddTransformer(banda.Init())
 	css.AddTransformer(scrollbar.Init())
 	css.AddTransformer(flexprep.Init())
 	css.AddTransformer(marginblock.Init())
 	css.AddTransformer(ul.Init())
 	css.AddTransformer(ol.Init())
-	css.AddTransformer(text.Init())
 	css.AddTransformer(background.Init())
 	css.AddTransformer(img.Init())
 
@@ -277,9 +277,9 @@ func Open(data *Window, width, height int) {
 	})
 
 	data.CSS.Adapter.AddEventListener("scroll", func(e element.Event) {
-		currentEvent.Scroll = e.Data.(int)
+		currentEvent.ScrollY = e.Data.(int)
 		monitor.GetEvents(&currentEvent)
-		currentEvent.Scroll = 0
+		currentEvent.ScrollY = 0
 	})
 
 	data.CSS.Adapter.AddEventListener("mousedown", func(e element.Event) {
@@ -421,6 +421,7 @@ func AddHTMLAndAttrs(n *element.Node, state *map[string]element.State) {
 	n.OuterHTML = tag + n.InnerHTML + closing
 	// !NOTE: This is the only spot you can pierce the vale
 	n.ScrollHeight = s[n.Properties.Id].ScrollHeight
+	n.ScrollWidth = s[n.Properties.Id].ScrollWidth
 	for i := range n.Children {
 		AddHTMLAndAttrs(n.Children[i], state)
 	}

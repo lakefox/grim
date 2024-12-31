@@ -14,7 +14,8 @@ type EventData struct {
 	Position []int
 	Click    bool
 	Context  bool
-	Scroll   int
+	ScrollX  int
+	ScrollY  int
 	Key      int
 	KeyState bool
 }
@@ -54,7 +55,8 @@ func (m *Monitor) RunEvents(n *element.Node) bool {
 	evt.Target = n
 
 	if scrolled {
-		evt.Scroll = 0
+		evt.ScrollX = 0
+		evt.ScrollY = 0
 		m.EventMap[n.Properties.Id] = evt
 	}
 	eventListeners := []string{}
@@ -131,14 +133,43 @@ func (m *Monitor) RunEvents(n *element.Node) bool {
 		n.Blur()
 	}
 
-	if evt.Scroll != 0 {
-		styledEl, _ := m.CSS.GetStyles(n)
+	var styledEl map[string]string
 
+	if evt.ScrollX != 0 || evt.ScrollY != 0 {
+		styledEl, _ = m.CSS.GetStyles(n)
+	}
+
+	if evt.ScrollX != 0 {
+		if hasAutoOrScroll(styledEl) {
+			s := *m.State
+			self := s[n.Properties.Id]
+			containerWidth := self.Width
+			n.ScrollLeft += evt.ScrollX
+
+			if (int((float32(int(n.ScrollLeft))/((containerWidth/float32(n.ScrollWidth))*containerWidth))*containerWidth) + int(containerWidth)) >= n.ScrollWidth {
+				n.ScrollLeft = (((n.ScrollWidth) - int(containerWidth)) * int(containerWidth)) / n.ScrollWidth
+			}
+
+			if n.ScrollLeft <= 0 {
+				n.ScrollLeft = 0
+			}
+
+			if n.OnScroll != nil {
+				n.OnScroll(evt)
+			}
+
+			evt.ScrollX = 0
+			m.EventMap[n.Properties.Id] = evt
+			scrolled = true
+		}
+	}
+
+	if evt.ScrollY != 0 {
 		if hasAutoOrScroll(styledEl) {
 			s := *m.State
 			self := s[n.Properties.Id]
 			containerHeight := self.Height
-			n.ScrollTop -= evt.Scroll
+			n.ScrollTop -= evt.ScrollY
 
 			// This is the scroll scaling equation if it is less than the scroll height then let it add the next scroll amount
 			if (int((float32(int(n.ScrollTop))/((containerHeight/float32(n.ScrollHeight))*containerHeight))*containerHeight) + int(containerHeight)) >= n.ScrollHeight {
@@ -153,7 +184,7 @@ func (m *Monitor) RunEvents(n *element.Node) bool {
 				n.OnScroll(evt)
 			}
 
-			evt.Scroll = 0
+			evt.ScrollY = 0
 			m.EventMap[n.Properties.Id] = evt
 			scrolled = true
 		}
@@ -264,15 +295,23 @@ func (m *Monitor) GetEvents(data *EventData) {
 		insideY := (self.Y < float32(data.Position[1]) && self.Y+self.Height > float32(data.Position[1]))
 		inside := (insideX && insideY)
 
-		arrowScroll := 0
+		arrowScrollX := 0
+		arrowScrollY := 0
 
 		if m.Focus.SoftFocused == k || inside {
 			if data.Key == 265 {
 				// up
-				arrowScroll += 20
+				arrowScrollY += 20
 			} else if data.Key == 264 {
 				// Down
-				arrowScroll -= 20
+				arrowScrollY -= 20
+			}
+			if data.Key == 262 {
+				// up
+				arrowScrollX += 20
+			} else if data.Key == 263 {
+				// Down
+				arrowScrollX -= 20
 			}
 		}
 
@@ -425,13 +464,16 @@ func (m *Monitor) GetEvents(data *EventData) {
 				evt.ContextMenu = true
 			}
 
-			if (data.Scroll != 0 && (inside)) || arrowScroll != 0 || drag {
+			if (data.ScrollY != 0 && (inside)) || (data.ScrollX != 0 && (inside)) || arrowScrollX != 0 || arrowScrollY != 0 || drag {
 				// !TODO: for now just emit a event, will have to add el.scrollX
 				if drag {
-					data.Scroll = (evt.Y - data.Position[1])
+					data.ScrollY = (evt.Y - data.Position[1])
+					data.ScrollX = -(evt.X - data.Position[0])
 				}
-				evt.Scroll = data.Scroll + arrowScroll
-				arrowScroll = 0
+				evt.ScrollX = data.ScrollX + arrowScrollX
+				evt.ScrollY = data.ScrollY + arrowScrollY
+				arrowScrollX = 0
+				arrowScrollY = 0
 			}
 
 			if !evt.MouseEnter && inside {

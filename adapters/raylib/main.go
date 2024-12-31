@@ -173,7 +173,7 @@ func (wm *WindowManager) Draw(nodes []element.State) {
 							}
 
 							rl.DrawTextureRec(*texture, sourceRec, rl.Vector2{
-								X: node.X,
+								X: node.X + float32(node.Crop.X),
 								Y: node.Y + float32(node.Crop.Y),
 							}, rl.White)
 						}

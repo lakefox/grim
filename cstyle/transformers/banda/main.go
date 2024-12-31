@@ -27,7 +27,11 @@ func Init() cstyle.Transformer {
 
 				before.InnerText = n.PseudoElements["::before"]["content"][1 : len(n.PseudoElements["::before"]["content"])-1]
 
-				n.InsertBefore(&before, n.Children[0])
+				if len(n.Children) == 0 {
+					n.AppendChild(&before)
+				} else {
+					n.InsertBefore(&before, n.Children[0])
+				}
 			}
 
 			if n.PseudoElements["::after"] != nil {
