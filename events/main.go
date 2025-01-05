@@ -31,7 +31,7 @@ type Monitor struct {
 
 type Drag struct {
 	Position []int
-	Node     string
+	Type     string
 }
 
 type Focus struct {
@@ -358,7 +358,14 @@ func (m *Monitor) GetEvents(data *EventData) {
 				evt.MouseUp = false
 				if m.Drag.Position[0] == -1 && m.Drag.Position[1] == -1 {
 					if strings.Contains(k, "grim-thumb") {
-						m.Drag = Drag{Position: data.Position}
+						t := ""
+						if strings.Contains(k, "grim-thumbx") {
+							t = "x"
+						} else if strings.Contains(k, "grim-thumby") {
+							t = "y"
+						}
+						m.Drag = Drag{Position: data.Position,
+							Type: t}
 					}
 				}
 			}
@@ -368,7 +375,6 @@ func (m *Monitor) GetEvents(data *EventData) {
 				evt.MouseDown = false
 				evt.Click = false
 				m.Drag = Drag{Position: []int{-1, -1}}
-
 			}
 
 			if data.Click && !evt.Click && !drag {
@@ -465,15 +471,21 @@ func (m *Monitor) GetEvents(data *EventData) {
 			}
 
 			if (data.ScrollY != 0 && (inside)) || (data.ScrollX != 0 && (inside)) || arrowScrollX != 0 || arrowScrollY != 0 || drag {
-				// !TODO: for now just emit a event, will have to add el.scrollX
 				if drag {
-					data.ScrollY = (evt.Y - data.Position[1])
-					data.ScrollX = -(evt.X - data.Position[0])
+					if m.Drag.Type == "y" {
+						data.ScrollY = (evt.Y - data.Position[1])
+					} else if m.Drag.Type == "x" {
+						data.ScrollX = -(evt.X - data.Position[0])
+					}
 				}
 				evt.ScrollX = data.ScrollX + arrowScrollX
 				evt.ScrollY = data.ScrollY + arrowScrollY
 				arrowScrollX = 0
 				arrowScrollY = 0
+				if strings.Contains(k, "grim-thumb") || drag {
+					data.ScrollX = 0
+					data.ScrollY = 0
+				}
 			}
 
 			if !evt.MouseEnter && inside {

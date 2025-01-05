@@ -33,9 +33,13 @@ func Init() cstyle.Transformer {
 				n.Style["position"] = "relative"
 			}
 
-			width := "14px"
+			trackWidth := "14px"
+			thumbWidth := "8px"
+			thumbMargin := "3px"
 			if n.Style["scrollbar-width"] == "thin" {
-				width = "10px"
+				trackWidth = "10px"
+				thumbWidth = "6px"
+				thumbMargin = "2px"
 			}
 			if n.Style["scrollbar-width"] == "none" {
 				return n
@@ -57,7 +61,47 @@ func Init() cstyle.Transformer {
 
 			}
 
-			// yScrollbar := false
+			// X scrollbar
+			xScrollbar := false
+
+			if (n.Style["overflow-x"] == "scroll" || n.Style["overflow-x"] == "auto") && ((n.ScrollWidth > int(c.Width) && n.TagName == "html") || n.ScrollWidth > 0) {
+				scrollbar := n.CreateElement("grim-track")
+
+				scrollbar.Style["position"] = "absolute"
+				scrollbar.Style["bottom"] = "0px"
+				scrollbar.Style["left"] = "0"
+				scrollbar.Style["width"] = "100%"
+				scrollbar.Style["height"] = trackWidth
+				scrollbar.Style["background"] = backgroundColor
+				scrollbar.SetAttribute("direction", "x")
+
+				thumb := n.CreateElement("grim-thumbx")
+				thumb.Style["position"] = "absolute"
+				thumb.Style["left"] = strconv.Itoa(n.ScrollLeft) + "px"
+				thumb.Style["top"] = thumbMargin
+				thumb.Style["height"] = thumbWidth
+				thumb.Style["width"] = "20px"
+				thumb.Style["background"] = thumbColor
+				thumb.Style["cursor"] = "pointer"
+				thumb.Style["border-radius"] = "10px"
+
+				for k, v := range n.PseudoElements["::-webkit-scrollbar"] {
+					scrollbar.Style[k] = v
+					thumb.Style[k] = v
+				}
+
+				for k, v := range n.PseudoElements["::-webkit-scrollbar-track"] {
+					scrollbar.Style[k] = v
+				}
+
+				for k, v := range n.PseudoElements["::-webkit-scrollbar-thumb"] {
+					thumb.Style[k] = v
+				}
+
+				scrollbar.AppendChild(&thumb)
+				xScrollbar = true
+				n.AppendChild(&scrollbar)
+			}
 
 			// Y scrollbar
 
@@ -67,20 +111,26 @@ func Init() cstyle.Transformer {
 				scrollbar.Style["position"] = "absolute"
 				scrollbar.Style["top"] = "0"
 				scrollbar.Style["right"] = "0"
-				scrollbar.Style["width"] = width
+				scrollbar.Style["width"] = trackWidth
 				scrollbar.Style["height"] = "100%"
 				scrollbar.Style["background"] = backgroundColor
 				scrollbar.SetAttribute("direction", "y")
 
-				thumb := n.CreateElement("grim-thumb")
+				if xScrollbar {
+					scrollbar.Style["height"] = "calc(100% - " + trackWidth + ")"
+				}
+
+				thumb := n.CreateElement("grim-thumby")
 
 				thumb.Style["position"] = "absolute"
 				thumb.Style["top"] = strconv.Itoa(n.ScrollTop) + "px"
 				thumb.Style["left"] = "0"
-				thumb.Style["width"] = width
+				thumb.Style["width"] = thumbWidth
 				thumb.Style["height"] = "20px"
 				thumb.Style["background"] = thumbColor
 				thumb.Style["cursor"] = "pointer"
+				thumb.Style["margin-left"] = thumbMargin
+				thumb.Style["border-radius"] = "10px"
 
 				for k, v := range n.PseudoElements["::-webkit-scrollbar"] {
 					scrollbar.Style[k] = v
@@ -97,7 +147,7 @@ func Init() cstyle.Transformer {
 
 				scrollbar.AppendChild(&thumb)
 
-				n.Style["width"] = "calc(" + n.Style["width"] + "-" + width + ")"
+				n.Style["width"] = "calc(" + n.Style["width"] + "-" + trackWidth + ")"
 				pr := n.Style["padding-right"]
 				if pr == "" {
 					if n.Style["padding"] != "" {
@@ -106,57 +156,10 @@ func Init() cstyle.Transformer {
 				}
 
 				if pr != "" {
-					n.Style["padding-right"] = "calc(" + pr + "+" + width + ")"
+					n.Style["padding-right"] = "calc(" + pr + "+" + trackWidth + ")"
 				} else {
-					n.Style["padding-right"] = width
+					n.Style["padding-right"] = trackWidth
 				}
-				// yScrollbar = true
-				n.AppendChild(&scrollbar)
-			}
-
-			// X scrollbar
-
-			if (n.Style["overflow-x"] == "scroll" || n.Style["overflow-x"] == "auto") && ((n.ScrollWidth > int(c.Width) && n.TagName == "html") || n.ScrollWidth > 0) {
-				scrollbar := n.CreateElement("grim-track")
-
-				scrollbar.Style["position"] = "absolute"
-				scrollbar.Style["bottom"] = "0px"
-				scrollbar.Style["left"] = "0"
-				// if yScrollbar {
-				// scrollbar.Style["width"] = "calc(100% - " + width + ")"
-				// } else {
-				scrollbar.Style["width"] = "100%"
-				// }
-				scrollbar.Style["height"] = width
-				scrollbar.Style["background"] = backgroundColor
-				scrollbar.SetAttribute("direction", "x")
-
-				thumb := n.CreateElement("grim-thumb")
-
-				thumb.Style["position"] = "absolute"
-				// thumb.Style["left"] = "10px"
-				thumb.Style["left"] = strconv.Itoa(n.ScrollLeft) + "px"
-				thumb.Style["top"] = "0px"
-				thumb.Style["height"] = width
-				thumb.Style["width"] = "20px"
-				thumb.Style["background"] = thumbColor
-				thumb.Style["cursor"] = "pointer"
-
-				for k, v := range n.PseudoElements["::-webkit-scrollbar"] {
-					scrollbar.Style[k] = v
-					thumb.Style[k] = v
-				}
-
-				for k, v := range n.PseudoElements["::-webkit-scrollbar-track"] {
-					scrollbar.Style[k] = v
-				}
-
-				for k, v := range n.PseudoElements["::-webkit-scrollbar-thumb"] {
-					thumb.Style[k] = v
-				}
-
-				scrollbar.AppendChild(&thumb)
-
 				n.AppendChild(&scrollbar)
 			}
 
