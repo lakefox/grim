@@ -11,7 +11,9 @@ import (
 // !TODO: Create :not and other selectors
 // + :nth-last-child()etc..
 
-// !TODO: Make var() and :root
+// !TODO: Make var() and :root (root is implide)
+
+// !ISSUE: Psuedo selectors don't work
 
 type SelectorParts struct {
 	TagName    string
@@ -123,19 +125,6 @@ func NthChildMatch(pattern string, index int) bool {
 	}
 	return (index-b)%a == 0 && (index-b)/a >= 0
 }
-func Contains(selector []string, node []string) bool {
-	selectorSet := make(map[string]struct{}, len(node))
-	for _, s := range node {
-		selectorSet[strings.TrimSpace(s)] = struct{}{}
-	}
-
-	for _, s := range selector {
-		if _, exists := selectorSet[strings.TrimSpace(s)]; !exists {
-			return false
-		}
-	}
-	return true
-}
 
 func TestSelector(n *element.Node, selector string) bool {
 	selectors := splitSelector(selector, ',')
@@ -185,6 +174,10 @@ func TestSelector(n *element.Node, selector string) bool {
 			return n.Disabled
 		} else if selector == ":checked" {
 			return n.Checked
+		} else if selector == ":focus" {
+			return n.Focused
+		} else if selector == ":hover" {
+			return n.Hovered
 		}
 	}
 	has := false

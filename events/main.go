@@ -118,9 +118,9 @@ func (m *Monitor) RunEvents(n *element.Node) bool {
 	}
 
 	if evt.Hover {
-		n.ClassList.Add(":hover")
+		n.Hovered = true
 	} else {
-		n.ClassList.Remove(":hover")
+		n.Hovered = false
 	}
 
 	if len(m.Focus.Nodes) > 0 && m.Focus.Selected > -1 {

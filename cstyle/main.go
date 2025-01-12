@@ -8,7 +8,6 @@ import (
 	"grim/element"
 	"grim/font"
 	"grim/parser"
-	"grim/selector"
 	"grim/utils"
 	"image"
 	"strconv"
@@ -176,12 +175,12 @@ func (c *CSS) GetStyles(n *element.Node) (map[string]string, map[string]map[stri
 	// 	fmt.Println("WHOLE MATCH", selector.TestSelector(n, `input:required`))
 	// }
 	// if n.Properties.Id == "a8" {
-	if n.Properties.Id == "h19" {
-		fmt.Println("###########")
-		fmt.Println(n.Properties.Id)
-		fmt.Println("WHOLE MATCH", selector.TestSelector(n, `h1 + h1`))
-		// fmt.Println("WHOLE MATCH", selector.TestSelector(n, `body:has(h1.class +h1)>h1[attr="test"]#id.class:has(input:is(input[type="text"]:required)+div),a`))
-	}
+	// if n.Properties.Id == "h19" {
+	// 	fmt.Println("###########")
+	// 	fmt.Println(n.Properties.Id)
+	// 	fmt.Println("WHOLE MATCH", selector.TestSelector(n, `h1 + h1`))
+	// 	// fmt.Println("WHOLE MATCH", selector.TestSelector(n, `body:has(h1.class +h1)>h1[attr="test"]#id.class:has(input:is(input[type="text"]:required)+div),a`))
+	// }
 
 	// if n.Properties.Id == "h110" {
 	// 	fmt.Println("###########")

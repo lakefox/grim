@@ -33,6 +33,8 @@ type Node struct {
 	Required        bool
 	Disabled        bool
 	Checked         bool
+	Focused         bool
+	Hovered         bool
 
 	// !NOTE: ScrollHeight is the amount of scroll left, not the total amount of scroll
 	// + if you  want the same scrollHeight like js the add the height of the element to it
@@ -335,19 +337,11 @@ func (n *Node) Remove() {
 }
 
 func (n *Node) Focus() {
-	has := false
-	for _, v := range n.ClassList.Classes {
-		if v == ":focus" {
-			has = true
-		}
-	}
-	if !has {
-		n.ClassList.Add(":focus")
-	}
+	n.Focused = true
 }
 
 func (n *Node) Blur() {
-	n.ClassList.Remove(":focus")
+	n.Focused = false
 }
 
 func (n *Node) GetContext(width, height int) *canvas.Canvas {
