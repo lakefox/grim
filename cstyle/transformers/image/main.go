@@ -17,6 +17,7 @@ func Init() cstyle.Transformer {
 	return cstyle.Transformer{
 		Selector: func(n *element.Node) bool {
 			return n.TagName == "img"
+			// !ISSUE: img tags or background-url || background: url()
 		},
 		Handler: func(n *element.Node, c *cstyle.CSS) *element.Node {
 			n.TagName = "canvas"

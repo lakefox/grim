@@ -165,85 +165,132 @@ func (c *CSS) GetStyles(n *element.Node) (map[string]string, map[string]map[stri
 	// + might addeventlisteners here?????
 
 	// Apply styles from style sheets
-	selectors := []string{}
+	// selectors := [][]string{selector.GetSelectors(n)}
+	// styleMaps := []*parser.StyleMap{}
 
-	selectors = append(selectors, n.TagName)
-
-	if n.Id != "" {
-		selectors = append(selectors, "#"+n.Id)
+	// The goal is to get to this and remove most of below also remove the parser temp stuff
+	// fmt.Println(n.Properties.Id)
+	// if n.Properties.Id == "input6" {
+	// 	fmt.Println("###########")
+	// 	fmt.Println(n.Properties.Id)
+	// 	fmt.Println("WHOLE MATCH", selector.TestSelector(n, `input:required`))
+	// }
+	// if n.Properties.Id == "a8" {
+	if n.Properties.Id == "h19" {
+		fmt.Println("###########")
+		fmt.Println(n.Properties.Id)
+		fmt.Println("WHOLE MATCH", selector.TestSelector(n, `h1 + h1`))
+		// fmt.Println("WHOLE MATCH", selector.TestSelector(n, `body:has(h1.class +h1)>h1[attr="test"]#id.class:has(input:is(input[type="text"]:required)+div),a`))
 	}
 
-	for _, class := range n.ClassList.Classes {
-		if class[0] == ':' {
-			selectors = append(selectors, class)
-		} else {
-			selectors = append(selectors, "."+class)
-		}
-	}
+	// if n.Properties.Id == "h110" {
+	// 	fmt.Println("###########")
+	// 	fmt.Println(n.Properties.Id)
+	// 	fmt.Println("WHOLE MATCH", selector.TestSelector(n, `body:nth-child(2)`))
+	// 	fmt.Println("WHOLE MATCH", selector.TestSelector(n, `h1 + h1`))
+	// }
+	// for _, sm := range c.StyleMap {
+	// 	for k, v := range sm {
+	// 		match, psuedo := selector.TestSelector(n, k)
+	// 		if psuedo != "" {
+	// 			for k, v := range *v.Styles {
+	// 				if pseudoStyles[psuedo] == nil {
+	// 					pseudoStyles[psuedo] = map[string]string{}
+	// 				}
+	// 				pseudoStyles[psuedo][k] = v
+	// 			}
+	// 		} else if match {
+	// 			for k, v := range *v.Styles {
+	// 				styles[k] = v
+	// 			}
+	// 		}
+	// 	}
+	// }
 
-	styleMaps := []*parser.StyleMap{}
-	for _, v := range selectors {
-		styleMaps = append(styleMaps, c.StyleMap[v]...)
-	}
+	// for _, selector := range selectors {
+	// 	for _, v := range selector {
+	// 		styleMaps = append(styleMaps, c.StyleMap[v]...)
+	// 	}
+	// }
+	// fmt.Println("SELECTORS:", selectors)
 
-	for _, styleMap := range styleMaps {
-		parts := styleMap.Selector
-		currentElement := n
-		isPseudo := false
-		pseudoSelector := ""
-		for i, part := range parts {
-			for i, v := range part {
-				if len(v) < 2 {
-					continue
-				}
-				if v[0:2] == "::" {
-					part = append(part[:i], part[i+1:]...)
-					isPseudo = true
-					pseudoSelector = v
-					break
-				}
-			}
+	// for _, styleMap := range styleMaps {
+	// 	parts := styleMap.Selector
+	// 	currentElement := n
+	// 	pseudoSelector := ""
+	// 	for range parts {
+	// 		// add the minimum amount of parent selectors
+	// 		if len(selectors) < len(parts) {
+	// 			if currentElement.Parent != nil {
+	// 				currentElement = currentElement.Parent
+	// 				ps := selector.GetSelectors(currentElement)
+	// 				selectors = append([][]string{ps}, selectors...)
+	// 			}
+	// 		}
+	// 	}
 
-			has := selector.Contains(part, selectors)
+	// 	var has, isPseudo, isComputable bool
+	// 	computableSelectors := []string{}
+	// 	fmt.Println("PARTS: ", parts)
 
-			if i == len(parts)-1 || !has {
-				if has {
-					if isPseudo {
-						for k, v := range *styleMap.Styles {
-							if pseudoStyles[pseudoSelector] == nil {
-								pseudoStyles[pseudoSelector] = map[string]string{}
-							}
-							pseudoStyles[pseudoSelector][k] = v
-						}
+	// 	for i := 0; i < len(parts); i++ {
+	// 		part := parts[len(parts)-(1+i)]
+	// 		sel := selectors[len(selectors)-(1+i)]
+	// 		for i := len(part) - 1; i >= 0; i-- {
+	// 			v := part[i]
+	// 			if len(v) < 2 {
+	// 				continue
+	// 			}
+	// 			if v[0:2] == "::" {
+	// 				part = append(part[:i], part[i+1:]...)
+	// 				isPseudo = true
+	// 				pseudoSelector = v
+	// 				break // Exit the loop if ::pseudo-selector is found
+	// 			} else if v[0:1] == ":" && string(v[len(v)-1]) == ")" {
+	// 				// If the selector contains :nth-child(2n+1) we need to check the sibling nodes so remove it and
+	// 				// store it so we can compute the result if the base selectors match. Else we don't waste time
+	// 				// Also needs the string(v[len(v)-1]) == ")" so things like :hover :focus :enabled can pass
+	// 				isComputable = true
+	// 				part = append(part[:i], part[i+1:]...)
+	// 				computableSelectors = append(computableSelectors, v)
+	// 			}
+	// 		}
 
-					} else {
-						for k, v := range *styleMap.Styles {
-							styles[k] = v
-						}
-					}
-				}
-				break
-			} else {
-				selectors = []string{}
-				currentElement = currentElement.Parent
+	// 		has = selector.Contains(part, sel)
+	// 		if !has {
+	// 			break
+	// 		}
+	// 	}
 
-				for _, class := range currentElement.ClassList.Classes {
-					if class[0] == ':' {
-						selectors = append(selectors, class)
-					} else {
-						selectors = append(selectors, "."+class)
-					}
-				}
+	// 	if isComputable && has {
+	// 		// !ISSUE: h1 + h2 {} is valid :(
+	// 		nCount := len(n.Parent.Children) + 1
+	// 		for i := len(computableSelectors) - 1; i >= 0; i-- {
+	// 			v := computableSelectors[i]
+	// 			if len(v) >= 5 && (v[:5] == ":not(" || v[:4] == ":is(") {
+	// 				has = selector.IsNot(v, selectors, i)
+	// 			} else if len(v) >= 11 && v[:11] == ":nth-child(" {
+	// 				has = selector.NthChildMatch(v[11:len(v)-1], nCount)
+	// 			}
 
-				if n.Id != "" {
-					selectors = append(selectors, "#"+currentElement.Id)
-				}
+	// 		}
+	// 	}
 
-				selectors = append(selectors, currentElement.TagName)
-
-			}
-		}
-	}
+	// 	if has {
+	// 		if isPseudo {
+	// 			for k, v := range *styleMap.Styles {
+	// 				if pseudoStyles[pseudoSelector] == nil {
+	// 					pseudoStyles[pseudoSelector] = map[string]string{}
+	// 				}
+	// 				pseudoStyles[pseudoSelector][k] = v
+	// 			}
+	// 		} else {
+	// 			for k, v := range *styleMap.Styles {
+	// 				styles[k] = v
+	// 			}
+	// 		}
+	// 	}
+	// }
 
 	// Parse inline styles
 	inlineStyles := parser.ParseStyleAttribute(n.GetAttribute("style"))
@@ -478,6 +525,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node, state *map[string]element.State)
 		v.Parent = n
 		n.Children[i] = c.ComputeNodeStyle(v, state)
 		cState := (*state)[n.Children[i].Properties.Id]
+
 		if style["height"] == "" && style["max-height"] == "" {
 			if v.Style["position"] != "absolute" && cState.Y+cState.Height > childYOffset {
 				childYOffset = cState.Y + cState.Height
@@ -507,7 +555,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node, state *map[string]element.State)
 	if style["height"] == "" {
 		self.Height += self.Padding.Bottom
 	}
-
+	// fmt.Println(n.TagName, n.Style)
 	self.ScrollHeight += int(self.Padding.Bottom)
 	self.ScrollWidth += int(self.Padding.Right)
 

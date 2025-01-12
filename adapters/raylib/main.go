@@ -275,7 +275,7 @@ func (wm *WindowManager) GetEvents() {
 	if wd != 0 {
 		wm.Adapter.DispatchEvent(element.Event{
 			Name: "scroll",
-			Data: int(wd * 3),
+			Data: int(wd * 6),
 		})
 	}
 }

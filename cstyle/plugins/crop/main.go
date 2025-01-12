@@ -3,6 +3,7 @@ package crop
 import (
 	"grim/cstyle"
 	"grim/element"
+	"grim/utils"
 )
 
 func Init() cstyle.Plugin {
@@ -21,7 +22,16 @@ func Init() cstyle.Plugin {
 
 			scrollTop, scrollLeft := findScroll(n)
 
-			containerHeight := self.Height
+			var mod float32
+			if n.TagName == "html" {
+				for _, v := range n.Children {
+					if v.TagName == "body" {
+						cs := s[v.Properties.Id]
+						mod += cs.Margin.Bottom
+					}
+				}
+			}
+			containerHeight := self.Height - mod
 			contentHeight := float32(self.ScrollHeight)
 
 			containerWidth := self.Width
@@ -48,7 +58,7 @@ func Init() cstyle.Plugin {
 				}
 				if v.TagName == "grim-track" && v.GetAttribute("direction") == "x" {
 					if containerWidth < contentWidth {
-						// containerHeight -= utils.ConvertToPixels(v.Style["height"], self.EM, self.Width)
+						containerHeight -= utils.ConvertToPixels(v.Style["height"], self.EM, self.Width)
 						p := s[v.Children[0].Properties.Id]
 
 						p.Width = (containerWidth / contentWidth) * containerWidth

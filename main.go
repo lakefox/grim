@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	_ "embed"
 	"encoding/json"
-	"fmt"
 	adapter "grim/adapters"
 	"grim/canvas"
 	"grim/cstyle"
@@ -51,6 +50,9 @@ type Window struct {
 
 	Scripts scripts.Scripts
 }
+
+// !ISSUE: Add a Mux option to all a http server to map to the window
+func (window *Window) HttpMux() {}
 
 func (window *Window) Path(path string) {
 
@@ -362,9 +364,11 @@ func AddStyles(c cstyle.CSS, node *element.Node, parent *element.Node) *element.
 
 	if len(node.Children) > 0 {
 		n.Children = make([]*element.Node, 0, len(node.Children))
+		n.Children = append(n.Children, node.Children...)
 		for _, v := range node.Children {
 			n.Children = append(n.Children, AddStyles(c, v, &n))
 		}
+
 	}
 
 	return &n
@@ -374,24 +378,33 @@ func CreateNode(node *html.Node, parent *element.Node) {
 	if node.Type == html.ElementNode {
 		newNode := parent.CreateElement(node.Data)
 		for _, attr := range node.Attr {
-			if attr.Key == "class" {
+			switch attr.Key {
+			case "class":
 				classes := strings.Split(attr.Val, " ")
 				for _, class := range classes {
 					newNode.ClassList.Add(class)
 				}
-			} else if attr.Key == "id" {
+			case "id":
 				newNode.Id = attr.Val
-			} else if attr.Key == "contenteditable" && (attr.Val == "" || attr.Val == "true") {
-				newNode.ContentEditable = true
-			} else if attr.Key == "href" {
+			case "contenteditable":
+				if attr.Val == "" || attr.Val == "true" {
+					newNode.ContentEditable = true
+				}
+			case "href":
 				newNode.Href = attr.Val
-			} else if attr.Key == "src" {
+			case "src":
 				newNode.Src = attr.Val
-			} else if attr.Key == "title" {
+			case "title":
 				newNode.Title = attr.Val
-			} else if attr.Key == "tabindex" {
+			case "tabindex":
 				newNode.TabIndex, _ = strconv.Atoi(attr.Val)
-			} else {
+			case "disabled":
+				newNode.Disabled = true
+			case "required":
+				newNode.Required = true
+			case "checked":
+				newNode.Checked = true
+			default:
 				newNode.SetAttribute(attr.Key, attr.Val)
 			}
 		}
@@ -431,7 +444,6 @@ func parseHTMLFromFile(path string, fs adapter.FileSystem) ([]string, []string, 
 	file, _ := fs.ReadFile(path)
 
 	htmlContent := removeHTMLComments(string(file))
-	htmlContent = string(ConvertSelfClosingTags([]byte(htmlContent)))
 
 	doc, _ := html.Parse(strings.NewReader(encapsulateText(removeWhitespaceBetweenTags(htmlContent))))
 
@@ -585,39 +597,4 @@ func hashStruct(s interface{}) ([]byte, error) {
 	hash := hasher.Sum(nil)
 
 	return hash, nil
-}
-
-// ConvertSelfClosingTags converts self-closing tags in the HTML to non-self-closing tags
-func ConvertSelfClosingTags(html []byte) []byte {
-	// Find the <body> section
-	bodyStart := []byte("<body>")
-	bodyEnd := []byte("</body>")
-
-	startIndex := bytes.Index(html, bodyStart)
-	endIndex := bytes.Index(html, bodyEnd)
-
-	if startIndex == -1 || endIndex == -1 {
-		// If <body> or </body> is not found, return the original HTML
-		return html
-	}
-
-	// Extract the <body> content
-	bodyContent := html[startIndex+len(bodyStart) : endIndex]
-
-	// Regular expression to match self-closing tags (e.g., <br />, <img />, <hr />, etc.)
-	re := regexp.MustCompile(`<(\w+)([^>]*?)/>`)
-	// Replace the self-closing tag with the non-self-closing form
-	convertedBody := re.ReplaceAllFunc(bodyContent, func(match []byte) []byte {
-		// Extract the tag name and the attributes
-		tagName := strings.Split(string(match), " ")[0][1:]
-		attributes := string(match[len(tagName)+2 : len(match)-2])
-		// Rebuild the tag as non-self-closing
-		if attributes == "" {
-			return []byte(fmt.Sprintf("<%s></%s>", tagName, tagName))
-		}
-		return []byte(fmt.Sprintf("<%s %s></%s>", tagName, attributes, tagName))
-	})
-
-	// Reassemble the HTML with the modified body
-	return append(append(html[:startIndex+len(bodyStart)], convertedBody...), html[endIndex:]...)
 }

@@ -3,7 +3,7 @@ package element
 import (
 	"fmt"
 	"grim/canvas"
-	"grim/selector"
+	"grim/parser"
 	ic "image/color"
 	"math"
 	"slices"
@@ -30,6 +30,9 @@ type Node struct {
 	ScrollTop       int
 	TabIndex        int
 	ContentEditable bool
+	Required        bool
+	Disabled        bool
+	Checked         bool
 
 	// !NOTE: ScrollHeight is the amount of scroll left, not the total amount of scroll
 	// + if you  want the same scrollHeight like js the add the height of the element to it
@@ -247,10 +250,9 @@ func TestSelector(selectString string, n *Node) bool {
 		}
 	}
 
-	part := selector.SplitSelector(strings.TrimSpace(parts[len(parts)-1]))
-	// fmt.Println(part)
+	part := parser.SplitSelector(strings.TrimSpace(parts[len(parts)-1]))
 
-	has := selector.Contains(part, selectors)
+	has := parser.Contains(part, selectors)
 
 	if len(parts) == 1 || !has {
 		return has
