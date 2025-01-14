@@ -15,7 +15,7 @@ html {
     color: #000000;
     background-color: #ffffff;
     overflow-y: auto;
-    scrollbar-color: #c7c7c7 #fafafa;
+    scrollbar-color: #6b6b6b #2b2b2b;
     scrollbar-width: auto;
 }
 head {
@@ -330,6 +330,7 @@ input {
     cursor: text;
     height: 1em;
     width: 153px;
+    font-size: 16px;
 }
 input[type="search" i] {
     box-sizing: border-box;

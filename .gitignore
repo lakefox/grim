@@ -2,3 +2,7 @@
 comment
 .DS_Store
 .vscode
+/tests/main
+/test/file.pdf
+/test/cpu.pprof
+/test/mem.pprof

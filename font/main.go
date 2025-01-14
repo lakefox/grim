@@ -83,45 +83,54 @@ func GetFontPath(fontName string, bold string, italic bool, fs *adapter.FileSyst
 
 func findFont(name string, bold string, italic bool, paths []string) string {
 	namePattern := `(?i)\b` + regexp.QuoteMeta(strings.ToLower(name)) + `\b` // Match 'name' as a word, case-insensitive
+	wns := []string{"thin",
+		"extralight",
+		"light",
+		"medium",
+		"semibold",
+		"bold",
+		"extrabold",
+		"black"}
+	matches := []string{}
 	for _, v := range paths {
 		fileName := filepath.Base(strings.ToLower(v))
 		matched, _ := regexp.MatchString(namePattern, fileName)
 		if matched {
-			weightName := GetWeightName(bold)
-			if bold == "" {
-				wns := []string{"thin",
-					"extralight",
-					"light",
-					"medium",
-					"semibold",
-					"bold",
-					"extrabold",
-					"black"}
-				doesContain := false
-				for _, wn := range wns {
-					if strings.Contains(fileName, wn) {
-						doesContain = true
-					}
-				}
-				if doesContain {
-					continue
-				}
-			}
-			if !strings.Contains(fileName, weightName) {
-				continue
-			}
+
 			if italic {
 				if strings.Contains(fileName, "italic") {
-					return v
+					matches = append(matches, strings.ToLower(v))
 				}
 			} else {
 				if !strings.Contains(fileName, "italic") {
-					return v
+					matches = append(matches, strings.ToLower(v))
 				}
 			}
 		}
 	}
-	return ""
+
+	for _, v := range matches {
+		weightName := GetWeightName(bold)
+		if bold == "" {
+			doesContain := false
+			for _, wn := range wns {
+				if strings.Contains(v, wn) {
+					doesContain = true
+				}
+			}
+			if doesContain {
+				continue
+			}
+		}
+		if strings.Contains(v, weightName) {
+			return v
+		}
+	}
+	if len(matches) > 0 {
+		return matches[0]
+	} else {
+		return ""
+	}
 }
 
 func GetWeightName(weight string) string {

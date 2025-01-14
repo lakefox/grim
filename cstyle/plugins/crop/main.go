@@ -104,8 +104,6 @@ func Init() cstyle.Plugin {
 					width := int(child.Width)
 					height := int(child.Height)
 
-					// fmt.Println(scrollTop, scrollLeft)
-
 					if child.Y-float32(scrollTop) < (self.Y) {
 						yCrop = int((self.Y) - (child.Y - float32(scrollTop)))
 						height = int(child.Height) - yCrop
@@ -121,11 +119,7 @@ func Init() cstyle.Plugin {
 							w = self.Width + float32(scrollLeft) - child.X
 						}
 						width = int(w) - xCrop
-						// if self.Width < child.Width-float32(scrollLeft-int(self.X+self.Margin.Left)) {
-						// 	width = int(self.Width)
-						// } else {
-						// 	width = int(child.Width) - (scrollLeft - int(self.X+self.Margin.Left))
-						// }
+
 					} else if (child.X-float32(scrollLeft))+child.Width > self.X+self.Width {
 						diff := ((child.X - float32(scrollLeft)) + child.Width) - (self.X + self.Width)
 						width = int(child.Width) - int(diff)
@@ -138,7 +132,6 @@ func Init() cstyle.Plugin {
 						Width:  width,
 						Height: height,
 					}
-					// fmt.Println(child.Crop)
 					(*state)[v.Properties.Id] = child
 
 					updateChildren(v, state, scrollTop, scrollLeft)

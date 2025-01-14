@@ -3,7 +3,6 @@ package element
 import (
 	"fmt"
 	"grim/canvas"
-	"grim/parser"
 	ic "image/color"
 	"math"
 	"slices"
@@ -85,6 +84,13 @@ type Crop struct {
 	Height int
 }
 
+type MarginPadding struct {
+	Top    float32
+	Left   float32
+	Right  float32
+	Bottom float32
+}
+
 // !FLAG: I would like to remove element.Node.Properties if possible but I don't think it is
 
 type Properties struct {
@@ -100,12 +106,12 @@ type ClassList struct {
 	Value   string
 }
 
-type MarginPadding struct {
-	Top    float32
-	Left   float32
-	Right  float32
-	Bottom float32
-}
+// func (n *Node) InnerText(value ...string) string {
+// 	if len(value) > 0 {
+// 		n.innerText = value[0] // Setter
+// 	}
+// 	return n.innerText // Getter
+// }
 
 func (c *ClassList) Add(class string) {
 	if !slices.Contains(c.Classes, class) {
@@ -201,66 +207,66 @@ func (n *Node) CreateElement(name string) Node {
 	}
 }
 
-func (n *Node) QuerySelectorAll(selectString string) *[]*Node {
-	results := []*Node{}
-	if TestSelector(selectString, n) {
-		results = append(results, n)
-	}
+// func (n *Node) QuerySelectorAll(selectString string) *[]*Node {
+// 	results := []*Node{}
+// 	if TestSelector(selectString, n) {
+// 		results = append(results, n)
+// 	}
 
-	for i := range n.Children {
-		el := n.Children[i]
-		cr := el.QuerySelectorAll(selectString)
-		if len(*cr) > 0 {
-			results = append(results, *cr...)
-		}
-	}
-	return &results
-}
+// 	for i := range n.Children {
+// 		el := n.Children[i]
+// 		cr := el.QuerySelectorAll(selectString)
+// 		if len(*cr) > 0 {
+// 			results = append(results, *cr...)
+// 		}
+// 	}
+// 	return &results
+// }
 
-func (n *Node) QuerySelector(selectString string) *Node {
-	if TestSelector(selectString, n) {
-		return n
-	}
+// func (n *Node) QuerySelector(selectString string) *Node {
+// 	if TestSelector(selectString, n) {
+// 		return n
+// 	}
 
-	for i := range n.Children {
-		el := n.Children[i]
-		cr := el.QuerySelector(selectString)
-		if cr.Properties.Id != "" {
-			return cr
-		}
-	}
+// 	for i := range n.Children {
+// 		el := n.Children[i]
+// 		cr := el.QuerySelector(selectString)
+// 		if cr.Properties.Id != "" {
+// 			return cr
+// 		}
+// 	}
 
-	return &Node{}
-}
+// 	return &Node{}
+// }
 
-func TestSelector(selectString string, n *Node) bool {
-	parts := strings.Split(selectString, ">")
+// func TestSelector(selectString string, n *Node) bool {
+// 	parts := strings.Split(selectString, ">")
 
-	selectors := []string{}
+// 	selectors := []string{}
 
-	selectors = append(selectors, n.TagName)
+// 	selectors = append(selectors, n.TagName)
 
-	if n.Id != "" {
-		selectors = append(selectors, "#"+n.Id)
-	}
+// 	if n.Id != "" {
+// 		selectors = append(selectors, "#"+n.Id)
+// 	}
 
-	for _, class := range n.ClassList.Classes {
-		if class[0] == ':' {
-			selectors = append(selectors, class)
-		} else {
-			selectors = append(selectors, "."+class)
-		}
-	}
+// 	for _, class := range n.ClassList.Classes {
+// 		if class[0] == ':' {
+// 			selectors = append(selectors, class)
+// 		} else {
+// 			selectors = append(selectors, "."+class)
+// 		}
+// 	}
 
-	part := parser.SplitSelector(strings.TrimSpace(parts[len(parts)-1]))
+// 	part := parser.SplitSelector(strings.TrimSpace(parts[len(parts)-1]))
 
-	has := parser.Contains(part, selectors)
+// 	has := parser.Contains(part, selectors)
 
-	if len(parts) == 1 || !has {
-		return has
-	}
-	return TestSelector(strings.Join(parts[:len(parts)-1], ">"), n.Parent)
-}
+// 	if len(parts) == 1 || !has {
+// 		return has
+// 	}
+// 	return TestSelector(strings.Join(parts[:len(parts)-1], ">"), n.Parent)
+// }
 
 var (
 	idCounter int64

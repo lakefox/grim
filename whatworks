@@ -7,7 +7,7 @@ flex - row,col,justify-row,reverse,align-items,align-content
 queryselector(all)
 events
 hover
-focus
+focus/blur
 text algin
 text decroation
 bold underline overline italic
@@ -21,6 +21,8 @@ borders
 :nth-child
 ::before
 ::after
+:hover
+:focus
 img
 OnClick
 OnContextMenu 

@@ -62,7 +62,6 @@ func Init() cstyle.Plugin {
 			if justifyContent == "" {
 				justifyContent = "normal"
 			}
-			// fmt.Println(flexDirection, flexReversed, flexWrapped, alignItems, alignContent, justifyItems, justifyContent)
 			rows := [][]int{}
 			maxH := float32(0)
 			// maxW := float32(0)

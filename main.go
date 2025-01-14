@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	_ "embed"
 	"encoding/json"
+	"fmt"
 	adapter "grim/adapters"
 	"grim/canvas"
 	"grim/cstyle"
@@ -26,6 +27,7 @@ import (
 	"grim/scripts"
 	"grim/scripts/a"
 	"image"
+	"time"
 
 	"grim/element"
 	"grim/events"
@@ -304,6 +306,11 @@ func Open(data *Window, width, height int) {
 		monitor.GetEvents(&currentEvent)
 	})
 
+	// !ISSUE: the loop should be moved to the adapter and the rerendering should only happen if a eventlistener goes off
+	// + also have a animation loop seperate but thats later
+	// + really should run runevents after get events and if there is any changes then rerender
+	// + ahh what about dom changes in the js api...
+	// + could swap to getters and setters but i don't like them
 	// Main game loop
 	for !shouldStop {
 
@@ -330,7 +337,10 @@ func Open(data *Window, width, height int) {
 
 		if !bytes.Equal(hash, newHash) || resize {
 			hash = newHash
+			fmt.Println("#######")
+			s := time.Now()
 			newDoc := AddStyles(data.CSS, data.Document.Children[0], &data.Document)
+
 			newDoc = data.CSS.Transform(newDoc)
 
 			state["ROOT"] = element.State{
@@ -349,6 +359,8 @@ func Open(data *Window, width, height int) {
 			// fmt.Println(newDoc.OuterHTML)
 			data.Scripts.Run(&data.Document)
 			shelf.Clean()
+			elapsed := time.Since(s)
+			fmt.Printf("Execution time: %s\n", elapsed)
 		}
 
 		monitor.RunEvents(data.Document.Children[0])
@@ -364,9 +376,13 @@ func AddStyles(c cstyle.CSS, node *element.Node, parent *element.Node) *element.
 
 	if len(node.Children) > 0 {
 		n.Children = make([]*element.Node, 0, len(node.Children))
-		n.Children = append(n.Children, node.Children...)
-		for _, v := range node.Children {
-			n.Children = append(n.Children, AddStyles(c, v, &n))
+		// n.Children = append(n.Children, node.Children...)
+		// for _, v := range node.Children {
+		for i := 0; i < len(node.Children); i++ {
+			n.Children = append(n.Children, node.Children[i])
+		}
+		for i := 0; i < len(node.Children); i++ {
+			n.Children[i] = AddStyles(c, node.Children[i], &n)
 		}
 
 	}
@@ -534,13 +550,10 @@ func encapsulateText(htmlString string) string {
 	closeClose := regexp.MustCompile(`(<\/\w+[^>]*>)([^<]+)(<\/\w+[^>]*>)`)
 	a := matchFactory(openOpen)
 	t := openOpen.ReplaceAllStringFunc(htmlString, a)
-	// fmt.Println(t)
 	b := matchFactory(closeOpen)
 	u := closeOpen.ReplaceAllStringFunc(t, b)
-	// fmt.Println(u)
 	c := matchFactory(closeClose)
 	v := closeClose.ReplaceAllStringFunc(u, c)
-	// fmt.Println(v)
 	return v
 }
 

@@ -1,63 +1,14 @@
 package parser
 
 import (
+	"grim/element"
 	"regexp"
 	"strings"
 )
 
 type StyleMap struct {
-	Selector    [][]string
-	Styles      *map[string]string
-	SheetNumber int
-}
-
-func ProcessStyles(selectString string) map[string]*StyleMap {
-	sm := StyleMap{}
-	styleMapMap := map[string]*StyleMap{}
-	re := regexp.MustCompile(`\s+`)
-	parts := []string{}
-	currentPart := ""
-	parenCount := 0 // To track if we are inside parentheses
-
-	for _, r := range re.ReplaceAllString(selectString, " ") {
-		switch {
-		case r == ' ' && parenCount == 0: // Split only if not inside parentheses
-			if currentPart != "" {
-				parts = append(parts, currentPart)
-				currentPart = ""
-			}
-		case r == '>': // Always split at '>'
-			if currentPart != "" {
-				parts = append(parts, currentPart)
-			}
-			parts = append(parts, string(r))
-			currentPart = ""
-		case r == '(':
-			parenCount++
-			currentPart += string(r)
-		case r == ')':
-			parenCount--
-			currentPart += string(r)
-		default:
-			currentPart += string(r)
-		}
-	}
-
-	// Append the last part if any
-	if currentPart != "" {
-		parts = append(parts, currentPart)
-	}
-	sm.Selector = make([][]string, len(parts))
-
-	for i, v := range parts {
-		part := SplitSelector(strings.TrimSpace(v))
-		sm.Selector[i] = part
-
-		for _, b := range part {
-			styleMapMap[b] = &sm
-		}
-	}
-	return styleMapMap
+	Selector string
+	Styles   *map[string]string
 }
 
 func ParseCSS(css string) (map[string]*map[string]string, map[string][]*StyleMap) {
@@ -75,16 +26,22 @@ func ParseCSS(css string) (map[string]*map[string]string, map[string][]*StyleMap
 		styleBlock := match[2]
 
 		selectors := parseSelectors(selectorBlock)
-		for _, selector := range selectors {
+		for _, s := range selectors {
 			styles := parseStyles(styleBlock)
-			selectorMap[selector] = &styles
-			smm := ProcessStyles(selector)
-			for k := range smm {
-				smm[k].Styles = &styles
-				if styleMaps[k] == nil {
-					styleMaps[k] = []*StyleMap{}
+			selectorMap[s] = &styles
+			sel := element.ExtractBaseElements(s)
+			smm := map[string]*StyleMap{}
+			for _, is := range sel {
+				for _, v := range is {
+					smm[v] = &StyleMap{}
+					smm[v].Styles = &styles
+					smm[v].Selector = s
+					if styleMaps[v] == nil {
+						styleMaps[v] = []*StyleMap{}
+					}
+					styleMaps[v] = append(styleMaps[v], smm[v])
 				}
-				styleMaps[k] = append(styleMaps[k], smm[k])
+
 			}
 		}
 	}

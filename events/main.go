@@ -529,7 +529,6 @@ func (m *Monitor) GetEvents(data *EventData) {
 	}
 
 	if softFocus != "" {
-		// fmt.Println(softFocus)
 		m.Focus.SoftFocused = softFocus
 	}
 }

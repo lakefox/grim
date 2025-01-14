@@ -1,9 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"grim"
 	"grim/adapters/raylib"
-	// "github.com/pkg/profile"
 )
 
 // go tool pprof --pdf ./main ./cpu.pprof > file.pdf && open file.pdf
@@ -15,8 +15,11 @@ func main() {
 	// defaults read ~/Library/Preferences/.GlobalPreferences.plist
 	// !ISSUE: Flex2 doesn't work anymore
 	window := grim.New(raylib.Init())
+	window.Path("./src/index.html")
 
-	window.Path("./src/superselector.html")
+	document := window.Document
+
+	fmt.Println(document.QuerySelector(":nth-child(1)"))
 
 	grim.Open(&window, 850, 400)
 }

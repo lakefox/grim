@@ -81,9 +81,9 @@ html {
     background: pink;
 }
 
-/* #paragraph::before {
+#paragraph::before {
     content: "HI";
-} */
+}
 .border {
     border-top: solid 20px blue;
     border-bottom: solid 20px orange;

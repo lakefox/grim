@@ -56,8 +56,8 @@ func Init() cstyle.Transformer {
 				backgroundColor = splitStr[1]
 				thumbColor = splitStr[0]
 			} else {
-				backgroundColor = "#fafafa"
-				thumbColor = "#c7c7c7"
+				backgroundColor = "#2b2b2b"
+				thumbColor = "#6b6b6b"
 
 			}
 
