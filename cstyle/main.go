@@ -161,9 +161,11 @@ func (c *CSS) GetStyles(n *element.Node) (map[string]string, map[string]map[stri
 		sm := c.StyleMap[v]
 		for _, m := range sm {
 			if element.ShouldTestSelector(n, m.Selector) {
+				// fmt.Println("########### ", n.Properties.Id, " ##########")
 				match, isPseudo := element.TestSelector(n, m.Selector)
 				if match {
 					if isPseudo {
+						// fmt.Println(m.Selector)
 						pseudoSelector := "::" + strings.Split(m.Selector, "::")[1]
 						if pseudoStyles[pseudoSelector] == nil {
 							pseudoStyles[pseudoSelector] = map[string]string{}

@@ -97,7 +97,7 @@ type Properties struct {
 	Id             string
 	EventListeners map[string][]func(Event) `json:"-"`
 	// Events         []string
-	// !TODO: After focus
+	// !TODO: Make selected work
 	Selected []float32
 }
 

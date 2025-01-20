@@ -6,12 +6,7 @@ import (
 	"strings"
 )
 
-// !TODO: Create :not and other selectors
-// + :nth-last-child()etc..
-
 // !TODO: Make var() and :root (root is implide)
-
-// !ISSUE: Psuedo selectors don't work
 
 func (n *Node) QuerySelector(selectString string) *Node {
 	m, _ := TestSelector(n, selectString)
@@ -32,6 +27,7 @@ func (n *Node) QuerySelector(selectString string) *Node {
 
 func (n *Node) QuerySelectorAll(selectString string) *[]*Node {
 	results := []*Node{}
+
 	m, _ := TestSelector(n, selectString)
 	if m {
 		results = append(results, n)
@@ -185,10 +181,12 @@ func TestSelector(n *Node, selector string) (bool, bool) {
 			return !m, false
 		} else if len(selector) >= 11 && selector[0:11] == ":nth-child(" {
 			index := 0
-			for _, v := range n.Parent.Children {
-				index++
-				if v.Properties.Id == n.Properties.Id {
-					break
+			if n.Parent != nil {
+				for _, v := range n.Parent.Children {
+					index++
+					if v.Properties.Id == n.Properties.Id {
+						break
+					}
 				}
 			}
 			m := NthChildMatch(selector[11:len(selector)-1], index)
@@ -220,15 +218,14 @@ func TestSelector(n *Node, selector string) (bool, bool) {
 		if len(directChildren) > 1 {
 			currentElement := n
 			match := true
-			for i := len(directChildren) - 2; i >= 0; i-- {
-				currentElement = currentElement.Parent
+			for i := len(directChildren) - 1; i >= 0; i-- {
 				m, _ := TestSelector(currentElement, directChildren[i])
 				if !m {
 					match = false
 				}
+				currentElement = currentElement.Parent
 			}
 			has = match
-			break
 		}
 		for _, dc := range directChildren {
 			adjacentSiblings := splitSelector(dc, '+')
@@ -241,7 +238,8 @@ func TestSelector(n *Node, selector string) (bool, bool) {
 						m, _ := TestSelector(v, sel)
 						if m {
 							if match {
-								return i == index, false
+								has, isPsuedo = i == index, false
+								break
 							}
 							match = true
 							index = i + 1
@@ -269,7 +267,8 @@ func TestSelector(n *Node, selector string) (bool, bool) {
 							m, _ := TestSelector(v, sel)
 							if m {
 								if match {
-									return true, false
+									has, isPsuedo = true, false
+									break
 								}
 								match = true
 								break
@@ -286,8 +285,10 @@ func TestSelector(n *Node, selector string) (bool, bool) {
 					descendants := splitSelector(gs, ' ')
 					for _, d := range descendants {
 						computeAble := splitSelector(d, ':')
+						if len(computeAble) == 0 {
+							continue
+						}
 						baseNode := computeAble[0]
-
 						if len(computeAble) > 1 {
 							match := true
 							for _, v := range computeAble[1:] {
@@ -296,12 +297,12 @@ func TestSelector(n *Node, selector string) (bool, bool) {
 								if !m {
 									match = false
 								} else if len(v) > 10 && v[0:10] == "nth-child(" {
-									return true, false
+									has = CompareSelector(baseNode, n)
+									break
 								}
 							}
 							has = match
 						}
-
 						if has || !(len(computeAble) > 1) {
 							m := CompareSelector(baseNode, n)
 							has = m
@@ -319,6 +320,7 @@ func TestSelector(n *Node, selector string) (bool, bool) {
 			return true, isPsuedo
 		}
 	}
+
 	return has, isPsuedo
 }
 

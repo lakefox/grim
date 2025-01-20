@@ -15,11 +15,14 @@ func main() {
 	// defaults read ~/Library/Preferences/.GlobalPreferences.plist
 	// !ISSUE: Flex2 doesn't work anymore
 	window := grim.New(raylib.Init())
-	window.Path("./src/index.html")
+	window.Path("./src/superselector.html")
+	document := window.Document()
 
-	document := window.Document
+	qsa := document.QuerySelectorAll(`body:has(h1.class + h1)> h1[attr="test"]#id.class:has(input:is(input[type="text"]) + div),a`)
 
-	fmt.Println(document.QuerySelector(":nth-child(1)"))
-
+	for _, v := range *qsa {
+		fmt.Println("qsa: ", v.Properties.Id)
+	}
+	// body:has(h1.class + h1)> h1[attr="test"]#id.class:has(input:is(input[type="text"]) + div),a {
 	grim.Open(&window, 850, 400)
 }

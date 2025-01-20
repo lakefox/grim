@@ -6,3 +6,5 @@ comment
 /test/file.pdf
 /test/cpu.pprof
 /test/mem.pprof
+.vscode
+.DS_Store

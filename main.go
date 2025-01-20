@@ -48,16 +48,19 @@ var mastercss string
 
 type Window struct {
 	CSS      cstyle.CSS
-	Document element.Node
+	document element.Node
 
 	Scripts scripts.Scripts
 }
 
-// !ISSUE: Add a Mux option to all a http server to map to the window
+func (w *Window) Document() *element.Node {
+	return w.document.Children[0]
+}
+
+// !TODO: Add a Mux option to all a http server to map to the window
 func (window *Window) HttpMux() {}
 
 func (window *Window) Path(path string) {
-
 	styleSheets, styleTags, htmlNodes := parseHTMLFromFile(path, window.CSS.Adapter.FileSystem)
 
 	for _, v := range styleSheets {
@@ -70,7 +73,8 @@ func (window *Window) Path(path string) {
 
 	window.CSS.Path = filepath.Dir(path)
 
-	CreateNode(htmlNodes, &window.Document)
+	CreateNode(htmlNodes, &window.document)
+	// window.Document = *window.Document
 }
 
 func New(adapterFunction *adapter.Adapter) Window {
@@ -108,7 +112,7 @@ func New(adapterFunction *adapter.Adapter) Window {
 
 	return Window{
 		CSS:      css,
-		Document: document,
+		document: document,
 		Scripts:  s,
 	}
 }
@@ -202,6 +206,8 @@ func flatten(n *element.Node) []*element.Node {
 	return nodes
 }
 
+// !ISSUE: Probally don't need this to be exposed to the outside, if using getter/setter, just render once content is loaded then everytime a event
+// + or content update
 func Open(data *Window, width, height int) {
 	shelf := library.Shelf{
 		Textures:   map[string]*image.RGBA{},
@@ -209,8 +215,8 @@ func Open(data *Window, width, height int) {
 	}
 
 	debug := false
-	data.Document.Style["width"] = strconv.Itoa(int(width)) + "px"
-	data.Document.Style["height"] = strconv.Itoa(int(height)) + "px"
+	data.document.Style["width"] = strconv.Itoa(int(width)) + "px"
+	data.document.Style["height"] = strconv.Itoa(int(height)) + "px"
 
 	data.CSS.Adapter.Library = &shelf
 	data.CSS.Adapter.Init(width, height)
@@ -329,17 +335,17 @@ func Open(data *Window, width, height int) {
 			data.CSS.Width = float32(width)
 			data.CSS.Height = float32(height)
 
-			data.Document.Style["width"] = strconv.Itoa(int(width)) + "px"
-			data.Document.Style["height"] = strconv.Itoa(int(height)) + "px"
+			data.document.Style["width"] = strconv.Itoa(int(width)) + "px"
+			data.document.Style["height"] = strconv.Itoa(int(height)) + "px"
 		}
 
-		newHash, _ := hashStruct(&data.Document.Children[0])
+		newHash, _ := hashStruct(&data.document.Children[0])
 
 		if !bytes.Equal(hash, newHash) || resize {
 			hash = newHash
-			fmt.Println("#######")
+			fmt.Println("----------------------------------")
 			s := time.Now()
-			newDoc := AddStyles(data.CSS, data.Document.Children[0], &data.Document)
+			newDoc := AddStyles(data.CSS, data.document.Children[0], &data.document)
 
 			newDoc = data.CSS.Transform(newDoc)
 
@@ -354,16 +360,16 @@ func Open(data *Window, width, height int) {
 
 			data.CSS.Adapter.Load(rd)
 
-			AddHTMLAndAttrs(&data.Document, &state)
+			AddHTMLAndAttrs(&data.document, &state)
 			// AddHTMLAndAttrs(newDoc, &state)
 			// fmt.Println(newDoc.OuterHTML)
-			data.Scripts.Run(&data.Document)
+			data.Scripts.Run(&data.document)
 			shelf.Clean()
 			elapsed := time.Since(s)
 			fmt.Printf("Execution time: %s\n", elapsed)
 		}
 
-		monitor.RunEvents(data.Document.Children[0])
+		monitor.RunEvents(data.document.Children[0])
 		data.CSS.Adapter.Render(rd)
 	}
 }
