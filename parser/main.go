@@ -9,11 +9,10 @@ import (
 type StyleMap struct {
 	Selector string
 	Styles   *map[string]string
+	Sheet int
 }
 
-func ParseCSS(css string) (map[string]*map[string]string, map[string][]*StyleMap) {
-	selectorMap := make(map[string]*map[string]string)
-
+func ParseCSS(css string, sheet int) map[string][]*StyleMap {
 	// Remove comments
 	css = removeComments(css)
 
@@ -28,7 +27,7 @@ func ParseCSS(css string) (map[string]*map[string]string, map[string][]*StyleMap
 		selectors := parseSelectors(selectorBlock)
 		for _, s := range selectors {
 			styles := parseStyles(styleBlock)
-			selectorMap[s] = &styles
+
 			sel := element.ExtractBaseElements(s)
 			smm := map[string]*StyleMap{}
 			for _, is := range sel {
@@ -46,7 +45,7 @@ func ParseCSS(css string) (map[string]*map[string]string, map[string][]*StyleMap
 		}
 	}
 
-	return selectorMap, styleMaps
+	return styleMaps
 }
 
 func parseSelectors(selectorBlock string) []string {

@@ -28,12 +28,16 @@ func Init() cstyle.Transformer {
 				n.Style["margin-right"] = mb[1]
 			} else if writingMode == "vertical-rl" {
 				// !ISSUE: This will not move everything over
-				// + https://developer.mozilla.org/en-US/docs/Web/CSS/margin-block
+				// + link: https://developer.mozilla.org/en-US/docs/Web/CSS/margin-block
 				n.Style["margin-left"] = mb[1]
 				n.Style["margin-right"] = mb[0]
-			} else {
-				n.Style["margin-top"] = mb[0]
-				n.Style["margin-bottom"] = mb[1]
+			} else if n.Style["margin"] == "" {
+				if n.Style["margin-top"] == "" {
+					n.Style["margin-top"] = mb[0]
+				}
+				if n.Style["margin-bottom"] == "" {
+					n.Style["margin-bottom"] = mb[0]
+				}
 			}
 
 			return n

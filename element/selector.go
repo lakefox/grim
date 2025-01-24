@@ -8,6 +8,10 @@ import (
 
 // !TODO: Make var() and :root (root is implide)
 
+// !MAN,ELEMENT: QuerySelector is a Node method to select an element using a CSS selector
+// + [!MAN]Note: the CSS query is performed relative to the Node calling it
+// + [!MAN]Usage: element.Node.QuerySelector("css,query") -> element.Node
+// + [!DEVMAN]Note: See TestSelector for query information
 func (n *Node) QuerySelector(selectString string) *Node {
 	m, _ := TestSelector(n, selectString)
 	if m {
@@ -25,6 +29,10 @@ func (n *Node) QuerySelector(selectString string) *Node {
 	return &Node{}
 }
 
+// !MAN,ELEMENT: QuerySelectorAll is a Node method to select all matching elements using a CSS selector
+// + [!MAN]Note: the CSS query is performed relative to the Node calling it
+// + [!MAN]Usage: element.Node.QuerySelectorAll("css,query") -> []element.Node
+// + [!DEVMAN]Note: See TestSelector for query information
 func (n *Node) QuerySelectorAll(selectString string) *[]*Node {
 	results := []*Node{}
 
@@ -154,6 +162,10 @@ func NthChildMatch(pattern string, index int) bool {
 	return (index-b)%a == 0 && (index-b)/a >= 0
 }
 
+// !ISSUE: :where doesn't work and h1+h1 is propagating to all elements on superselector
+// + :where selects properly but the margin doesn't...
+// + h1+h1 selects all but should only select the last two...
+
 func TestSelector(n *Node, selector string) (bool, bool) {
 	selectors := splitSelector(selector, ',')
 
@@ -226,35 +238,34 @@ func TestSelector(n *Node, selector string) (bool, bool) {
 				currentElement = currentElement.Parent
 			}
 			has = match
+			break
 		}
 		for _, dc := range directChildren {
 			adjacentSiblings := splitSelector(dc, '+')
 			if len(adjacentSiblings) > 1 {
-				match := false
-				index := 0
-				for _, sel := range adjacentSiblings {
-					for i := index; i < len(n.Parent.Children); i++ {
-						v := n.Parent.Children[i]
-						m, _ := TestSelector(v, sel)
-						if m {
-							if match {
-								has, isPsuedo = i == index, false
-								break
+				for i, v := range n.Parent.Children {
+					if v.Properties.Id == n.Properties.Id {
+						// Make sure the current element matches the last selector
+						m,_ := TestSelector(n, adjacentSiblings[len(adjacentSiblings)-1])
+						if i >= len(adjacentSiblings)-1 && m {
+							match := true
+							// Skip the first selector, its been matched to the current node
+							adjIndex := len(adjacentSiblings)-2
+							for j := i-1; j >= i-len(adjacentSiblings)+1; j-- {
+								sm, _ := TestSelector(n.Parent.Children[j], adjacentSiblings[adjIndex])
+								if !sm {
+									match = false
+									break
+								}
+								adjIndex--
 							}
-							match = true
-							index = i + 1
-							if index > len(n.Parent.Children)-1 {
-								has = false
-								break
-							}
-							break
+							has = match
 						}
-					}
-					if !match {
+
 						break
 					}
-				}
-				has = match
+				}	
+				
 				break
 			}
 			for _, as := range adjacentSiblings {
@@ -283,6 +294,35 @@ func TestSelector(n *Node, selector string) (bool, bool) {
 				}
 				for _, gs := range generalSiblings {
 					descendants := splitSelector(gs, ' ')
+					if len(descendants) > 1 {
+						// !DEVMAN,ELEMENT,TESTSELECTOR: Descendants selector checks for any parent to have
+						// + the next tag, but doesn't check the main tag if it did and the main didn't 
+						// + have the selector then it would move up. So instead the main tag is skipped 
+						// + until the next check.
+						currentElement := n.Parent
+						match := false
+						for i := len(descendants)-1; i > 0; i-- {
+							m := false
+							for currentElement.Parent != nil && !m {
+								m, _ = TestSelector(currentElement, descendants[i])
+								if m {
+									match = m
+									break
+								}
+								currentElement = currentElement.Parent
+							}
+
+							if !m {
+								match = false
+								break
+							}
+						}
+						if !match {
+							break
+						}
+						has = match
+						// A break is not inserted here because of the main element check
+					}
 					for _, d := range descendants {
 						computeAble := splitSelector(d, ':')
 						if len(computeAble) == 0 {
@@ -413,6 +453,7 @@ func CompareSelector(selector string, n *Node) bool {
 
 func ExtractBaseElements(selector string) [][]string {
 	var baseElements []string
+
 	selectors := splitSelector(selector, ',')
 	for _, s := range selectors {
 		directChild := splitSelector(s, '>')
@@ -431,6 +472,17 @@ func ExtractBaseElements(selector string) [][]string {
 	}
 
 	baseParts := [][]string{}
+
+	computeAble := splitSelector(selector, ':')
+
+	for _, v := range computeAble {
+		if strings.Contains(v, "(") {
+			be := ExtractBaseElements(v[strings.Index(v,"(")+1: len(v)-2])
+			for _,b := range be {
+				baseElements = append(baseElements, b...)
+			}
+		}
+	}
 
 	for _, v := range baseElements {
 		ps := ParseSelector(v)

@@ -10,6 +10,7 @@ import (
 	"grim/parser"
 	"grim/utils"
 	"image"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -31,7 +32,6 @@ type Transformer struct {
 type CSS struct {
 	Width        float32
 	Height       float32
-	StyleSheets  []map[string]*map[string]string
 	Plugins      []Plugin
 	Transformers []Transformer
 	Document     *element.Node
@@ -39,6 +39,7 @@ type CSS struct {
 	StyleMap     map[string][]*parser.StyleMap
 	Adapter      *adapter.Adapter
 	Path         string
+	StyleSheets  int
 }
 
 func (c *CSS) Transform(n *element.Node) *element.Node {
@@ -59,7 +60,8 @@ func (c *CSS) Transform(n *element.Node) *element.Node {
 func (c *CSS) StyleSheet(path string) {
 	// Parse the CSS file
 	data, _ := c.Adapter.FileSystem.ReadFile(path)
-	styles, styleMaps := parser.ParseCSS(string(data))
+	styleMaps := parser.ParseCSS(string(data), c.StyleSheets)
+	c.StyleSheets++
 
 	if c.StyleMap == nil {
 		c.StyleMap = map[string][]*parser.StyleMap{}
@@ -71,12 +73,11 @@ func (c *CSS) StyleSheet(path string) {
 		}
 		c.StyleMap[k] = append(c.StyleMap[k], v...)
 	}
-
-	c.StyleSheets = append(c.StyleSheets, styles)
 }
 
 func (c *CSS) StyleTag(css string) {
-	styles, styleMaps := parser.ParseCSS(css)
+	styleMaps := parser.ParseCSS(css, c.StyleSheets)
+	c.StyleSheets++
 
 	if c.StyleMap == nil {
 		c.StyleMap = map[string][]*parser.StyleMap{}
@@ -88,8 +89,6 @@ func (c *CSS) StyleTag(css string) {
 		}
 		c.StyleMap[k] = append(c.StyleMap[k], v...)
 	}
-
-	c.StyleSheets = append(c.StyleSheets, styles)
 }
 
 var inheritedProps = []string{
@@ -97,7 +96,6 @@ var inheritedProps = []string{
 	"cursor",
 	"font",
 	"font-family",
-	"font-size",
 	"font-style",
 	"font-weight",
 	"letter-spacing",
@@ -155,71 +153,44 @@ func (c *CSS) GetStyles(n *element.Node) (map[string]string, map[string]map[stri
 	}
 
 	baseSelectors := element.GenBaseElements(n)
-	parentSelectors := element.GenBaseElements(n.Parent)
+	testedSelectors := map[string]bool{}
 
+	// !DEVMAN: You need to pre-sort the selectors by their .Sheet field to create the 
+	// + cascading effect of CSS
+
+	styleMaps := []*parser.StyleMap{}
 	for _, v := range baseSelectors {
 		sm := c.StyleMap[v]
-		for _, m := range sm {
-			if element.ShouldTestSelector(n, m.Selector) {
-				// fmt.Println("########### ", n.Properties.Id, " ##########")
-				match, isPseudo := element.TestSelector(n, m.Selector)
-				if match {
-					if isPseudo {
-						// fmt.Println(m.Selector)
-						pseudoSelector := "::" + strings.Split(m.Selector, "::")[1]
+		styleMaps = append(styleMaps, sm...)
+	}
+	sort.Slice(styleMaps, func(i, j int) bool {
+		return styleMaps[i].Sheet < styleMaps[j].Sheet
+	})
+	for _, m := range styleMaps {
+		if element.ShouldTestSelector(n, m.Selector) {
+			testedSelectors[m.Selector] = true	
+			match, isPseudo := element.TestSelector(n, m.Selector)
+			if match {
+				if isPseudo {
+					pseudoSelector := "::" + strings.Split(m.Selector, "::")[1]
+					if pseudoStyles[pseudoSelector] == nil {
+						pseudoStyles[pseudoSelector] = map[string]string{}
+					}
+					for k, v := range *m.Styles {
 						if pseudoStyles[pseudoSelector] == nil {
 							pseudoStyles[pseudoSelector] = map[string]string{}
 						}
-						for k, v := range *m.Styles {
-							if pseudoStyles[pseudoSelector] == nil {
-								pseudoStyles[pseudoSelector] = map[string]string{}
-							}
-							pseudoStyles[pseudoSelector][k] = v
-						}
-					} else {
-						for k, v := range *m.Styles {
-							styles[k] = v
-						}
+						pseudoStyles[pseudoSelector][k] = v
+					}
+				} else {
+					for k, v := range *m.Styles {
+						styles[k] = v
 					}
 				}
 			}
 		}
 	}
-
-	for _, v := range parentSelectors {
-		sm := c.StyleMap[v]
-		for _, m := range sm {
-			if strings.Contains(m.Selector, ":nth-child(") {
-				if element.ShouldTestSelector(n, m.Selector) {
-					match, _ := element.TestSelector(n, m.Selector)
-					if match {
-						for k, v := range *m.Styles {
-							styles[k] = v
-						}
-					}
-				}
-			}
-		}
-	}
-
-	// fmt.Println(n.Properties.Id, styles, n.Parent.Properties.Id, n.Parent.Style)
-
-	// 	if has {
-	// 		if isPseudo {
-	// 			for k, v := range *styleMap.Styles {
-	// 				if pseudoStyles[pseudoSelector] == nil {
-	// 					pseudoStyles[pseudoSelector] = map[string]string{}
-	// 				}
-	// 				pseudoStyles[pseudoSelector][k] = v
-	// 			}
-	// 		} else {
-	// 			for k, v := range *styleMap.Styles {
-	// 				styles[k] = v
-	// 			}
-	// 		}
-	// 	}
-	// }
-
+	
 	// Parse inline styles
 	inlineStyles := parser.ParseStyleAttribute(n.GetAttribute("style"))
 	for k, v := range inlineStyles {
@@ -263,7 +234,10 @@ func (c *CSS) ComputeNodeStyle(n *element.Node, state *map[string]element.State)
 	self.Background = color.Parse(style, "background")
 	self.Border, _ = border.Parse(style, self, parent)
 	border.Draw(&self, shelf)
-
+	
+	if style["font-size"] == "" {
+		style["font-size"] = "1em"
+	}
 	fs := utils.ConvertToPixels(style["font-size"], parent.EM, parent.Width)
 	self.EM = fs
 

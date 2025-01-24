@@ -17,7 +17,7 @@ import (
 	"grim/cstyle/transformers/banda"
 	flexprep "grim/cstyle/transformers/flex"
 	img "grim/cstyle/transformers/image"
-	marginblock "grim/cstyle/transformers/margin-block"
+	// marginblock "grim/cstyle/transformers/margin-block"
 	"grim/cstyle/transformers/ol"
 	"grim/cstyle/transformers/scrollbar"
 	"grim/cstyle/transformers/text"
@@ -95,7 +95,7 @@ func New(adapterFunction *adapter.Adapter) Window {
 	css.AddTransformer(banda.Init())
 	css.AddTransformer(scrollbar.Init())
 	css.AddTransformer(flexprep.Init())
-	css.AddTransformer(marginblock.Init())
+	// css.AddTransformer(marginblock.Init())
 	css.AddTransformer(ul.Init())
 	css.AddTransformer(ol.Init())
 	css.AddTransformer(background.Init())
