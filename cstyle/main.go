@@ -117,7 +117,7 @@ func (c *CSS) QuickStyles(n *element.Node) map[string]string {
 
 	// Inherit styles from parent
 	if n.Parent != nil {
-		ps := n.Parent.Style
+		ps := n.Parent.CStyle
 		for _, prop := range inheritedProps {
 			if value, ok := ps[prop]; ok && value != "" {
 				styles[prop] = value
@@ -126,7 +126,7 @@ func (c *CSS) QuickStyles(n *element.Node) map[string]string {
 	}
 
 	// Add node's own styles
-	for k, v := range n.Style {
+	for k, v := range n.CStyle {
 		styles[k] = v
 	}
 
@@ -139,7 +139,7 @@ func (c *CSS) GetStyles(n *element.Node) (map[string]string, map[string]map[stri
 
 	// Inherit styles from parent
 	if n.Parent != nil {
-		ps := n.Parent.Style
+		ps := n.Parent.CStyle
 		for _, prop := range inheritedProps {
 			if value, ok := ps[prop]; ok && value != "" {
 				styles[prop] = value
@@ -148,14 +148,14 @@ func (c *CSS) GetStyles(n *element.Node) (map[string]string, map[string]map[stri
 	}
 
 	// Add node's own styles
-	for k, v := range n.Style {
+	for k, v := range n.CStyle {
 		styles[k] = v
 	}
 
 	baseSelectors := element.GenBaseElements(n)
 	testedSelectors := map[string]bool{}
 
-	// !DEVMAN: You need to pre-sort the selectors by their .Sheet field to create the 
+	// !DEVMAN: You need to pre-sort the selectors by their .Sheet field to create the
 	// + cascading effect of CSS
 
 	styleMaps := []*parser.StyleMap{}
@@ -168,7 +168,7 @@ func (c *CSS) GetStyles(n *element.Node) (map[string]string, map[string]map[stri
 	})
 	for _, m := range styleMaps {
 		if element.ShouldTestSelector(n, m.Selector) {
-			testedSelectors[m.Selector] = true	
+			testedSelectors[m.Selector] = true
 			match, isPseudo := element.TestSelector(n, m.Selector)
 			if match {
 				if isPseudo {
@@ -190,7 +190,7 @@ func (c *CSS) GetStyles(n *element.Node) (map[string]string, map[string]map[stri
 			}
 		}
 	}
-	
+
 	// Parse inline styles
 	inlineStyles := parser.ParseStyleAttribute(n.GetAttribute("style"))
 	for k, v := range inlineStyles {
@@ -199,7 +199,7 @@ func (c *CSS) GetStyles(n *element.Node) (map[string]string, map[string]map[stri
 
 	// Handle z-index inheritance
 	if n.Parent != nil && styles["z-index"] == "" {
-		if parentZIndex, ok := n.Parent.Style["z-index"]; ok && parentZIndex != "" {
+		if parentZIndex, ok := n.Parent.CStyle["z-index"]; ok && parentZIndex != "" {
 			z, _ := strconv.Atoi(parentZIndex)
 			z += 1
 			styles["z-index"] = strconv.Itoa(z)
@@ -230,11 +230,11 @@ func (c *CSS) ComputeNodeStyle(n *element.Node, state *map[string]element.State)
 	parent := s[n.Parent.Properties.Id]
 
 	// Cache the style map
-	style := n.Style
+	style := n.CStyle
 	self.Background = color.Parse(style, "background")
 	self.Border, _ = border.Parse(style, self, parent)
 	border.Draw(&self, shelf)
-	
+
 	if style["font-size"] == "" {
 		style["font-size"] = "1em"
 	}
@@ -269,7 +269,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node, state *map[string]element.State)
 	p := utils.GetMP(*n, wh, state, "padding")
 	self.Margin = m
 	self.Padding = p
-	self.Cursor = n.Style["cursor"]
+	self.Cursor = n.CStyle["cursor"]
 
 	var top, left, right, bottom bool
 
@@ -294,15 +294,15 @@ func (c *CSS) ComputeNodeStyle(n *element.Node, state *map[string]element.State)
 		}
 	} else {
 		for i, v := range n.Parent.Children {
-			if v.Style["position"] != "absolute" {
+			if v.CStyle["position"] != "absolute" {
 				if v.Properties.Id == n.Properties.Id {
 					if i > 0 {
 						sib := n.Parent.Children[i-1]
 						sibling := s[sib.Properties.Id]
-						if sib.Style["position"] != "absolute" {
+						if sib.CStyle["position"] != "absolute" {
 							if style["display"] == "inline" {
 								y = sibling.Y
-								if sib.Style["display"] != "inline" {
+								if sib.CStyle["display"] != "inline" {
 									y += sibling.Height
 								}
 							} else {
@@ -347,17 +347,17 @@ func (c *CSS) ComputeNodeStyle(n *element.Node, state *map[string]element.State)
 		n.InnerText = strings.TrimSpace(n.InnerText)
 		italic := false
 
-		if n.Style["font-style"] == "italic" {
+		if n.CStyle["font-style"] == "italic" {
 			italic = true
 		}
 
 		if c.Fonts == nil {
 			c.Fonts = map[string]imgFont.Face{}
 		}
-		fid := n.Style["font-family"] + fmt.Sprint(self.EM, n.Style["font-weight"], italic)
+		fid := n.CStyle["font-family"] + fmt.Sprint(self.EM, n.CStyle["font-weight"], italic)
 
 		if c.Fonts[fid] == nil {
-			f, _ := font.LoadFont(n.Style["font-family"], int(self.EM), n.Style["font-weight"], italic, &c.Adapter.FileSystem)
+			f, _ := font.LoadFont(n.CStyle["font-family"], int(self.EM), n.CStyle["font-weight"], italic, &c.Adapter.FileSystem)
 			c.Fonts[fid] = f
 		}
 		fnt := c.Fonts[fid]
@@ -382,11 +382,11 @@ func (c *CSS) ComputeNodeStyle(n *element.Node, state *map[string]element.State)
 			self.Textures = append(self.Textures, c.Adapter.Library.Set(key, data))
 		}
 
-		if n.Style["height"] == "" && n.Style["min-height"] == "" {
+		if n.CStyle["height"] == "" && n.CStyle["min-height"] == "" {
 			self.Height = float32(metadata.LineHeight)
 		}
 
-		if n.Style["width"] == "" && n.Style["min-width"] == "" {
+		if n.CStyle["width"] == "" && n.CStyle["min-width"] == "" {
 			self.Width = float32(width)
 		}
 	}
@@ -431,7 +431,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node, state *map[string]element.State)
 		cState := (*state)[n.Children[i].Properties.Id]
 
 		if style["height"] == "" && style["max-height"] == "" {
-			if v.Style["position"] != "absolute" && cState.Y+cState.Height > childYOffset {
+			if v.CStyle["position"] != "absolute" && cState.Y+cState.Height > childYOffset {
 				childYOffset = cState.Y + cState.Height
 				self.Height = cState.Y - self.Border.Top.Width - self.Y + cState.Height
 				self.Height += cState.Margin.Top + cState.Margin.Bottom + cState.Padding.Top + cState.Padding.Bottom + cState.Border.Top.Width + cState.Border.Bottom.Width
@@ -451,7 +451,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node, state *map[string]element.State)
 			}
 		}
 
-		if cState.Width > self.Width && n.Style["width"] == "" {
+		if cState.Width > self.Width && n.CStyle["width"] == "" {
 			self.Width = cState.Width
 		}
 	}
@@ -469,12 +469,6 @@ func (c *CSS) ComputeNodeStyle(n *element.Node, state *map[string]element.State)
 			v.Handler(n, state, c)
 		}
 	}
-	// if n.TagName != "notaspan" {
-	// 	fmt.Println(">>>", n.Properties.Id, self.X, self.Y, self.Width, self.Height)
-	// 	for k, v := range style {
-	// 		fmt.Println(k, v)
-	// 	}
-	// }
 
 	return n
 }

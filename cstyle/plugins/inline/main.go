@@ -14,7 +14,7 @@ func Init() cstyle.Plugin {
 			}
 			matches := true
 			for name, value := range styles {
-				if n.Style[name] != value && !(value == "*") && n.Style[name] != "" {
+				if n.CStyle[name] != value && !(value == "*") && n.CStyle[name] != "" {
 					matches = false
 				}
 			}
@@ -34,10 +34,10 @@ func Init() cstyle.Plugin {
 			for i, v := range n.Parent.Children {
 				// vState := s[v.Properties.Id]
 				if i > 0 {
-					if v.Style["position"] != "absolute" {
+					if v.CStyle["position"] != "absolute" {
 						if v.Properties.Id == n.Properties.Id {
 							sib := n.Parent.Children[i-1]
-							if sib.Style["position"] == "absolute" {
+							if sib.CStyle["position"] == "absolute" {
 								if i-2 >= 0 {
 									sib = n.Parent.Children[i-2]
 								} else {
@@ -51,7 +51,7 @@ func Init() cstyle.Plugin {
 								self.X = copyOfX
 							} else {
 								// Node did not break
-								if sib.Style["display"] != "inline" {
+								if sib.CStyle["display"] != "inline" {
 									self.Y = sibling.Y + sibling.Height + sibling.Border.Top.Width + sibling.Border.Bottom.Width + sibling.Margin.Top + sibling.Margin.Bottom
 								} else {
 									self.Y = sibling.Y

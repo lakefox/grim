@@ -13,7 +13,7 @@ func Init() cstyle.Plugin {
 			}
 			matches := true
 			for name, value := range styles {
-				if (n.Style[name] != value || n.Style[name] == "") && !(value == "*") {
+				if (n.CStyle[name] != value || n.CStyle[name] == "") && !(value == "*") {
 					matches = false
 				}
 			}
@@ -30,12 +30,12 @@ func Init() cstyle.Plugin {
 			for _, v := range n.Children {
 				// This prevents using absolutely positionioned elements in the alignment of text
 				// + Will need to add the other styles
-				if v.Style["position"] != "absolute" {
+				if v.CStyle["position"] != "absolute" {
 					nChildren = append(nChildren, v)
 				}
 			}
 
-			if n.Style["text-align"] == "center" {
+			if n.CStyle["text-align"] == "center" {
 				if len(nChildren) > 0 {
 					minX = s[nChildren[0].Properties.Id].X
 					baseY := s[nChildren[0].Properties.Id].Y + s[nChildren[0].Properties.Id].Height
@@ -72,7 +72,7 @@ func Init() cstyle.Plugin {
 						(*state)[nChildren[a].Properties.Id] = cState
 					}
 				}
-			} else if n.Style["text-align"] == "right" {
+			} else if n.CStyle["text-align"] == "right" {
 				if len(nChildren) > 0 {
 					minX = s[nChildren[0].Properties.Id].X
 					baseY := s[nChildren[0].Properties.Id].Y + s[nChildren[0].Properties.Id].Height

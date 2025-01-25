@@ -38,8 +38,8 @@ func GetWH(n element.Node, state *map[string]element.State) WidthHeight {
 	self := s[n.Properties.Id]
 	var parent element.State
 
-	if n.Style == nil {
-		n.Style = make(map[string]string)
+	if n.CStyle == nil {
+		n.CStyle = make(map[string]string)
 	}
 
 	fs := self.EM
@@ -54,37 +54,37 @@ func GetWH(n element.Node, state *map[string]element.State) WidthHeight {
 		}
 	} else {
 		pwh = WidthHeight{}
-		if width, exists := n.Style["width"]; exists {
+		if width, exists := n.CStyle["width"]; exists {
 			if f, err := strconv.ParseFloat(strings.TrimSuffix(width, "px"), 32); err == nil {
 				pwh.Width = float32(f)
 			}
 		}
-		if height, exists := n.Style["height"]; exists {
+		if height, exists := n.CStyle["height"]; exists {
 			if f, err := strconv.ParseFloat(strings.TrimSuffix(height, "px"), 32); err == nil {
 				pwh.Height = float32(f)
 			}
 		}
 	}
 
-	wStyle := n.Style["width"]
+	wStyle := n.CStyle["width"]
 
-	if wStyle == "" && n.Style["display"] != "inline" {
+	if wStyle == "" && n.CStyle["display"] != "inline" {
 		wStyle = "100%"
 	}
 
 	width := ConvertToPixels(wStyle, fs, pwh.Width)
-	height := ConvertToPixels(n.Style["height"], fs, pwh.Height)
+	height := ConvertToPixels(n.CStyle["height"], fs, pwh.Height)
 
-	if minWidth, exists := n.Style["min-width"]; exists {
+	if minWidth, exists := n.CStyle["min-width"]; exists {
 		width = Max(width, ConvertToPixels(minWidth, fs, pwh.Width))
 	}
-	if maxWidth, exists := n.Style["max-width"]; exists {
+	if maxWidth, exists := n.CStyle["max-width"]; exists {
 		width = Min(width, ConvertToPixels(maxWidth, fs, pwh.Width))
 	}
-	if minHeight, exists := n.Style["min-height"]; exists {
+	if minHeight, exists := n.CStyle["min-height"]; exists {
 		height = Max(height, ConvertToPixels(minHeight, fs, pwh.Height))
 	}
-	if maxHeight, exists := n.Style["max-height"]; exists {
+	if maxHeight, exists := n.CStyle["max-height"]; exists {
 		height = Min(height, ConvertToPixels(maxHeight, fs, pwh.Height))
 	}
 
@@ -98,12 +98,12 @@ func GetWH(n element.Node, state *map[string]element.State) WidthHeight {
 		wh.Height += self.Padding.Top + self.Padding.Bottom
 	}
 
-	if wStyle == "100%" && n.Style["position"] != "absolute" {
+	if wStyle == "100%" && n.CStyle["position"] != "absolute" {
 		wh.Width -= (self.Margin.Right + self.Margin.Left + self.Border.Left.Width + self.Border.Right.Width + parent.Padding.Left + parent.Padding.Right + self.Padding.Left + self.Padding.Right)
 	}
 
-	if n.Style["height"] == "100%" {
-		if n.Style["position"] == "absolute" {
+	if n.CStyle["height"] == "100%" {
+		if n.CStyle["position"] == "absolute" {
 			wh.Height -= (self.Margin.Top + self.Margin.Bottom)
 		} else {
 			wh.Height -= (self.Margin.Top + self.Margin.Bottom + parent.Padding.Top + parent.Padding.Bottom)
@@ -120,7 +120,7 @@ func GetMP(n element.Node, wh WidthHeight, state *map[string]element.State, t st
 	m := element.MarginPadding{}
 
 	// Cache style properties
-	style := n.Style
+	style := n.CStyle
 	leftKey, rightKey, topKey, bottomKey := t+"-left", t+"-right", t+"-top", t+"-bottom"
 
 	leftStyle := style[leftKey]
@@ -370,13 +370,13 @@ func GetInnerText(n *html.Node) string {
 }
 
 func GetPositionOffsetNode(n *element.Node) *element.Node {
-	pos := n.Style["position"]
+	pos := n.CStyle["position"]
 
 	if pos == "relative" || pos == "absolute" {
 		return n
 	} else {
 		if n.Parent.TagName != "ROOT" {
-			if n.Parent.Style != nil {
+			if n.Parent.CStyle != nil {
 				return GetPositionOffsetNode(n.Parent)
 			} else {
 				return nil
@@ -448,9 +448,9 @@ func NodeToHTML(node *element.Node) (string, string) {
 	}
 
 	// Add class list if present
-	if len(node.ClassList.Classes) > 0 || node.ClassList.Value != "" {
+	if len(node.ClassList.Classes()) > 0 {
 		classes := ""
-		for _, v := range node.ClassList.Classes {
+		for _, v := range node.ClassList.Classes() {
 			if len(v) > 0 {
 				if string(v[0]) != ":" {
 					classes += v + " "
@@ -464,10 +464,10 @@ func NodeToHTML(node *element.Node) (string, string) {
 	}
 
 	// Add style if present
-	if len(node.Style) > 0 {
+	if len(node.CStyle) > 0 {
 
 		style := ""
-		for key, value := range node.Style {
+		for key, value := range node.CStyle {
 			if key != "inlineText" {
 				style += key + ":" + value + ";"
 			}
@@ -480,11 +480,7 @@ func NodeToHTML(node *element.Node) (string, string) {
 	}
 
 	// Add other attributes if present
-	for key, value := range node.Attribute {
-		if strings.TrimSpace(value) != "" {
-			buffer.WriteString(" " + key + "=\"" + value + "\"")
-		}
-	}
+	buffer.WriteString(node.Attribute())
 
 	buffer.WriteString(">")
 
@@ -523,7 +519,7 @@ func InnerHTML(node *element.Node) string {
 
 func ParentStyleProp(n *element.Node, prop string, selector func(string) bool) bool {
 	if n.Parent != nil {
-		if selector(n.Parent.Style[prop]) {
+		if selector(n.Parent.CStyle[prop]) {
 			return true
 		} else {
 			return ParentStyleProp(n.Parent, prop, selector)

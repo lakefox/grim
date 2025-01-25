@@ -1,0 +1,25 @@
+<h2>DEVMAN</h2>
+<h3>File: cstyle/main.go:158</h3>
+<p>You need to pre-sort the selectors by their .Sheet field to create the</br>cascading effect of CSS</p>
+<ul></ul>
+<h3>File: element/selector.go:298</h3>
+<p>Descendants selector checks for any parent to have</br>the next tag, but doesn't check the main tag if it did and the main didn't</br>have the selector then it would move up. So instead the main tag is skipped</br>until the next check.</p>
+<ul></ul>
+<h2>MAN</h2>
+<h3>File: element/selector.go:11</h3>
+<p>QuerySelector is a Node method to select an element using a CSS selector</p>
+<ul><li>
+<b>Note</b>
+See TestSelector for query information
+</li>
+
+</ul>
+<h3>File: element/selector.go:32</h3>
+<p>QuerySelectorAll is a Node method to select all matching elements using a CSS selector</p>
+<ul><li>
+<b>Note</b>
+See TestSelector for query information
+</li>
+
+</ul>
+

@@ -17,6 +17,7 @@ import (
 	"grim/cstyle/transformers/banda"
 	flexprep "grim/cstyle/transformers/flex"
 	img "grim/cstyle/transformers/image"
+
 	// marginblock "grim/cstyle/transformers/margin-block"
 	"grim/cstyle/transformers/ol"
 	"grim/cstyle/transformers/scrollbar"
@@ -103,8 +104,8 @@ func New(adapterFunction *adapter.Adapter) Window {
 
 	el := element.Node{}
 	document := el.CreateElement("ROOT")
-	document.Style["width"] = "800px"
-	document.Style["height"] = "450px"
+	document.CStyle["width"] = "800px"
+	document.CStyle["height"] = "450px"
 	document.Properties.Id = "ROOT"
 
 	s := scripts.Scripts{}
@@ -215,8 +216,8 @@ func Open(data *Window, width, height int) {
 	}
 
 	debug := false
-	data.document.Style["width"] = strconv.Itoa(int(width)) + "px"
-	data.document.Style["height"] = strconv.Itoa(int(height)) + "px"
+	data.document.CStyle["width"] = strconv.Itoa(int(width)) + "px"
+	data.document.CStyle["height"] = strconv.Itoa(int(height)) + "px"
 
 	data.CSS.Adapter.Library = &shelf
 	data.CSS.Adapter.Init(width, height)
@@ -319,7 +320,6 @@ func Open(data *Window, width, height int) {
 	// + could swap to getters and setters but i don't like them
 	// Main game loop
 	for !shouldStop {
-
 		if !shouldStop && debug {
 			shouldStop = true
 		}
@@ -335,8 +335,8 @@ func Open(data *Window, width, height int) {
 			data.CSS.Width = float32(width)
 			data.CSS.Height = float32(height)
 
-			data.document.Style["width"] = strconv.Itoa(int(width)) + "px"
-			data.document.Style["height"] = strconv.Itoa(int(height)) + "px"
+			data.document.CStyle["width"] = strconv.Itoa(int(width)) + "px"
+			data.document.CStyle["height"] = strconv.Itoa(int(height)) + "px"
 		}
 
 		newHash, _ := hashStruct(&data.document.Children[0])
@@ -378,7 +378,7 @@ func AddStyles(c cstyle.CSS, node *element.Node, parent *element.Node) *element.
 	n := *node
 	n.Parent = parent
 
-	n.Style, n.PseudoElements = c.GetStyles(&n)
+	n.CStyle, n.PseudoElements = c.GetStyles(&n)
 
 	if len(node.Children) > 0 {
 		n.Children = make([]*element.Node, 0, len(node.Children))

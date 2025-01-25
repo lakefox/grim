@@ -11,14 +11,14 @@ import (
 func Init() cstyle.Transformer {
 	return cstyle.Transformer{
 		Selector: func(n *element.Node) bool {
-			return n.Style["flex"] != ""
+			return n.CStyle["flex"] != ""
 		},
 		Handler: func(n *element.Node, c *cstyle.CSS) *element.Node {
-			flex, _ := parseFlex(n.Style["flex"])
+			flex, _ := parseFlex(n.CStyle["flex"])
 
-			n.Style["flex-basis"] = flex.FlexBasis
-			n.Style["flex-grow"] = flex.FlexGrow
-			n.Style["flex-shrink"] = flex.FlexShrink
+			n.CStyle["flex-basis"] = flex.FlexBasis
+			n.CStyle["flex-grow"] = flex.FlexGrow
+			n.CStyle["flex-shrink"] = flex.FlexShrink
 
 			return n
 		},

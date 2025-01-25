@@ -213,10 +213,10 @@ func GetMetaData(n *element.Node, state *map[string]element.State, font *font.Fa
 
 	text := MetaData{}
 	text.Font = font
-	letterSpacing := utils.ConvertToPixels(n.Style["letter-spacing"], self.EM, parent.Width)
-	wordSpacing := utils.ConvertToPixels(n.Style["word-spacing"], self.EM, parent.Width)
-	lineHeight := utils.ConvertToPixels(n.Style["line-height"], self.EM, parent.Width)
-	underlineoffset := utils.ConvertToPixels(n.Style["text-underline-offset"], self.EM, parent.Width)
+	letterSpacing := utils.ConvertToPixels(n.CStyle["letter-spacing"], self.EM, parent.Width)
+	wordSpacing := utils.ConvertToPixels(n.CStyle["word-spacing"], self.EM, parent.Width)
+	lineHeight := utils.ConvertToPixels(n.CStyle["line-height"], self.EM, parent.Width)
+	underlineoffset := utils.ConvertToPixels(n.CStyle["text-underline-offset"], self.EM, parent.Width)
 
 	if lineHeight == 0 {
 		lineHeight = self.EM + 3
@@ -227,49 +227,49 @@ func GetMetaData(n *element.Node, state *map[string]element.State, font *font.Fa
 	text.LetterSpacing = int(letterSpacing)
 	wb := " "
 
-	if n.Style["word-wrap"] == "break-word" {
+	if n.CStyle["word-wrap"] == "break-word" {
 		wb = ""
 	}
 
-	if n.Style["text-wrap"] == "wrap" || n.Style["text-wrap"] == "balance" {
+	if n.CStyle["text-wrap"] == "wrap" || n.CStyle["text-wrap"] == "balance" {
 		wb = ""
 	}
 
 	var dt float32
 
-	if n.Style["text-decoration-thickness"] == "auto" || n.Style["text-decoration-thickness"] == "" {
+	if n.CStyle["text-decoration-thickness"] == "auto" || n.CStyle["text-decoration-thickness"] == "" {
 		dt = self.EM / 7
 	} else {
-		dt = utils.ConvertToPixels(n.Style["text-decoration-thickness"], self.EM, parent.Width)
+		dt = utils.ConvertToPixels(n.CStyle["text-decoration-thickness"], self.EM, parent.Width)
 	}
 
-	col := cc.Parse(n.Style, "font")
+	col := cc.Parse(n.CStyle, "font")
 
-	if n.Style["text-decoration-color"] == "" {
-		n.Style["text-decoration-color"] = n.Style["color"]
+	if n.CStyle["text-decoration-color"] == "" {
+		n.CStyle["text-decoration-color"] = n.CStyle["color"]
 	}
 
 	text.Color = col
-	text.DecorationColor = cc.Parse(n.Style, "decoration")
-	text.Align = n.Style["text-align"]
+	text.DecorationColor = cc.Parse(n.CStyle, "decoration")
+	text.Align = n.CStyle["text-align"]
 	text.WordBreak = wb
 	text.WordSpacing = int(wordSpacing)
 	text.LetterSpacing = int(letterSpacing)
-	text.WhiteSpace = n.Style["white-space"]
+	text.WhiteSpace = n.CStyle["white-space"]
 	text.DecorationThickness = int(dt)
-	text.Overlined = n.Style["text-decoration"] == "overline"
-	text.Underlined = n.Style["text-decoration"] == "underline"
-	text.LineThrough = n.Style["text-decoration"] == "line-through"
+	text.Overlined = n.CStyle["text-decoration"] == "overline"
+	text.Underlined = n.CStyle["text-decoration"] == "underline"
+	text.LineThrough = n.CStyle["text-decoration"] == "line-through"
 	text.EM = int(self.EM)
 	text.Width = int(parent.Width)
 	text.Text = n.InnerText
 	text.UnderlineOffset = int(underlineoffset)
 
-	if n.Style["text-underline-offset"] == "" {
+	if n.CStyle["text-underline-offset"] == "" {
 		text.UnderlineOffset = 2
 	}
 
-	if n.Style["word-spacing"] == "" {
+	if n.CStyle["word-spacing"] == "" {
 		// !ISSUE: is word spacing actually impleamented
 		text.WordSpacing, _ = MeasureSpace(&text)
 	}

@@ -246,12 +246,12 @@ func TestSelector(n *Node, selector string) (bool, bool) {
 				for i, v := range n.Parent.Children {
 					if v.Properties.Id == n.Properties.Id {
 						// Make sure the current element matches the last selector
-						m,_ := TestSelector(n, adjacentSiblings[len(adjacentSiblings)-1])
+						m, _ := TestSelector(n, adjacentSiblings[len(adjacentSiblings)-1])
 						if i >= len(adjacentSiblings)-1 && m {
 							match := true
 							// Skip the first selector, its been matched to the current node
-							adjIndex := len(adjacentSiblings)-2
-							for j := i-1; j >= i-len(adjacentSiblings)+1; j-- {
+							adjIndex := len(adjacentSiblings) - 2
+							for j := i - 1; j >= i-len(adjacentSiblings)+1; j-- {
 								sm, _ := TestSelector(n.Parent.Children[j], adjacentSiblings[adjIndex])
 								if !sm {
 									match = false
@@ -264,8 +264,8 @@ func TestSelector(n *Node, selector string) (bool, bool) {
 
 						break
 					}
-				}	
-				
+				}
+
 				break
 			}
 			for _, as := range adjacentSiblings {
@@ -296,12 +296,12 @@ func TestSelector(n *Node, selector string) (bool, bool) {
 					descendants := splitSelector(gs, ' ')
 					if len(descendants) > 1 {
 						// !DEVMAN,ELEMENT,TESTSELECTOR: Descendants selector checks for any parent to have
-						// + the next tag, but doesn't check the main tag if it did and the main didn't 
-						// + have the selector then it would move up. So instead the main tag is skipped 
+						// + the next tag, but doesn't check the main tag if it did and the main didn't
+						// + have the selector then it would move up. So instead the main tag is skipped
 						// + until the next check.
 						currentElement := n.Parent
 						match := false
-						for i := len(descendants)-1; i > 0; i-- {
+						for i := len(descendants) - 1; i > 0; i-- {
 							m := false
 							for currentElement.Parent != nil && !m {
 								m, _ = TestSelector(currentElement, descendants[i])
@@ -341,6 +341,7 @@ func TestSelector(n *Node, selector string) (bool, bool) {
 									break
 								}
 							}
+							// !ISSUE: Why is this here??? has = is never reached above
 							has = match
 						}
 						if has || !(len(computeAble) > 1) {
@@ -426,7 +427,7 @@ func CompareSelector(selector string, n *Node) bool {
 			match := true
 			for _, v := range baseParts.ClassList {
 				bpc := false
-				for _, c := range n.ClassList.Classes {
+				for _, c := range n.ClassList.Classes() {
 					if v == c {
 						bpc = true
 					}
@@ -438,7 +439,7 @@ func CompareSelector(selector string, n *Node) bool {
 			}
 
 			for k, v := range baseParts.Attribute {
-				if n.Attribute[k] != v {
+				if n.attribute[k] != v {
 					match = false
 				}
 			}
@@ -477,8 +478,8 @@ func ExtractBaseElements(selector string) [][]string {
 
 	for _, v := range computeAble {
 		if strings.Contains(v, "(") {
-			be := ExtractBaseElements(v[strings.Index(v,"(")+1: len(v)-2])
-			for _,b := range be {
+			be := ExtractBaseElements(v[strings.Index(v, "(")+1 : len(v)-2])
+			for _, b := range be {
 				baseElements = append(baseElements, b...)
 			}
 		}
@@ -523,11 +524,11 @@ func GenBaseElements(n *Node) []string {
 		selectors = append(selectors, "#"+n.Id)
 	}
 
-	for _, c := range n.ClassList.Classes {
+	for _, c := range n.ClassList.Classes() {
 		selectors = append(selectors, "."+c)
 	}
 
-	for k, v := range n.Attribute {
+	for k, v := range n.attribute {
 		selectors = append(selectors, `[`+k+`="`+v+`"]`)
 	}
 

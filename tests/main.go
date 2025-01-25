@@ -16,7 +16,7 @@ func main() {
 	// defaults read ~/Library/Preferences/.GlobalPreferences.plist
 	// !ISSUE: Flex2 doesn't work anymore
 	window := grim.New(raylib.Init())
-	window.Path("./src/index.html")
+	window.Path("./src/superselector.html")
 	document := window.Document()
 	fmt.Println("start")
 	fmt.Println(element.ExtractBaseElements(`:where(h1, h2, h3)`))

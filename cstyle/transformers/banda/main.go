@@ -18,11 +18,11 @@ func Init() cstyle.Transformer {
 			if n.PseudoElements["::before"] != nil {
 				before := n.CreateElement("before")
 				before.Parent = n
-				before.Style, _ = c.GetStyles(&before)
-				before.Style["display"] = "inline"
+				before.CStyle, _ = c.GetStyles(&before)
+				before.CStyle["display"] = "inline"
 
 				for k, v := range n.PseudoElements["::before"] {
-					before.Style[k] = v
+					before.CStyle[k] = v
 				}
 
 				before.InnerText = n.PseudoElements["::before"]["content"][1 : len(n.PseudoElements["::before"]["content"])-1]
@@ -37,11 +37,11 @@ func Init() cstyle.Transformer {
 			if n.PseudoElements["::after"] != nil {
 				after := n.CreateElement("after")
 				after.Parent = n
-				after.Style, _ = c.GetStyles(&after)
-				after.Style["display"] = "inline"
+				after.CStyle, _ = c.GetStyles(&after)
+				after.CStyle["display"] = "inline"
 
 				for k, v := range n.PseudoElements["::after"] {
-					after.Style[k] = v
+					after.CStyle[k] = v
 				}
 
 				after.InnerText = n.PseudoElements["::after"]["content"][1 : len(n.PseudoElements["::after"]["content"])-1]

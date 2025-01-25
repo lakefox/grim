@@ -18,26 +18,26 @@ func Init() cstyle.Transformer {
 			tN := n.CreateElement(n.TagName)
 			for _, v := range n.Children {
 				li := n.CreateElement("li")
-				li.Style = v.Style
+				li.CStyle = v.CStyle
 				dot := li.CreateElement("div")
-				dot.Style["background"] = "#000"
-				dot.Style["border-radius"] = "100px"
-				dot.Style["width"] = "5px"
-				dot.Style["height"] = "5px"
-				dot.Style["margin-right"] = "10px"
+				dot.CStyle["background"] = "#000"
+				dot.CStyle["border-radius"] = "100px"
+				dot.CStyle["width"] = "5px"
+				dot.CStyle["height"] = "5px"
+				dot.CStyle["margin-right"] = "10px"
 
 				content := li.CreateElement("div")
 				content.InnerText = v.InnerText
-				content.Style = v.Style
-				content.Style = c.QuickStyles(&content)
-				content.Style["display"] = "block"
+				content.CStyle = v.CStyle
+				content.CStyle = c.QuickStyles(&content)
+				content.CStyle["display"] = "block"
 				li.AppendChild(&dot)
 				li.AppendChild(&content)
 				li.Parent = n
 
-				li.Style["display"] = "flex"
-				li.Style["align-items"] = "center"
-				li.Style = c.QuickStyles(&li)
+				li.CStyle["display"] = "flex"
+				li.CStyle["align-items"] = "center"
+				li.CStyle = c.QuickStyles(&li)
 
 				tN.AppendChild(&li)
 			}
