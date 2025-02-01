@@ -30,7 +30,7 @@ Contributors who make **meaningful contributions** (see `CONTRIBUTING.md`) are g
 ---
 
 ## **GNU General Public License v3.0 (GPLv3)**
-
+```text
                     GNU GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007
 
@@ -705,3 +705,4 @@ may consider it more useful to permit linking proprietary applications with
 the library.  If this is what you want to do, use the GNU Lesser General
 Public License instead of this License.  But first, please read
 <https://www.gnu.org/licenses/why-not-lgpl.html>.
+```
