@@ -64,7 +64,7 @@ func Init() cstyle.Transformer {
 			// X scrollbar
 			xScrollbar := false
 
-			if (n.CStyle["overflow-x"] == "scroll" || n.CStyle["overflow-x"] == "auto") && ((n.ScrollWidth > int(c.Width) && n.TagName == "html") || n.ScrollWidth > 0) {
+			if (n.CStyle["overflow-x"] == "scroll" || n.CStyle["overflow-x"] == "auto")  {
 				scrollbar := n.CreateElement("grim-track")
 
 				scrollbar.CStyle["position"] = "absolute"
@@ -73,6 +73,7 @@ func Init() cstyle.Transformer {
 				scrollbar.CStyle["width"] = "100%"
 				scrollbar.CStyle["height"] = trackWidth
 				scrollbar.CStyle["background"] = backgroundColor
+				scrollbar.CStyle["z-index"] = "99999"
 				scrollbar.SetAttribute("direction", "x")
 
 				thumb := n.CreateElement("grim-thumbx")
@@ -84,6 +85,7 @@ func Init() cstyle.Transformer {
 				thumb.CStyle["background"] = thumbColor
 				thumb.CStyle["cursor"] = "pointer"
 				thumb.CStyle["border-radius"] = "10px"
+				thumb.CStyle["z-index"] = "99999"
 
 				for k, v := range n.PseudoElements["::-webkit-scrollbar"] {
 					scrollbar.CStyle[k] = v
@@ -105,7 +107,7 @@ func Init() cstyle.Transformer {
 
 			// Y scrollbar
 
-			if (n.CStyle["overflow-y"] == "scroll" || n.CStyle["overflow-y"] == "auto") && ((n.ScrollHeight > int(c.Height) && n.TagName == "html") || n.ScrollHeight > 0) {
+			if (n.CStyle["overflow-y"] == "scroll" || n.CStyle["overflow-y"] == "auto") {
 				scrollbar := n.CreateElement("grim-track")
 
 				scrollbar.CStyle["position"] = "absolute"
@@ -114,6 +116,7 @@ func Init() cstyle.Transformer {
 				scrollbar.CStyle["width"] = trackWidth
 				scrollbar.CStyle["height"] = "100%"
 				scrollbar.CStyle["background"] = backgroundColor
+				scrollbar.CStyle["z-index"] = "99999"
 				scrollbar.SetAttribute("direction", "y")
 
 				if xScrollbar {
@@ -131,6 +134,7 @@ func Init() cstyle.Transformer {
 				thumb.CStyle["cursor"] = "pointer"
 				thumb.CStyle["margin-left"] = thumbMargin
 				thumb.CStyle["border-radius"] = "10px"
+				thumb.CStyle["z-index"] = "99999"
 
 				for k, v := range n.PseudoElements["::-webkit-scrollbar"] {
 					scrollbar.CStyle[k] = v

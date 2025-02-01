@@ -13,6 +13,7 @@ import (
 )
 
 func Init() *adapter.Adapter {
+	rl.SetTraceLogLevel(rl.LogNone)
 	a := adapter.Adapter{}
 	a.AddEventListener("cursor", handleCursorEvent)
 

@@ -23,7 +23,7 @@ func Init() cstyle.Transformer {
 				mb[1] = n.CStyle["margin-block-end"]
 			}
 
-			// !ISSUE: Not working tline36 broke margin
+			// !ISSUE: Not working line36 broke margin
 
 			if writingMode == "vertical-lr" {
 				n.CStyle["margin-left"] = mb[0]

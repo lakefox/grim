@@ -42,21 +42,6 @@ type CSS struct {
 	StyleSheets  int
 }
 
-func (c *CSS) Transform(n *element.Node) *element.Node {
-	for _, v := range c.Transformers {
-		if v.Selector(n) {
-			n = v.Handler(n, c)
-		}
-	}
-
-	for i := 0; i < len(n.Children); i++ {
-		tc := c.Transform(n.Children[i])
-		n.Children[i] = tc
-	}
-
-	return n
-}
-
 func (c *CSS) StyleSheet(path string) {
 	// Parse the CSS file
 	data, _ := c.Adapter.FileSystem.ReadFile(path)
@@ -217,15 +202,31 @@ func (c *CSS) AddTransformer(transformer Transformer) {
 	c.Transformers = append(c.Transformers, transformer)
 }
 
-func (c *CSS) ComputeNodeStyle(n *element.Node, state *map[string]element.State) *element.Node {
+var nonRenderTags = map[string]bool{
+	"head":  true,
+	"meta":  true,
+	"link":  true,
+	"title": true,
+	"style": true,
+}
+
+func (c *CSS) ComputeNodeStyle(n *element.Node, state *map[string]element.State) element.State {
 	shelf := c.Adapter.Library
 	// Head is not renderable
-	if utils.IsParent(*n, "head") {
-		return n
-	}
-
 	s := *state
 	self := s[n.Properties.Id]
+
+	if nonRenderTags[n.TagName] {
+		return self
+	}
+
+	for _, v := range c.Transformers {
+		if v.Selector(n) {
+			v.Handler(n, c)
+		}
+	}
+
+
 	plugins := c.Plugins
 	parent := s[n.Parent.Properties.Id]
 
@@ -233,7 +234,6 @@ func (c *CSS) ComputeNodeStyle(n *element.Node, state *map[string]element.State)
 	style := n.CStyle
 	self.Background = color.Parse(style, "background")
 	self.Border, _ = border.Parse(style, self, parent)
-	border.Draw(&self, shelf)
 
 	if style["font-size"] == "" {
 		style["font-size"] = "1em"
@@ -244,33 +244,34 @@ func (c *CSS) ComputeNodeStyle(n *element.Node, state *map[string]element.State)
 	if style["display"] == "none" {
 		self.X, self.Y, self.Width, self.Height = 0, 0, 0, 0
 		(*state)[n.Properties.Id] = self
-		return n
+		return self
 	}
 
 	// Set Z index value to be sorted in window
 	if zIndex, err := strconv.Atoi(style["z-index"]); err == nil {
 		self.Z = float32(zIndex)
 	}
-	if parent.Z > 0 {
+
+	if self.Z > 0 {
 		self.Z = parent.Z + 1
 	}
-
+	
 	(*state)[n.Properties.Id] = self
 
-	wh := utils.GetWH(*n, state)
-	width, height := wh.Width, wh.Height
+	wh, m, p := utils.GetWH(*n, state)
+
+	self.Margin = m
+	self.Padding = p
+	self.Width =  wh.Width
+	self.Height = wh.Height
+	self.Cursor = n.CStyle["cursor"]
+	(*state)[n.Properties.Id] = self
 
 	x, y := parent.X, parent.Y
 	offsetX, offsetY := utils.GetXY(n, state)
 	x += offsetX
 	y += offsetY
-
-	m := utils.GetMP(*n, wh, state, "margin")
-	p := utils.GetMP(*n, wh, state, "padding")
-	self.Margin = m
-	self.Padding = p
-	self.Cursor = n.CStyle["cursor"]
-
+	
 	var top, left, right, bottom bool
 
 	if style["position"] == "absolute" {
@@ -285,11 +286,11 @@ func (c *CSS) ComputeNodeStyle(n *element.Node, state *map[string]element.State)
 			left = true
 		}
 		if rightVal := style["right"]; rightVal != "" {
-			x = base.X + ((base.Width - width) - utils.ConvertToPixels(rightVal, self.EM, parent.Width))
+			x = base.X + ((base.Width - self.Width) - utils.ConvertToPixels(rightVal, self.EM, parent.Width))
 			right = true
 		}
 		if bottomVal := style["bottom"]; bottomVal != "" {
-			y = base.Y + ((base.Height - height) - utils.ConvertToPixels(bottomVal, self.EM, parent.Width))
+			y = base.Y + ((base.Height - self.Height) - utils.ConvertToPixels(bottomVal, self.EM, parent.Width))
 			bottom = true
 		}
 	} else {
@@ -335,9 +336,6 @@ func (c *CSS) ComputeNodeStyle(n *element.Node, state *map[string]element.State)
 
 	self.X = x
 	self.Y = y
-
-	self.Width = width
-	self.Height = height
 
 	self.ContentEditable = n.ContentEditable
 
@@ -427,8 +425,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node, state *map[string]element.State)
 	for i := 0; i < len(n.Children); i++ {
 		v := n.Children[i]
 		v.Parent = n
-		n.Children[i] = c.ComputeNodeStyle(v, state)
-		cState := (*state)[n.Children[i].Properties.Id]
+		cState := c.ComputeNodeStyle(v, state)
 
 		if style["height"] == "" && style["max-height"] == "" {
 			if v.CStyle["position"] != "absolute" && cState.Y+cState.Height > childYOffset {
@@ -464,11 +461,14 @@ func (c *CSS) ComputeNodeStyle(n *element.Node, state *map[string]element.State)
 
 	(*state)[n.Properties.Id] = self
 
+	border.Draw(&self, shelf)
+	(*state)[n.Properties.Id] = self
+
 	for _, v := range plugins {
 		if v.Selector(n) {
 			v.Handler(n, state, c)
 		}
 	}
 
-	return n
+	return self
 }

@@ -8,6 +8,14 @@ import (
 	"strings"
 )
 
+var nonRenderTags = map[string]bool{
+	"head":  true,
+	"meta":  true,
+	"link":  true,
+	"title": true,
+	"style": true,
+}
+
 func Init() cstyle.Transformer {
 	return cstyle.Transformer{
 		Selector: func(n *element.Node) bool {
@@ -18,9 +26,10 @@ func Init() cstyle.Transformer {
 			}
 		},
 		Handler: func(n *element.Node, c *cstyle.CSS) *element.Node {
-			if utils.IsParent(*n, "head") {
+			if nonRenderTags[n.TagName] {
 				return n
 			}
+
 			words := strings.Split(strings.TrimSpace(n.InnerText), " ")
 			n.InnerText = ""
 			if n.CStyle["display"] == "inline" {
@@ -29,7 +38,7 @@ func Init() cstyle.Transformer {
 					// Add the words backwards because you are inserting adjacent to the parent
 					a := (len(words) - 1) - i
 					if len(strings.TrimSpace(words[a])) > 0 {
-						el := n.CreateElement("notaspan")
+						el := n.CreateElement("text")
 						el.InnerText = DecodeHTMLEscapes(words[a])
 						el.Parent = n
 
@@ -44,7 +53,7 @@ func Init() cstyle.Transformer {
 			} else {
 				for i := 0; i < len(words); i++ {
 					if len(strings.TrimSpace(words[i])) > 0 {
-						el := n.CreateElement("notaspan")
+						el := n.CreateElement("text")
 						el.InnerText = DecodeHTMLEscapes(words[i])
 						el.Parent = n
 

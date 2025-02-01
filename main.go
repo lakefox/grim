@@ -1,10 +1,7 @@
 package grim
 
 import (
-	"bytes"
-	"crypto/sha256"
 	_ "embed"
-	"encoding/json"
 	"fmt"
 	adapter "grim/adapters"
 	"grim/canvas"
@@ -18,7 +15,7 @@ import (
 	flexprep "grim/cstyle/transformers/flex"
 	img "grim/cstyle/transformers/image"
 
-	// marginblock "grim/cstyle/transformers/margin-block"
+	marginblock "grim/cstyle/transformers/margin-block"
 	"grim/cstyle/transformers/ol"
 	"grim/cstyle/transformers/scrollbar"
 	"grim/cstyle/transformers/text"
@@ -28,7 +25,6 @@ import (
 	"grim/scripts"
 	"grim/scripts/a"
 	"image"
-	"time"
 
 	"grim/element"
 	"grim/events"
@@ -75,13 +71,13 @@ func (window *Window) Path(path string) {
 	window.CSS.Path = filepath.Dir(path)
 
 	CreateNode(htmlNodes, &window.document)
-	// window.Document = *window.Document
+	open(window)
 }
 
-func New(adapterFunction *adapter.Adapter) Window {
+func New(adapterFunction *adapter.Adapter, width, height int) Window {
 	css := cstyle.CSS{
-		Width:   800,
-		Height:  450,
+		Width:   float32(width),
+		Height:  float32(height),
 		Adapter: adapterFunction,
 	}
 
@@ -96,7 +92,7 @@ func New(adapterFunction *adapter.Adapter) Window {
 	css.AddTransformer(banda.Init())
 	css.AddTransformer(scrollbar.Init())
 	css.AddTransformer(flexprep.Init())
-	// css.AddTransformer(marginblock.Init())
+	css.AddTransformer(marginblock.Init())
 	css.AddTransformer(ul.Init())
 	css.AddTransformer(ol.Init())
 	css.AddTransformer(background.Init())
@@ -104,8 +100,8 @@ func New(adapterFunction *adapter.Adapter) Window {
 
 	el := element.Node{}
 	document := el.CreateElement("ROOT")
-	document.CStyle["width"] = "800px"
-	document.CStyle["height"] = "450px"
+	document.CStyle["width"] = strconv.Itoa(width)+"px"
+	document.CStyle["height"] = strconv.Itoa(height)+"px"
 	document.Properties.Id = "ROOT"
 
 	s := scripts.Scripts{}
@@ -209,28 +205,27 @@ func flatten(n *element.Node) []*element.Node {
 
 // !ISSUE: Probally don't need this to be exposed to the outside, if using getter/setter, just render once content is loaded then everytime a event
 // + or content update
-func Open(data *Window, width, height int) {
+func open(data *Window) {
 	shelf := library.Shelf{
 		Textures:   map[string]*image.RGBA{},
 		References: map[string]bool{},
 	}
 
 	debug := false
-	data.document.CStyle["width"] = strconv.Itoa(int(width)) + "px"
-	data.document.CStyle["height"] = strconv.Itoa(int(height)) + "px"
+	data.document.CStyle["width"] = strconv.Itoa(int(data.CSS.Width)) + "px"
+	data.document.CStyle["height"] = strconv.Itoa(int(data.CSS.Height)) + "px"
 
 	data.CSS.Adapter.Library = &shelf
-	data.CSS.Adapter.Init(width, height)
+	data.CSS.Adapter.Init(int(data.CSS.Width), int(data.CSS.Height))
 
 	state := map[string]element.State{}
 	state["ROOT"] = element.State{
-		Width:  float32(width),
-		Height: float32(height),
+		Width:  float32(data.CSS.Width),
+		Height: float32(data.CSS.Height),
 	}
 
 	shouldStop := false
 
-	var hash []byte
 	var rd []element.State
 
 	// Load init font
@@ -243,7 +238,6 @@ func Open(data *Window, width, height int) {
 		data.CSS.Fonts[fid] = f
 	}
 
-	newWidth, newHeight := width, height
 
 	monitor := events.Monitor{
 		EventMap: make(map[string]element.Event),
@@ -260,8 +254,13 @@ func Open(data *Window, width, height int) {
 
 	data.CSS.Adapter.AddEventListener("windowresize", func(e element.Event) {
 		wh := e.Data.(map[string]int)
-		newWidth = wh["width"]
-		newHeight = wh["height"]
+
+		data.CSS.Width = float32(wh["width"])
+		data.CSS.Height = float32(wh["height"])
+
+		data.document.CStyle["width"] = strconv.Itoa(wh["width"]) + "px"
+		data.document.CStyle["height"] = strconv.Itoa(wh["height"]) + "px"
+		rd = getRenderData(data, &state, &shelf, &monitor)
 	})
 
 	data.CSS.Adapter.AddEventListener("close", func(e element.Event) {
@@ -283,24 +282,32 @@ func Open(data *Window, width, height int) {
 
 	data.CSS.Adapter.AddEventListener("mousemove", func(e element.Event) {
 		pos := e.Data.([]int)
-		currentEvent.Position = pos
-		monitor.GetEvents(&currentEvent)
+		if pos[0] > 0 && pos[1] > 0 {
+			if pos[0] < int(data.CSS.Width) && pos[1] < int(data.CSS.Height) {
+				currentEvent.Position = pos
+				monitor.GetEvents(&currentEvent)
+				rd = getRenderData(data, &state, &shelf, &monitor)
+			}
+		}
 	})
 
 	data.CSS.Adapter.AddEventListener("scroll", func(e element.Event) {
 		currentEvent.ScrollY = e.Data.(int)
 		monitor.GetEvents(&currentEvent)
 		currentEvent.ScrollY = 0
+		rd = getRenderData(data, &state, &shelf, &monitor)
 	})
 
 	data.CSS.Adapter.AddEventListener("mousedown", func(e element.Event) {
 		currentEvent.Click = true
 		monitor.GetEvents(&currentEvent)
+		rd = getRenderData(data, &state, &shelf, &monitor)
 	})
 
 	data.CSS.Adapter.AddEventListener("mouseup", func(e element.Event) {
 		currentEvent.Click = false
 		monitor.GetEvents(&currentEvent)
+		rd = getRenderData(data, &state, &shelf, &monitor)
 	})
 
 	data.CSS.Adapter.AddEventListener("contextmenudown", func(e element.Event) {
@@ -319,65 +326,58 @@ func Open(data *Window, width, height int) {
 	// + ahh what about dom changes in the js api...
 	// + could swap to getters and setters but i don't like them
 	// Main game loop
+	rd = getRenderData(data, &state, &shelf, &monitor)
+	// !TODO: Move to adapter
+
 	for !shouldStop {
 		if !shouldStop && debug {
 			shouldStop = true
 		}
 		// Check if the window size has changed
-		resize := false
-
-		if newWidth != width || newHeight != height {
-			resize = true
-			// Window has been resized, handle the event
-			width = newWidth
-			height = newHeight
-
-			data.CSS.Width = float32(width)
-			data.CSS.Height = float32(height)
-
-			data.document.CStyle["width"] = strconv.Itoa(int(width)) + "px"
-			data.document.CStyle["height"] = strconv.Itoa(int(height)) + "px"
-		}
-
-		newHash, _ := hashStruct(&data.document.Children[0])
-
-		if !bytes.Equal(hash, newHash) || resize {
-			hash = newHash
-			fmt.Println("----------------------------------")
-			s := time.Now()
-			newDoc := AddStyles(data.CSS, data.document.Children[0], &data.document)
-
-			newDoc = data.CSS.Transform(newDoc)
-
-			state["ROOT"] = element.State{
-				Width:  float32(width),
-				Height: float32(height),
-			}
-
-			data.CSS.ComputeNodeStyle(newDoc, &state)
-
-			rd = data.Render(newDoc, &state, &shelf)
-
-			data.CSS.Adapter.Load(rd)
-
-			AddHTMLAndAttrs(&data.document, &state)
-			// AddHTMLAndAttrs(newDoc, &state)
-			// fmt.Println(newDoc.OuterHTML)
-			data.Scripts.Run(&data.document)
-			shelf.Clean()
-			elapsed := time.Since(s)
-			fmt.Printf("Execution time: %s\n", elapsed)
-		}
-
-		monitor.RunEvents(data.document.Children[0])
+		
 		data.CSS.Adapter.Render(rd)
 	}
 }
 
+// !TODO: This need to be better implemented but rn just testing
+func getRenderData(data *Window, state *map[string]element.State, shelf *library.Shelf, monitor *events.Monitor) []element.State {
+	(*state)["ROOT"] = element.State{
+		Width:  float32(data.CSS.Width),
+		Height: float32(data.CSS.Height),
+	}
+	fmt.Println("_______________________")
+
+	// !ISSUE: Move this inside of ComputeNodeStyle
+	// + This modify events to return effected nodes
+
+	dc := data.document.Children[0]
+	// start := time.Now()
+	newDoc := AddStyles(data.CSS, dc, &data.document)
+	// fmt.Println(time.Since(start))
+	
+	data.CSS.ComputeNodeStyle(newDoc, state)
+	
+	rd := data.Render(newDoc, state, shelf)
+
+	data.CSS.Adapter.Load(rd)
+
+	AddHTMLAndAttrs(&data.document, state)
+	// fmt.Println(data.document.InnerHTML)
+
+	data.Scripts.Run(&data.document)
+	shelf.Clean()
+
+	// !TODO: Should return effected node, then render those specific
+	// + I think have node.ComputeNodeStyle would make this nice
+	monitor.RunEvents(data.document.Children[0])
+	return rd
+} 
+
+
 func AddStyles(c cstyle.CSS, node *element.Node, parent *element.Node) *element.Node {
 	n := *node
 	n.Parent = parent
-
+	// !DEVMAN: Copying is done here, would like to remove this and add it to ComputeNodeStyle, so I can save a tree climb
 	n.CStyle, n.PseudoElements = c.GetStyles(&n)
 
 	if len(node.Children) > 0 {
@@ -431,6 +431,7 @@ func CreateNode(node *html.Node, parent *element.Node) {
 			}
 		}
 		newNode.InnerText = strings.TrimSpace(utils.GetInnerText(node))
+
 		// Recursively traverse child nodes
 		for child := node.FirstChild; child != nil; child = child.NextSibling {
 			if child.Type == html.ElementNode {
@@ -451,9 +452,11 @@ func CreateNode(node *html.Node, parent *element.Node) {
 func AddHTMLAndAttrs(n *element.Node, state *map[string]element.State) {
 	// Head is not renderable
 	s := (*state)
+
 	n.InnerHTML = utils.InnerHTML(n)
 	tag, closing := utils.NodeToHTML(n)
 	n.OuterHTML = tag + n.InnerHTML + closing
+
 	// !NOTE: This is the only spot you can pierce the vale
 	n.ScrollHeight = s[n.Properties.Id].ScrollHeight
 	n.ScrollWidth = s[n.Properties.Id].ScrollWidth
@@ -572,7 +575,7 @@ func matchFactory(re *regexp.Regexp) func(string) string {
 
 		// Process submatches
 		if len(removeWhitespace(submatches[2])) > 0 {
-			return submatches[1] + "<notaspan>" + submatches[2] + "</notaspan>" + submatches[3]
+			return submatches[1] + "<text>" + submatches[2] + "</text>" + submatches[3]
 		} else {
 			return match
 		}
@@ -602,18 +605,3 @@ func removeWhitespaceBetweenTags(html string) string {
 	return re.ReplaceAllString(html, "><")
 }
 
-// Function to hash a struct using SHA-256
-func hashStruct(s interface{}) ([]byte, error) {
-	// Convert struct to JSON
-	jsonData, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-
-	// Hash the JSON data using SHA-256
-	hasher := sha256.New()
-	hasher.Write(jsonData)
-	hash := hasher.Sum(nil)
-
-	return hash, nil
-}

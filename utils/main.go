@@ -33,7 +33,7 @@ type WidthHeight struct {
 	Height float32
 }
 
-func GetWH(n element.Node, state *map[string]element.State) WidthHeight {
+func GetWH(n element.Node, state *map[string]element.State) (WidthHeight, element.MarginPadding, element.MarginPadding){
 	s := *state
 	self := s[n.Properties.Id]
 	var parent element.State
@@ -93,24 +93,27 @@ func GetWH(n element.Node, state *map[string]element.State) WidthHeight {
 		Height: height,
 	}
 
+	m := GetMP(n, wh, state, "margin")
+	p := GetMP(n, wh, state, "padding")
+
 	if n.Parent != nil {
-		wh.Width += self.Padding.Left + self.Padding.Right
-		wh.Height += self.Padding.Top + self.Padding.Bottom
+		wh.Width += p.Left + p.Right
+		wh.Height += p.Top + p.Bottom
 	}
 
 	if wStyle == "100%" && n.CStyle["position"] != "absolute" {
-		wh.Width -= (self.Margin.Right + self.Margin.Left + self.Border.Left.Width + self.Border.Right.Width + parent.Padding.Left + parent.Padding.Right + self.Padding.Left + self.Padding.Right)
+		wh.Width -= (m.Right + m.Left + self.Border.Left.Width + self.Border.Right.Width + parent.Padding.Left + parent.Padding.Right + p.Left + p.Right)
 	}
 
 	if n.CStyle["height"] == "100%" {
 		if n.CStyle["position"] == "absolute" {
-			wh.Height -= (self.Margin.Top + self.Margin.Bottom)
+			wh.Height -= (m.Top + m.Bottom)
 		} else {
-			wh.Height -= (self.Margin.Top + self.Margin.Bottom + parent.Padding.Top + parent.Padding.Bottom)
+			wh.Height -= (m.Top + m.Bottom + parent.Padding.Top + parent.Padding.Bottom)
 		}
 	}
 
-	return wh
+	return wh, m, p
 }
 
 func GetMP(n element.Node, wh WidthHeight, state *map[string]element.State, t string) element.MarginPadding {
@@ -387,21 +390,6 @@ func GetPositionOffsetNode(n *element.Node) *element.Node {
 	}
 }
 
-func IsParent(n element.Node, name string) bool {
-	if n.Parent == nil {
-		return false
-	}
-	if n.Parent.TagName != "ROOT" {
-		if n.Parent.TagName == name {
-			return true
-		} else {
-			return IsParent(*n.Parent, name)
-		}
-	} else {
-		return false
-	}
-}
-
 func ChildrenHaveText(n *element.Node) bool {
 	for _, child := range n.Children {
 		if len(strings.TrimSpace(child.InnerText)) != 0 {
@@ -416,7 +404,7 @@ func ChildrenHaveText(n *element.Node) bool {
 }
 
 func NodeToHTML(node *element.Node) (string, string) {
-	// if node.TagName == "notaspan" {
+	// if node.TagName == "text" {
 	// 	return node.InnerText + " ", ""
 	// }
 

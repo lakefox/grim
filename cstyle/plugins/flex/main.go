@@ -27,7 +27,9 @@ func Init() cstyle.Plugin {
 		Handler: func(n *element.Node, state *map[string]element.State, c *cstyle.CSS) {
 			s := *state
 			self := s[n.Properties.Id]
-
+			if len(n.Children) == 0 {
+				return
+			}
 			verbs := strings.Split(n.CStyle["flex-direction"], "-")
 			flexDirection := verbs[0]
 			if flexDirection == "" {
@@ -519,7 +521,7 @@ func countText(n *element.Node) int {
 	count := 0
 	groups := []int{}
 	for _, v := range n.Children {
-		if v.TagName == "notaspan" {
+		if v.TagName == "text" {
 			count += 1
 		}
 		if v.CStyle["display"] == "block" {
