@@ -20,10 +20,9 @@ func Init() cstyle.Plugin {
 			}
 			return matches
 		},
-		Handler: func(n *element.Node, state *map[string]element.State, c *cstyle.CSS) {
-			s := *state
-			self := s[n.Properties.Id]
-			parent := s[n.Parent.Properties.Id]
+		Handler: func(n *element.Node, c *cstyle.CSS) {
+			self := c.State[n.Properties.Id]
+			parent := c.State[n.Parent.Properties.Id]
 			copyOfX := self.X
 			copyOfY := self.Y
 			if copyOfX < parent.X+parent.Padding.Left {
@@ -32,7 +31,7 @@ func Init() cstyle.Plugin {
 
 			// xCollect := float32(0)
 			for i, v := range n.Parent.Children {
-				// vState := s[v.Properties.Id]
+				// vState := c.State[v.Properties.Id]
 				if i > 0 {
 					if v.CStyle["position"] != "absolute" {
 						if v.Properties.Id == n.Properties.Id {
@@ -44,7 +43,7 @@ func Init() cstyle.Plugin {
 									continue
 								}
 							}
-							sibling := s[sib.Properties.Id]
+							sibling := c.State[sib.Properties.Id]
 							if sibling.X+sibling.Width+self.Width > (parent.Width+parent.X+parent.Border.Left.Width)-(parent.Padding.Right) {
 								// Break Node.Id
 								self.Y = sibling.Y + sibling.Height
@@ -62,7 +61,7 @@ func Init() cstyle.Plugin {
 									var max float32
 									for a := i; a >= 0; a-- {
 										b := n.Parent.Children[a]
-										bStyle := s[b.Properties.Id]
+										bStyle := c.State[b.Properties.Id]
 										if bStyle.Y == baseY {
 											if bStyle.EM > max {
 												max = bStyle.EM
@@ -72,10 +71,10 @@ func Init() cstyle.Plugin {
 
 									for a := i; a >= 0; a-- {
 										b := n.Parent.Children[a]
-										bStyle := s[b.Properties.Id]
+										bStyle := c.State[b.Properties.Id]
 										if bStyle.Y == baseY {
 											bStyle.Y += (float32(math.Ceil(float64((max - (max * 0.3))))) - float32(math.Ceil(float64(bStyle.EM-(bStyle.EM*0.3)))))
-											(*state)[b.Properties.Id] = bStyle
+											c.State[b.Properties.Id] = bStyle
 										}
 									}
 									if self.Y == baseY {
@@ -90,21 +89,20 @@ func Init() cstyle.Plugin {
 				}
 
 			}
-			propagateOffsets(n, copyOfX, copyOfY, self, state)
-			(*state)[n.Properties.Id] = self
+			propagateOffsets(n, copyOfX, copyOfY, self, c)
+			c.State[n.Properties.Id] = self
 		},
 	}
 }
 
-func propagateOffsets(n *element.Node, copyOfX, copyOfY float32, self element.State, state *map[string]element.State) {
-	s := *state
+func propagateOffsets(n *element.Node, copyOfX, copyOfY float32, self element.State, c *cstyle.CSS) {
 	for _, v := range n.Children {
-		vState := s[v.Properties.Id]
+		vState := c.State[v.Properties.Id]
 		vState.X += self.X - copyOfX
 		vState.Y += self.Y - copyOfY
 		if len(v.Children) > 0 {
-			propagateOffsets(v, copyOfX, copyOfY, self, state)
+			propagateOffsets(v, copyOfX, copyOfY, self, c)
 		}
-		(*state)[v.Properties.Id] = vState
+		c.State[v.Properties.Id] = vState
 	}
 }

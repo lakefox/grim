@@ -100,8 +100,8 @@ func New(adapterFunction *adapter.Adapter, width, height int) Window {
 
 	el := element.Node{}
 	document := el.CreateElement("ROOT")
-	document.CStyle["width"] = strconv.Itoa(width)+"px"
-	document.CStyle["height"] = strconv.Itoa(height)+"px"
+	document.CStyle["width"] = strconv.Itoa(width) + "px"
+	document.CStyle["height"] = strconv.Itoa(height) + "px"
 	document.Properties.Id = "ROOT"
 
 	s := scripts.Scripts{}
@@ -114,8 +114,8 @@ func New(adapterFunction *adapter.Adapter, width, height int) Window {
 	}
 }
 
-func (w *Window) Render(doc *element.Node, state *map[string]element.State, shelf *library.Shelf) []element.State {
-	s := *state
+func (w *Window) Render(doc *element.Node, shelf *library.Shelf) []element.State {
+	s := w.CSS.State
 
 	flatDoc := flatten(doc)
 
@@ -218,8 +218,8 @@ func open(data *Window) {
 	data.CSS.Adapter.Library = &shelf
 	data.CSS.Adapter.Init(int(data.CSS.Width), int(data.CSS.Height))
 
-	state := map[string]element.State{}
-	state["ROOT"] = element.State{
+	data.CSS.State = map[string]element.State{}
+	data.CSS.State["ROOT"] = element.State{
 		Width:  float32(data.CSS.Width),
 		Height: float32(data.CSS.Height),
 	}
@@ -238,11 +238,9 @@ func open(data *Window) {
 		data.CSS.Fonts[fid] = f
 	}
 
-
 	monitor := events.Monitor{
 		EventMap: make(map[string]element.Event),
 		Adapter:  data.CSS.Adapter,
-		State:    &state,
 		CSS:      &data.CSS,
 		Focus: events.Focus{
 			Nodes:               []string{},
@@ -260,7 +258,7 @@ func open(data *Window) {
 
 		data.document.CStyle["width"] = strconv.Itoa(wh["width"]) + "px"
 		data.document.CStyle["height"] = strconv.Itoa(wh["height"]) + "px"
-		rd = getRenderData(data, &state, &shelf, &monitor)
+		rd = getRenderData(data, &shelf, &monitor)
 	})
 
 	data.CSS.Adapter.AddEventListener("close", func(e element.Event) {
@@ -286,7 +284,7 @@ func open(data *Window) {
 			if pos[0] < int(data.CSS.Width) && pos[1] < int(data.CSS.Height) {
 				currentEvent.Position = pos
 				monitor.GetEvents(&currentEvent)
-				rd = getRenderData(data, &state, &shelf, &monitor)
+				rd = getRenderData(data, &shelf, &monitor)
 			}
 		}
 	})
@@ -295,19 +293,19 @@ func open(data *Window) {
 		currentEvent.ScrollY = e.Data.(int)
 		monitor.GetEvents(&currentEvent)
 		currentEvent.ScrollY = 0
-		rd = getRenderData(data, &state, &shelf, &monitor)
+		rd = getRenderData(data, &shelf, &monitor)
 	})
 
 	data.CSS.Adapter.AddEventListener("mousedown", func(e element.Event) {
 		currentEvent.Click = true
 		monitor.GetEvents(&currentEvent)
-		rd = getRenderData(data, &state, &shelf, &monitor)
+		rd = getRenderData(data, &shelf, &monitor)
 	})
 
 	data.CSS.Adapter.AddEventListener("mouseup", func(e element.Event) {
 		currentEvent.Click = false
 		monitor.GetEvents(&currentEvent)
-		rd = getRenderData(data, &state, &shelf, &monitor)
+		rd = getRenderData(data, &shelf, &monitor)
 	})
 
 	data.CSS.Adapter.AddEventListener("contextmenudown", func(e element.Event) {
@@ -326,7 +324,7 @@ func open(data *Window) {
 	// + ahh what about dom changes in the js api...
 	// + could swap to getters and setters but i don't like them
 	// Main game loop
-	rd = getRenderData(data, &state, &shelf, &monitor)
+	rd = getRenderData(data, &shelf, &monitor)
 	// !TODO: Move to adapter
 
 	for !shouldStop {
@@ -334,14 +332,14 @@ func open(data *Window) {
 			shouldStop = true
 		}
 		// Check if the window size has changed
-		
+
 		data.CSS.Adapter.Render(rd)
 	}
 }
 
 // !TODO: This need to be better implemented but rn just testing
-func getRenderData(data *Window, state *map[string]element.State, shelf *library.Shelf, monitor *events.Monitor) []element.State {
-	(*state)["ROOT"] = element.State{
+func getRenderData(data *Window, shelf *library.Shelf, monitor *events.Monitor) []element.State {
+	data.CSS.State["ROOT"] = element.State{
 		Width:  float32(data.CSS.Width),
 		Height: float32(data.CSS.Height),
 	}
@@ -354,14 +352,14 @@ func getRenderData(data *Window, state *map[string]element.State, shelf *library
 	// start := time.Now()
 	newDoc := AddStyles(data.CSS, dc, &data.document)
 	// fmt.Println(time.Since(start))
-	
-	data.CSS.ComputeNodeStyle(newDoc, state)
-	
-	rd := data.Render(newDoc, state, shelf)
+
+	data.CSS.ComputeNodeStyle(newDoc)
+
+	rd := data.Render(newDoc, shelf)
 
 	data.CSS.Adapter.Load(rd)
 
-	AddHTMLAndAttrs(&data.document, state)
+	AddHTMLAndAttrs(&data.document, data.CSS.State)
 	// fmt.Println(data.document.InnerHTML)
 
 	data.Scripts.Run(&data.document)
@@ -371,8 +369,7 @@ func getRenderData(data *Window, state *map[string]element.State, shelf *library
 	// + I think have node.ComputeNodeStyle would make this nice
 	monitor.RunEvents(data.document.Children[0])
 	return rd
-} 
-
+}
 
 func AddStyles(c cstyle.CSS, node *element.Node, parent *element.Node) *element.Node {
 	n := *node
@@ -449,9 +446,8 @@ func CreateNode(node *html.Node, parent *element.Node) {
 	}
 }
 
-func AddHTMLAndAttrs(n *element.Node, state *map[string]element.State) {
+func AddHTMLAndAttrs(n *element.Node, s map[string]element.State) {
 	// Head is not renderable
-	s := (*state)
 
 	n.InnerHTML = utils.InnerHTML(n)
 	tag, closing := utils.NodeToHTML(n)
@@ -461,7 +457,7 @@ func AddHTMLAndAttrs(n *element.Node, state *map[string]element.State) {
 	n.ScrollHeight = s[n.Properties.Id].ScrollHeight
 	n.ScrollWidth = s[n.Properties.Id].ScrollWidth
 	for i := range n.Children {
-		AddHTMLAndAttrs(n.Children[i], state)
+		AddHTMLAndAttrs(n.Children[i], s)
 	}
 }
 
@@ -604,4 +600,3 @@ func removeWhitespaceBetweenTags(html string) string {
 	// Replace all matches of spaces between angle brackets with "><"
 	return re.ReplaceAllString(html, "><")
 }
-

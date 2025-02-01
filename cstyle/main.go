@@ -21,7 +21,7 @@ import (
 
 type Plugin struct {
 	Selector func(*element.Node) bool
-	Handler  func(*element.Node, *map[string]element.State, *CSS)
+	Handler  func(*element.Node, *CSS)
 }
 
 type Transformer struct {
@@ -40,6 +40,7 @@ type CSS struct {
 	Adapter      *adapter.Adapter
 	Path         string
 	StyleSheets  int
+	State        map[string]element.State
 }
 
 func (c *CSS) StyleSheet(path string) {
@@ -210,10 +211,10 @@ var nonRenderTags = map[string]bool{
 	"style": true,
 }
 
-func (c *CSS) ComputeNodeStyle(n *element.Node, state *map[string]element.State) element.State {
+func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 	shelf := c.Adapter.Library
 	// Head is not renderable
-	s := *state
+	s := c.State
 	self := s[n.Properties.Id]
 
 	if nonRenderTags[n.TagName] {
@@ -225,7 +226,6 @@ func (c *CSS) ComputeNodeStyle(n *element.Node, state *map[string]element.State)
 			v.Handler(n, c)
 		}
 	}
-
 
 	plugins := c.Plugins
 	parent := s[n.Parent.Properties.Id]
@@ -243,7 +243,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node, state *map[string]element.State)
 
 	if style["display"] == "none" {
 		self.X, self.Y, self.Width, self.Height = 0, 0, 0, 0
-		(*state)[n.Properties.Id] = self
+		c.State[n.Properties.Id] = self
 		return self
 	}
 
@@ -255,23 +255,23 @@ func (c *CSS) ComputeNodeStyle(n *element.Node, state *map[string]element.State)
 	if self.Z > 0 {
 		self.Z = parent.Z + 1
 	}
-	
-	(*state)[n.Properties.Id] = self
 
-	wh, m, p := utils.GetWH(*n, state)
+	c.State[n.Properties.Id] = self
+
+	wh, m, p := utils.GetWH(*n, c.State)
 
 	self.Margin = m
 	self.Padding = p
-	self.Width =  wh.Width
+	self.Width = wh.Width
 	self.Height = wh.Height
 	self.Cursor = n.CStyle["cursor"]
-	(*state)[n.Properties.Id] = self
+	c.State[n.Properties.Id] = self
 
 	x, y := parent.X, parent.Y
-	offsetX, offsetY := utils.GetXY(n, state)
+	offsetX, offsetY := utils.GetXY(*n, c.State)
 	x += offsetX
 	y += offsetY
-	
+
 	var top, left, right, bottom bool
 
 	if style["position"] == "absolute" {
@@ -339,7 +339,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node, state *map[string]element.State)
 
 	self.ContentEditable = n.ContentEditable
 
-	(*state)[n.Properties.Id] = self
+	c.State[n.Properties.Id] = self
 
 	if !utils.ChildrenHaveText(n) && len(n.InnerText) > 0 {
 		n.InnerText = strings.TrimSpace(n.InnerText)
@@ -360,7 +360,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node, state *map[string]element.State)
 		}
 		fnt := c.Fonts[fid]
 
-		metadata := font.GetMetaData(n, state, &fnt)
+		metadata := font.GetMetaData(n, &c.State, &fnt)
 		key := font.Key(metadata)
 		exists := c.Adapter.Library.Check(key)
 		var width int
@@ -415,8 +415,8 @@ func (c *CSS) ComputeNodeStyle(n *element.Node, state *map[string]element.State)
 
 	self.Value = n.InnerText
 	self.TabIndex = n.TabIndex
-	(*state)[n.Properties.Id] = self
-	(*state)[n.Parent.Properties.Id] = parent
+	c.State[n.Properties.Id] = self
+	c.State[n.Parent.Properties.Id] = parent
 
 	self.ScrollHeight = 0
 	self.ScrollWidth = 0
@@ -425,7 +425,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node, state *map[string]element.State)
 	for i := 0; i < len(n.Children); i++ {
 		v := n.Children[i]
 		v.Parent = n
-		cState := c.ComputeNodeStyle(v, state)
+		cState := c.ComputeNodeStyle(v)
 
 		if style["height"] == "" && style["max-height"] == "" {
 			if v.CStyle["position"] != "absolute" && cState.Y+cState.Height > childYOffset {
@@ -459,14 +459,14 @@ func (c *CSS) ComputeNodeStyle(n *element.Node, state *map[string]element.State)
 	self.ScrollHeight += int(self.Padding.Bottom)
 	self.ScrollWidth += int(self.Padding.Right)
 
-	(*state)[n.Properties.Id] = self
+	c.State[n.Properties.Id] = self
 
 	border.Draw(&self, shelf)
-	(*state)[n.Properties.Id] = self
+	c.State[n.Properties.Id] = self
 
 	for _, v := range plugins {
 		if v.Selector(n) {
-			v.Handler(n, state, c)
+			v.Handler(n, c)
 		}
 	}
 

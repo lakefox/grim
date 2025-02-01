@@ -15,9 +15,8 @@ func main() {
 	// defaults read ~/Library/Preferences/.GlobalPreferences.plist
 	// !ISSUE: Flex2 doesn't work anymore
 	window := grim.New(raylib.Init(), 850, 400)
-	window.Path("./src/index.html")
+	window.Path("./src/flex.html")
 	document := window.Document()
-
 
 	// !ISSUE: Code is unreachable
 	// qsa := document.QuerySelectorAll(`:where(h1, h2, h3)`)

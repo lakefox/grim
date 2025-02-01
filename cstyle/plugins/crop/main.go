@@ -15,10 +15,9 @@ func Init() cstyle.Plugin {
 				return false
 			}
 		},
-		Handler: func(n *element.Node, state *map[string]element.State, c *cstyle.CSS) {
+		Handler: func(n *element.Node, c *cstyle.CSS) {
 			// !TODO: Needs to find crop bounds for X
-			s := *state
-			self := s[n.Properties.Id]
+			self := c.State[n.Properties.Id]
 
 			scrollTop, scrollLeft := findScroll(n)
 
@@ -26,7 +25,7 @@ func Init() cstyle.Plugin {
 			if n.TagName == "html" {
 				for _, v := range n.Children {
 					if v.TagName == "body" {
-						cs := s[v.Properties.Id]
+						cs := c.State[v.Properties.Id]
 						mod += cs.Margin.Bottom
 					}
 				}
@@ -40,39 +39,39 @@ func Init() cstyle.Plugin {
 			for _, v := range n.Children {
 				if v.TagName == "grim-track" && v.GetAttribute("direction") == "y" {
 					if containerHeight < contentHeight {
-						p := s[v.Children[0].Properties.Id]
+						p := c.State[v.Children[0].Properties.Id]
 
 						p.Height = (containerHeight / contentHeight) * containerHeight
 
 						p.Y = self.Y + float32(scrollTop)
 
-						(*state)[v.Children[0].Properties.Id] = p
+						c.State[v.Children[0].Properties.Id] = p
 					} else {
-						p := s[v.Properties.Id]
+						p := c.State[v.Properties.Id]
 						p.Hidden = true
-						(*state)[v.Properties.Id] = p
-						p = s[v.Children[0].Properties.Id]
+						c.State[v.Properties.Id] = p
+						p = c.State[v.Children[0].Properties.Id]
 						p.Hidden = true
-						(*state)[v.Children[0].Properties.Id] = p
+						c.State[v.Children[0].Properties.Id] = p
 					}
 				}
 				if v.TagName == "grim-track" && v.GetAttribute("direction") == "x" {
 					if containerWidth < contentWidth {
 						containerHeight -= utils.ConvertToPixels(v.CStyle["height"], self.EM, self.Width)
-						p := s[v.Children[0].Properties.Id]
+						p := c.State[v.Children[0].Properties.Id]
 
 						p.Width = (containerWidth / contentWidth) * containerWidth
 
 						p.X = self.X + float32(scrollLeft)
 
-						(*state)[v.Children[0].Properties.Id] = p
+						c.State[v.Children[0].Properties.Id] = p
 					} else {
-						p := s[v.Properties.Id]
+						p := c.State[v.Properties.Id]
 						p.Hidden = true
-						(*state)[v.Properties.Id] = p
-						p = s[v.Children[0].Properties.Id]
+						c.State[v.Properties.Id] = p
+						p = c.State[v.Children[0].Properties.Id]
 						p.Hidden = true
-						(*state)[v.Children[0].Properties.Id] = p
+						c.State[v.Children[0].Properties.Id] = p
 					}
 				}
 			}
@@ -92,11 +91,11 @@ func Init() cstyle.Plugin {
 				if v.CStyle["position"] == "fixed" || v.TagName == "grim-track" {
 					continue
 				}
-				child := s[v.Properties.Id]
+				child := c.State[v.Properties.Id]
 				if ((child.Y+child.Height)-float32(scrollTop) < (self.Y) || (child.Y-float32(scrollTop)) > self.Y+self.Height) ||
 					((child.X+child.Width)-float32(scrollLeft) < (self.X) || (child.X-float32(scrollLeft)) > self.X+self.Width) {
 					child.Hidden = true
-					(*state)[v.Properties.Id] = child
+					c.State[v.Properties.Id] = child
 				} else {
 					child.Hidden = false
 					xCrop := 0
@@ -132,23 +131,23 @@ func Init() cstyle.Plugin {
 						Width:  width,
 						Height: height,
 					}
-					(*state)[v.Properties.Id] = child
+					c.State[v.Properties.Id] = child
 
-					updateChildren(v, state, scrollTop, scrollLeft)
+					updateChildren(v, c, scrollTop, scrollLeft)
 				}
 			}
-			(*state)[n.Properties.Id] = self
+			c.State[n.Properties.Id] = self
 		},
 	}
 }
 
-func updateChildren(n *element.Node, state *map[string]element.State, offsetY, offsetX int) {
-	self := (*state)[n.Properties.Id]
+func updateChildren(n *element.Node, c *cstyle.CSS, offsetY, offsetX int) {
+	self := c.State[n.Properties.Id]
 	self.X -= float32(offsetX)
 	self.Y -= float32(offsetY)
-	(*state)[n.Properties.Id] = self
+	c.State[n.Properties.Id] = self
 	for _, v := range n.Children {
-		updateChildren(v, state, offsetY, offsetX)
+		updateChildren(v, c, offsetY, offsetX)
 	}
 }
 

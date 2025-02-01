@@ -11,8 +11,8 @@ import (
 	"golang.org/x/net/html"
 )
 
-func GetXY(n *element.Node, state *map[string]element.State) (float32, float32) {
-	s := *state
+func GetXY(n element.Node, state map[string]element.State) (float32, float32) {
+	s := state
 	// self := s[n.Properties.Id]
 
 	offsetX := float32(0)
@@ -33,8 +33,8 @@ type WidthHeight struct {
 	Height float32
 }
 
-func GetWH(n element.Node, state *map[string]element.State) (WidthHeight, element.MarginPadding, element.MarginPadding){
-	s := *state
+func GetWH(n element.Node, state map[string]element.State) (WidthHeight, element.MarginPadding, element.MarginPadding) {
+	s := state
 	self := s[n.Properties.Id]
 	var parent element.State
 
@@ -116,8 +116,8 @@ func GetWH(n element.Node, state *map[string]element.State) (WidthHeight, elemen
 	return wh, m, p
 }
 
-func GetMP(n element.Node, wh WidthHeight, state *map[string]element.State, t string) element.MarginPadding {
-	s := *state
+func GetMP(n element.Node, wh WidthHeight, state map[string]element.State, t string) element.MarginPadding {
+	s := state
 	self := s[n.Properties.Id]
 	fs := self.EM
 	m := element.MarginPadding{}
@@ -193,7 +193,7 @@ func GetMP(n element.Node, wh WidthHeight, state *map[string]element.State, t st
 			parent := s[n.Parent.Properties.Id]
 			if parent.Margin.Top < m.Top {
 				parent.Margin.Top = m.Top
-				(*state)[n.Parent.Properties.Id] = parent
+				(state)[n.Parent.Properties.Id] = parent
 			}
 			m.Top = 0
 		} else {

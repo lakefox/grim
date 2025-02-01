@@ -21,7 +21,6 @@ type EventData struct {
 }
 
 type Monitor struct {
-	State    *map[string]element.State
 	Adapter  *adapter.Adapter
 	EventMap map[string]element.Event
 	CSS      *cstyle.CSS
@@ -142,7 +141,7 @@ func (m *Monitor) RunEvents(n *element.Node) bool {
 
 	if evt.ScrollX != 0 {
 		if hasAutoOrScroll(styledEl) {
-			s := *m.State
+			s := m.CSS.State
 			self := s[n.Properties.Id]
 			containerWidth := self.Width
 			n.ScrollLeft += evt.ScrollX
@@ -167,7 +166,7 @@ func (m *Monitor) RunEvents(n *element.Node) bool {
 
 	if evt.ScrollY != 0 {
 		if hasAutoOrScroll(styledEl) {
-			s := *m.State
+			s := m.CSS.State
 			self := s[n.Properties.Id]
 			containerHeight := self.Height
 			n.ScrollTop -= evt.ScrollY
@@ -219,7 +218,7 @@ func (m *Monitor) GetEvents(data *EventData) {
 		"template", // Used to define a client-side template
 	}
 
-	s := *m.State
+	s := m.CSS.State
 
 	m.Focus.LastClickWasFocused = false
 	// update focesable nodes
