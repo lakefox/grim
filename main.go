@@ -44,14 +44,14 @@ import (
 var mastercss string
 
 type Window struct {
-	CSS      cstyle.CSS
-	document element.Node
+	CSS cstyle.CSS
+	// document element.Node
 
 	Scripts scripts.Scripts
 }
 
 func (w *Window) Document() *element.Node {
-	return w.document.Children[0]
+	return w.CSS.Document["ROOT"].Children[0]
 }
 
 // !TODO: Add a Mux option to all a http server to map to the window
@@ -70,7 +70,7 @@ func (window *Window) Path(path string) {
 
 	window.CSS.Path = filepath.Dir(path)
 
-	CreateNode(htmlNodes, &window.document)
+	CreateNode(htmlNodes, window.CSS.Document["ROOT"])
 	open(window)
 }
 
@@ -107,10 +107,13 @@ func New(adapterFunction *adapter.Adapter, width, height int) Window {
 	s := scripts.Scripts{}
 	s.Add(a.Init())
 
+	css.Document = map[string]*element.Node{
+		"ROOT": &document,
+	}
+
 	return Window{
-		CSS:      css,
-		document: document,
-		Scripts:  s,
+		CSS:     css,
+		Scripts: s,
 	}
 }
 
@@ -212,8 +215,8 @@ func open(data *Window) {
 	}
 
 	debug := false
-	data.document.CStyle["width"] = strconv.Itoa(int(data.CSS.Width)) + "px"
-	data.document.CStyle["height"] = strconv.Itoa(int(data.CSS.Height)) + "px"
+	data.CSS.Document["ROOT"].CStyle["width"] = strconv.Itoa(int(data.CSS.Width)) + "px"
+	data.CSS.Document["ROOT"].CStyle["height"] = strconv.Itoa(int(data.CSS.Height)) + "px"
 
 	data.CSS.Adapter.Library = &shelf
 	data.CSS.Adapter.Init(int(data.CSS.Width), int(data.CSS.Height))
@@ -256,8 +259,8 @@ func open(data *Window) {
 		data.CSS.Width = float32(wh["width"])
 		data.CSS.Height = float32(wh["height"])
 
-		data.document.CStyle["width"] = strconv.Itoa(wh["width"]) + "px"
-		data.document.CStyle["height"] = strconv.Itoa(wh["height"]) + "px"
+		data.CSS.Document["ROOT"].CStyle["width"] = strconv.Itoa(wh["width"]) + "px"
+		data.CSS.Document["ROOT"].CStyle["height"] = strconv.Itoa(wh["height"]) + "px"
 		rd = getRenderData(data, &shelf, &monitor)
 	})
 
@@ -348,9 +351,9 @@ func getRenderData(data *Window, shelf *library.Shelf, monitor *events.Monitor) 
 	// !ISSUE: Move this inside of ComputeNodeStyle
 	// + This modify events to return effected nodes
 
-	dc := data.document.Children[0]
+	dc := data.CSS.Document["ROOT"].Children[0]
 	// start := time.Now()
-	newDoc := AddStyles(data.CSS, dc, &data.document)
+	newDoc := AddStyles(data.CSS, dc, data.CSS.Document["ROOT"])
 	// fmt.Println(time.Since(start))
 
 	data.CSS.ComputeNodeStyle(newDoc)
@@ -359,15 +362,15 @@ func getRenderData(data *Window, shelf *library.Shelf, monitor *events.Monitor) 
 
 	data.CSS.Adapter.Load(rd)
 
-	AddHTMLAndAttrs(&data.document, data.CSS.State)
+	AddHTMLAndAttrs(data.CSS.Document["ROOT"], data.CSS.State)
 	// fmt.Println(data.document.InnerHTML)
 
-	data.Scripts.Run(&data.document)
+	data.Scripts.Run(data.CSS.Document["ROOT"])
 	shelf.Clean()
 
 	// !TODO: Should return effected node, then render those specific
 	// + I think have node.ComputeNodeStyle would make this nice
-	monitor.RunEvents(data.document.Children[0])
+	monitor.RunEvents(data.CSS.Document["ROOT"].Children[0])
 	return rd
 }
 
@@ -428,7 +431,7 @@ func CreateNode(node *html.Node, parent *element.Node) {
 			}
 		}
 		newNode.InnerText = strings.TrimSpace(utils.GetInnerText(node))
-
+		newNode.Properties.Id = element.GenerateUniqueId(parent, node.Data)
 		// Recursively traverse child nodes
 		for child := node.FirstChild; child != nil; child = child.NextSibling {
 			if child.Type == html.ElementNode {

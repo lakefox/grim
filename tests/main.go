@@ -15,7 +15,7 @@ func main() {
 	// defaults read ~/Library/Preferences/.GlobalPreferences.plist
 	// !ISSUE: Flex2 doesn't work anymore
 	window := grim.New(raylib.Init(), 850, 400)
-	window.Path("./src/flex.html")
+	window.Path("./src/index.html")
 	document := window.Document()
 
 	// !ISSUE: Code is unreachable

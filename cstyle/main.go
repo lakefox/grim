@@ -34,7 +34,7 @@ type CSS struct {
 	Height       float32
 	Plugins      []Plugin
 	Transformers []Transformer
-	Document     *element.Node
+	Document     map[string]*element.Node
 	Fonts        map[string]imgFont.Face
 	StyleMap     map[string][]*parser.StyleMap
 	Adapter      *adapter.Adapter
@@ -216,7 +216,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 	// Head is not renderable
 	s := c.State
 	self := s[n.Properties.Id]
-
+	
 	if nonRenderTags[n.TagName] {
 		return self
 	}

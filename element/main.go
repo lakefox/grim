@@ -4,10 +4,8 @@ import (
 	"fmt"
 	"grim/canvas"
 	ic "image/color"
-	"math"
 	"slices"
 	"strconv"
-	"sync"
 )
 
 // !NOTE: With the current rendering scheme, all transform/plugin modifications are perserved in the document copy, then thrown away
@@ -258,30 +256,19 @@ func (n *Node) CreateElement(name string) Node {
 	}
 }
 
-var (
-	idCounter int64
-	mu        sync.Mutex
-)
-
-func generateUniqueId(tagName string) string {
-	mu.Lock()
-	defer mu.Unlock()
-	if idCounter == math.MaxInt64 {
-		idCounter = 0
-	}
-	idCounter++
-	return tagName + strconv.FormatInt(idCounter, 10)
+func GenerateUniqueId(parent *Node, tagName string) string {
+	return parent.Properties.Id+tagName+strconv.Itoa(len(parent.Children))
 }
 
 func (n *Node) AppendChild(c *Node) {
 	c.Parent = n
-	c.Properties.Id = generateUniqueId(c.TagName)
+	c.Properties.Id = GenerateUniqueId(n, c.TagName)
 	n.Children = append(n.Children, c)
 }
 
 func (n *Node) InsertAfter(c, tgt *Node) {
 	c.Parent = n
-	c.Properties.Id = generateUniqueId(c.TagName)
+	c.Properties.Id = GenerateUniqueId(n, c.TagName)
 
 	nodeIndex := -1
 	for i, v := range n.Children {
@@ -301,7 +288,7 @@ func (n *Node) InsertBefore(c, tgt *Node) {
 	c.Parent = n
 	// Set Id
 
-	c.Properties.Id = generateUniqueId(c.TagName)
+	c.Properties.Id = GenerateUniqueId(n, c.TagName)
 
 	nodeIndex := -1
 	for i, v := range n.Children {

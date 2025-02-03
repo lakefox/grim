@@ -64,7 +64,7 @@ func Init() cstyle.Transformer {
 			// X scrollbar
 			xScrollbar := false
 
-			if (n.CStyle["overflow-x"] == "scroll" || n.CStyle["overflow-x"] == "auto")  {
+			if n.CStyle["overflow-x"] == "scroll" || n.CStyle["overflow-x"] == "auto" {
 				scrollbar := n.CreateElement("grim-track")
 
 				scrollbar.CStyle["position"] = "absolute"
@@ -100,6 +100,7 @@ func Init() cstyle.Transformer {
 					thumb.CStyle[k] = v
 				}
 
+				scrollbar.Properties.Id = element.GenerateUniqueId(n, scrollbar.TagName)
 				scrollbar.AppendChild(&thumb)
 				xScrollbar = true
 				n.AppendChild(&scrollbar)
@@ -107,7 +108,7 @@ func Init() cstyle.Transformer {
 
 			// Y scrollbar
 
-			if (n.CStyle["overflow-y"] == "scroll" || n.CStyle["overflow-y"] == "auto") {
+			if n.CStyle["overflow-y"] == "scroll" || n.CStyle["overflow-y"] == "auto" {
 				scrollbar := n.CreateElement("grim-track")
 
 				scrollbar.CStyle["position"] = "absolute"
@@ -148,7 +149,7 @@ func Init() cstyle.Transformer {
 				for k, v := range n.PseudoElements["::-webkit-scrollbar-thumb"] {
 					thumb.CStyle[k] = v
 				}
-
+				scrollbar.Properties.Id = element.GenerateUniqueId(n, scrollbar.TagName)
 				scrollbar.AppendChild(&thumb)
 
 				n.CStyle["width"] = "calc(" + n.CStyle["width"] + "-" + trackWidth + ")"
