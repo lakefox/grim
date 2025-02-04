@@ -41,6 +41,13 @@ type Focus struct {
 }
 
 // !ISSUE: Events fire multiple times find a way to prevent sending repeat events at 120 fps also during drag click gets fired for every element moused over
+
+// !TODO: Should return modified elements, take nothing as a input bc m.CSS.Document
+// + need to find what changed, remove GetStyles might have to do after adding
+// + style precompute
+// + reomve m.EventMap after done if possible
+// + for k,v := range m./EventMap
+// + prob storing computed styles should be first bc then you can tell if the event matters
 func (m *Monitor) RunEvents(n *element.Node) bool {
 	var scrolled bool
 	for _, v := range n.Children {
@@ -225,14 +232,6 @@ func (m *Monitor) GetEvents(data *EventData) {
 	nodes := []fn{}
 	for k, self := range s {
 		if self.TabIndex > -1 {
-			if self.TabIndex == 9999999 {
-				// Add the last digits of the properties.id to make the elements sort in order
-				numStr := strings.TrimFunc(k, func(r rune) bool {
-					return !unicode.IsDigit(r) // Remove non-digit characters
-				})
-				prid, _ := strconv.Atoi(numStr)
-				self.TabIndex += prid
-			}
 			nodes = append(nodes, fn{Id: k, TabIndex: self.TabIndex})
 		}
 	}
@@ -413,14 +412,6 @@ func (m *Monitor) GetEvents(data *EventData) {
 							}
 						}
 						if selectedIndex == -1 {
-							if self.TabIndex == 9999999 {
-								// Add the last digits of the properties.id to make the elements sort in order
-								numStr := strings.TrimFunc(k, func(r rune) bool {
-									return !unicode.IsDigit(r) // Remove non-digit characters
-								})
-								prid, _ := strconv.Atoi(numStr)
-								self.TabIndex += prid
-							}
 							nodes = append(nodes, fn{Id: k, TabIndex: self.TabIndex})
 							sort.Slice(nodes, func(i, j int) bool {
 								return nodes[i].TabIndex < nodes[j].TabIndex // Ascending order by TabIndex

@@ -70,7 +70,7 @@ func (window *Window) Path(path string) {
 
 	window.CSS.Path = filepath.Dir(path)
 
-	CreateNode(htmlNodes, window.CSS.Document["ROOT"])
+	CreateNode(htmlNodes, window.CSS.Document["ROOT"], &window.CSS)
 	open(window)
 }
 
@@ -287,6 +287,7 @@ func open(data *Window) {
 			if pos[0] < int(data.CSS.Width) && pos[1] < int(data.CSS.Height) {
 				currentEvent.Position = pos
 				monitor.GetEvents(&currentEvent)
+				fmt.Println(monitor.EventMap)
 				rd = getRenderData(data, &shelf, &monitor)
 			}
 		}
@@ -396,7 +397,7 @@ func AddStyles(c cstyle.CSS, node *element.Node, parent *element.Node) *element.
 	return &n
 }
 
-func CreateNode(node *html.Node, parent *element.Node) {
+func CreateNode(node *html.Node, parent *element.Node, css *cstyle.CSS) {
 	if node.Type == html.ElementNode {
 		newNode := parent.CreateElement(node.Data)
 		for _, attr := range node.Attr {
@@ -431,19 +432,21 @@ func CreateNode(node *html.Node, parent *element.Node) {
 			}
 		}
 		newNode.InnerText = strings.TrimSpace(utils.GetInnerText(node))
+		
 		newNode.Properties.Id = element.GenerateUniqueId(parent, node.Data)
 		// Recursively traverse child nodes
 		for child := node.FirstChild; child != nil; child = child.NextSibling {
 			if child.Type == html.ElementNode {
-				CreateNode(child, &newNode)
+				CreateNode(child, &newNode, css)
 			}
 		}
 		parent.AppendChild(&newNode)
+		css.Document[newNode.Properties.Id] = &newNode
 
 	} else {
 		for child := node.FirstChild; child != nil; child = child.NextSibling {
 			if child.Type == html.ElementNode {
-				CreateNode(child, parent)
+				CreateNode(child, parent, css)
 			}
 		}
 	}
