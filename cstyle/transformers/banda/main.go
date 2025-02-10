@@ -7,25 +7,26 @@ import (
 
 func Init() cstyle.Transformer {
 	return cstyle.Transformer{
-		Selector: func(n *element.Node) bool {
-			if n.PseudoElements["::before"] != nil || n.PseudoElements["::after"] != nil {
+		Selector: func(n *element.Node, c *cstyle.CSS) bool {
+			ps := c.PsuedoStyles[n.Properties.Id]
+			if ps["::before"] != nil || ps["::after"] != nil {
 				return true
 			} else {
 				return false
 			}
 		},
 		Handler: func(n *element.Node, c *cstyle.CSS) *element.Node {
-			if n.PseudoElements["::before"] != nil {
+			ps := c.PsuedoStyles[n.Properties.Id]
+			if ps["::before"] != nil {
 				before := n.CreateElement("before")
 				before.Parent = n
-				before.CStyle, _ = c.GetStyles(&before)
-				before.CStyle["display"] = "inline"
+				before.Style("display", "inline")
 
-				for k, v := range n.PseudoElements["::before"] {
-					before.CStyle[k] = v
+				for k, v := range ps["::before"] {
+					before.Style(k, v)
 				}
 
-				before.InnerText = n.PseudoElements["::before"]["content"][1 : len(n.PseudoElements["::before"]["content"])-1]
+				before.InnerText = ps["::before"]["content"][1 : len(ps["::before"]["content"])-1]
 
 				if len(n.Children) == 0 {
 					n.AppendChild(&before)
@@ -34,17 +35,16 @@ func Init() cstyle.Transformer {
 				}
 			}
 
-			if n.PseudoElements["::after"] != nil {
+			if ps["::after"] != nil {
 				after := n.CreateElement("after")
 				after.Parent = n
-				after.CStyle, _ = c.GetStyles(&after)
-				after.CStyle["display"] = "inline"
+				after.Style("display", "inline")
 
-				for k, v := range n.PseudoElements["::after"] {
-					after.CStyle[k] = v
+				for k, v := range ps["::after"] {
+					after.Style(k, v)
 				}
 
-				after.InnerText = n.PseudoElements["::after"]["content"][1 : len(n.PseudoElements["::after"]["content"])-1]
+				after.InnerText = ps["::after"]["content"][1 : len(ps["::after"]["content"])-1]
 
 				n.AppendChild(&after)
 			}

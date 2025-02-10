@@ -514,6 +514,8 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 	border.Draw(&self, shelf)
 	c.State[n.Properties.Id] = self
 
+	c.Styles[n.Properties.Id] = style
+	
 	for _, v := range plugins {
 		if v.Selector(n, c) {
 			v.Handler(n, c)

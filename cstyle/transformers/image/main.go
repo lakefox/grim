@@ -15,7 +15,7 @@ import (
 
 func Init() cstyle.Transformer {
 	return cstyle.Transformer{
-		Selector: func(n *element.Node) bool {
+		Selector: func(n *element.Node, c *cstyle.CSS) bool {
 			return n.TagName == "img"
 			// !ISSUE: img tags or background-url || background: url()
 		},
@@ -26,28 +26,30 @@ func Init() cstyle.Transformer {
 				if err == nil {
 					img, _, err := image.Decode(bytes.NewReader(i))
 					if err == nil {
-						width, height := n.CStyle["width"], n.CStyle["height"]
-						if n.CStyle["width"] == "" {
+						width, height := n.Style("width"), n.Style("height")
+						if n.Style("width") == "" {
 							width = strconv.Itoa(img.Bounds().Dx()) + "px"
 						}
-						if n.CStyle["height"] == "" {
+						if n.Style("height") == "" {
 							height = strconv.Itoa(img.Bounds().Dy()) + "px"
 						}
 						ctx := n.GetContext(img.Bounds().Dx(), img.Bounds().Dy())
-						n.CStyle["width"], n.CStyle["height"] = width, height
+						n.Style("width", width)
+						n.Style("height", height)
 						ctx.DrawImage(img, 0, 0)
 					}
 				}
 			} else {
 				img, _ := c.Adapter.Library.Get(n.Properties.Id + "canvas")
-				width, height := n.CStyle["width"], n.CStyle["height"]
-				if n.CStyle["width"] == "" {
+				width, height := n.Style("width"), n.Style("height")
+				if n.Style("width") == "" {
 					width = strconv.Itoa(img.Bounds().Dx()) + "px"
 				}
-				if n.CStyle["height"] == "" {
+				if n.Style("height") == "" {
 					height = strconv.Itoa(img.Bounds().Dy()) + "px"
 				}
-				n.CStyle["width"], n.CStyle["height"] = width, height
+				n.Style("width", width)
+				n.Style("height", height)
 				n.Canvas = &canvas.Canvas{
 					RGBA: img,
 				}

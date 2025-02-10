@@ -13,7 +13,7 @@ import (
 
 func Init() cstyle.Transformer {
 	return cstyle.Transformer{
-		Selector: func(n *element.Node) bool {
+		Selector: func(n *element.Node, c *cstyle.CSS) bool {
 			return n.TagName == "ol"
 		},
 		Handler: func(n *element.Node, c *cstyle.CSS) *element.Node {
@@ -22,22 +22,24 @@ func Init() cstyle.Transformer {
 			var widths []int
 			for i, v := range n.Children {
 				li := n.CreateElement("li")
-
-				li.CStyle = v.CStyle
-				li.CStyle["display"] = "flex"
-				li.CStyle["align-items"] = "center"
-				li.CStyle = c.QuickStyles(&li)
-
 				dot := li.CreateElement("div")
-				dot.CStyle = li.CStyle
-				dot.CStyle["margin-right"] = "6px"
+				content := li.CreateElement("div")
 
-				dot.CStyle = c.QuickStyles(&dot)
-				dot.CStyle["display"] = "block"
+				for k, v := range c.Styles[v.Properties.Id] {
+					li.Style(k, v)
+					dot.Style(k, v)
+					content.Style(k, v)
+				}
+
+				li.Style("display", "flex")
+				li.Style("align-items", "center")
+
+				dot.Style("margin-right", "6px")
+				dot.Style("display", "block")
 
 				italic := false
 
-				if n.CStyle["font-style"] == "italic" {
+				if n.Style("font-style") == "italic" {
 					italic = true
 				}
 
@@ -45,12 +47,16 @@ func Init() cstyle.Transformer {
 					c.Fonts = map[string]imgFont.Face{}
 				}
 
-				fs := utils.ConvertToPixels(n.CStyle["font-size"], 16, c.Width)
+				fs := utils.ConvertToPixels(n.Style("font-size"), 16, c.Width)
 				em := fs
 
-				fid := n.CStyle["font-family"] + fmt.Sprint(em, n.CStyle["font-weight"], italic)
+				fid := n.Style("font-family") + fmt.Sprint(em, n.Style("font-weight"), italic)
 				if c.Fonts[fid] == nil {
-					f, _ := font.LoadFont(n.CStyle["font-family"], int(em), n.CStyle["font-weight"], italic, &c.Adapter.FileSystem)
+					f, err := font.LoadFont(n.Style("font-family"), int(em), n.Style("font-weight"), italic, &c.Adapter.FileSystem)
+
+					if err != nil {
+						panic(err)
+					}
 					c.Fonts[fid] = f
 				}
 				fnt := c.Fonts[fid]
@@ -62,11 +68,8 @@ func Init() cstyle.Transformer {
 
 				dot.InnerText = strconv.Itoa(i+1) + "."
 
-				content := li.CreateElement("div")
 				content.InnerText = v.InnerText
-				content.CStyle = li.CStyle
-				content.CStyle = c.QuickStyles(&content)
-				content.CStyle["display"] = "block"
+				content.Style("display", "block")
 
 				li.AppendChild(&dot)
 				li.AppendChild(&content)
@@ -76,7 +79,7 @@ func Init() cstyle.Transformer {
 			}
 
 			for i := range tN.Children {
-				tN.Children[i].Children[0].CStyle["margin-left"] = strconv.Itoa((maxOS - widths[i])) + "px"
+				tN.Children[i].Children[0].Style("margin-left", strconv.Itoa((maxOS-widths[i]))+"px")
 			}
 			n.Children = tN.Children
 			return n

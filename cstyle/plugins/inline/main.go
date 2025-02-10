@@ -8,17 +8,8 @@ import (
 
 func Init() cstyle.Plugin {
 	return cstyle.Plugin{
-		Selector: func(n *element.Node) bool {
-			styles := map[string]string{
-				"display": "inline",
-			}
-			matches := true
-			for name, value := range styles {
-				if n.CStyle[name] != value && !(value == "*") && n.CStyle[name] != "" {
-					matches = false
-				}
-			}
-			return matches
+		Selector: func(n *element.Node, c *cstyle.CSS) bool {
+			return c.Styles[n.Properties.Id]["display"] == "inline" || n.Style("display") == "inline"
 		},
 		Handler: func(n *element.Node, c *cstyle.CSS) {
 			self := c.State[n.Properties.Id]
@@ -33,10 +24,10 @@ func Init() cstyle.Plugin {
 			for i, v := range n.Parent.Children {
 				// vState := c.State[v.Properties.Id]
 				if i > 0 {
-					if v.CStyle["position"] != "absolute" {
+					if v.Style("position") != "absolute" {
 						if v.Properties.Id == n.Properties.Id {
 							sib := n.Parent.Children[i-1]
-							if sib.CStyle["position"] == "absolute" {
+							if sib.Style("position") == "absolute" {
 								if i-2 >= 0 {
 									sib = n.Parent.Children[i-2]
 								} else {
@@ -50,7 +41,7 @@ func Init() cstyle.Plugin {
 								self.X = copyOfX
 							} else {
 								// Node did not break
-								if sib.CStyle["display"] != "inline" {
+								if sib.Style("display") != "inline" {
 									self.Y = sibling.Y + sibling.Height + sibling.Border.Top.Width + sibling.Border.Bottom.Width + sibling.Margin.Top + sibling.Margin.Bottom
 								} else {
 									self.Y = sibling.Y

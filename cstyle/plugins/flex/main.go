@@ -11,25 +11,15 @@ import (
 
 func Init() cstyle.Plugin {
 	return cstyle.Plugin{
-		Selector: func(n *element.Node) bool {
-			styles := map[string]string{
-				"display": "flex",
-			}
-			matches := true
-			for name, value := range styles {
-				if (n.CStyle[name] != value || n.CStyle[name] == "") && !(value == "*") {
-					matches = false
-				}
-			}
-
-			return matches
+		Selector: func(n *element.Node, c *cstyle.CSS) bool {
+			return c.Styles[n.Properties.Id]["display"] == "flex" || n.Style("display") == "flex"
 		},
 		Handler: func(n *element.Node, c *cstyle.CSS) {
 			self := c.State[n.Properties.Id]
 			if len(n.Children) == 0 {
 				return
 			}
-			verbs := strings.Split(n.CStyle["flex-direction"], "-")
+			verbs := strings.Split(n.Style("flex-direction"), "-")
 			flexDirection := verbs[0]
 			if flexDirection == "" {
 				flexDirection = "row"
@@ -40,26 +30,26 @@ func Init() cstyle.Plugin {
 			}
 
 			var flexWrapped bool
-			if n.CStyle["flex-wrap"] == "wrap" {
+			if n.Style("flex-wrap") == "wrap" {
 				flexWrapped = true
 			} else {
 				flexWrapped = false
 			}
 
-			alignContent := n.CStyle["align-content"]
+			alignContent := n.Style("align-content")
 			if alignContent == "" {
 				alignContent = "normal"
 			}
-			alignItems := n.CStyle["align-items"]
+			alignItems := n.Style("align-items")
 			if alignItems == "" {
 				alignItems = "normal"
 			}
-			justifyItems := n.CStyle["justify-items"]
+			justifyItems := n.Style("justify-items")
 			if justifyItems == "" {
 				justifyItems = "normal"
 			}
 
-			justifyContent := n.CStyle["justify-content"]
+			justifyContent := n.Style("justify-content")
 			if justifyContent == "" {
 				justifyContent = "normal"
 			}
@@ -257,10 +247,10 @@ func Init() cstyle.Plugin {
 					for i := v[0]; i < v[1]; i++ {
 						vState := c.State[n.Children[i].Properties.Id]
 						// height := float32(v[2])
-						if n.Children[i].CStyle["height"] == "" && n.Children[i].CStyle["min-height"] == "" && !flexWrapped {
+						if n.Children[i].Style("height") == "" && n.Children[i].Style("min-height") == "" && !flexWrapped {
 							height := self.Height - self.Padding.Top - self.Padding.Bottom - vState.Margin.Top - vState.Margin.Bottom - (vState.Border.Top.Width + vState.Border.Bottom.Width)
 							vState.Height = minHeight(n.Children[i], c, height)
-						} else if flexWrapped && (n.CStyle["height"] != "" || n.CStyle["min-height"] != "") {
+						} else if flexWrapped && (n.Style("height") != "" || n.Style("min-height") != "") {
 							height := ((selfHeight / totalHeight) * float32(v[2])) - (vState.Margin.Top + vState.Margin.Bottom + (vState.Border.Top.Width + vState.Border.Bottom.Width))
 							vState.Height = minHeight(n.Children[i], c, height)
 							yStore := vState.Y
@@ -277,7 +267,7 @@ func Init() cstyle.Plugin {
 						}
 						c.State[n.Children[i].Properties.Id] = vState
 					}
-					if flexWrapped && (n.CStyle["height"] != "" || n.CStyle["min-height"] != "") {
+					if flexWrapped && (n.Style("height") != "" || n.Style("min-height") != "") {
 						yOffset += ((selfHeight / totalHeight) * float32(v[2]))
 					} else if flexWrapped {
 						yOffset += float32(v[2])
@@ -305,7 +295,7 @@ func Init() cstyle.Plugin {
 					var fixedHeightElements int
 					for i, v := range n.Children {
 						vState := c.State[v.Properties.Id]
-						if v.CStyle["min-height"] != "" {
+						if v.Style("min-height") != "" {
 							selfHeight -= vState.Height + vState.Margin.Top + vState.Margin.Bottom + (vState.Border.Top.Width + vState.Border.Bottom.Width)
 							fixedHeightElements++
 							maxH = utils.Max(maxH, vState.Height)
@@ -421,7 +411,7 @@ func Init() cstyle.Plugin {
 					alignCols(rows, n, c, alignItems, alignContent, innerSizes)
 				}
 			}
-			if n.CStyle["height"] == "" && n.CStyle["min-height"] == "" {
+			if n.Style("height") == "" && n.Style("min-height") == "" {
 				_, h := getInnerSize(n, c)
 				self.Height = h
 			}
@@ -440,11 +430,11 @@ func applyBlock(n *element.Node, c *cstyle.CSS) {
 			v := n.Children[i]
 			vState := c.State[v.Properties.Id]
 
-			if v.CStyle["display"] != "block" {
+			if v.Style("display") != "block" {
 				vState.Y += inlineOffset
 				accum = (vState.Y - baseY)
 				lastHeight = vState.Height
-			} else if v.CStyle["position"] != "absolute" {
+			} else if v.Style("position") != "absolute" {
 				vState.Y += accum
 				inlineOffset += (vState.Height + (vState.Border.Top.Width + vState.Border.Bottom.Width) + vState.Margin.Top + vState.Margin.Bottom + vState.Padding.Top + vState.Padding.Bottom) + lastHeight
 			}
@@ -460,7 +450,7 @@ func deInline(n *element.Node, c *cstyle.CSS) {
 	for _, v := range n.Children {
 		vState := c.State[v.Properties.Id]
 
-		if v.CStyle["display"] == "inline" {
+		if v.Style("display") == "inline" {
 			if baseX < 0 && baseY < 0 {
 				baseX = vState.X
 				baseY = vState.Y
@@ -491,7 +481,7 @@ func applyInline(n *element.Node, c *cstyle.CSS) {
 			applyInline(v, c)
 		}
 
-		if pl.Selector(v) {
+		if pl.Selector(v, c) {
 			pl.Handler(v, c)
 		}
 	}
@@ -520,7 +510,7 @@ func countText(n *element.Node) int {
 		if v.TagName == "text" {
 			count += 1
 		}
-		if v.CStyle["display"] == "block" {
+		if v.Style("display") == "block" {
 			groups = append(groups, count)
 			count = 0
 		}
@@ -538,8 +528,8 @@ func countText(n *element.Node) int {
 
 func minHeight(n *element.Node, c *cstyle.CSS, prev float32) float32 {
 	self := c.State[n.Properties.Id]
-	if n.CStyle["min-height"] != "" {
-		mw := utils.ConvertToPixels(n.CStyle["min-height"], self.EM, c.State[n.Parent.Properties.Id].Width)
+	if n.Style("min-height") != "" {
+		mw := utils.ConvertToPixels(n.Style("min-height"), self.EM, c.State[n.Parent.Properties.Id].Width)
 		return utils.Max(prev, mw)
 	} else {
 		return prev
@@ -558,8 +548,8 @@ func getMinHeight(n *element.Node, c *cstyle.CSS) float32 {
 	} else {
 		selfHeight = self.Height
 	}
-	if n.CStyle["min-height"] != "" {
-		mh := utils.ConvertToPixels(n.CStyle["min-height"], self.EM, c.State[n.Parent.Properties.Id].Width)
+	if n.Style("min-height") != "" {
+		mh := utils.ConvertToPixels(n.Style("min-height"), self.EM, c.State[n.Parent.Properties.Id].Width)
 		selfHeight = utils.Max(mh, selfHeight)
 	}
 
@@ -578,8 +568,8 @@ func getMinWidth(n *element.Node, c *cstyle.CSS) float32 {
 	} else {
 		selfWidth = self.Width
 	}
-	if n.CStyle["min-width"] != "" {
-		mw := utils.ConvertToPixels(n.CStyle["min-width"], self.EM, c.State[n.Parent.Properties.Id].Width)
+	if n.Style("min-width") != "" {
+		mw := utils.ConvertToPixels(n.Style("min-width"), self.EM, c.State[n.Parent.Properties.Id].Width)
 		selfWidth = utils.Max(mw, selfWidth)
 	}
 
@@ -595,7 +585,7 @@ func getMaxWidth(n *element.Node, c *cstyle.CSS) float32 {
 
 		for _, v := range n.Children {
 			rowWidth += getNodeWidth(v, c)
-			if v.CStyle["display"] != "inline" {
+			if v.Style("display") != "inline" {
 				maxRowWidth = utils.Max(rowWidth, maxRowWidth)
 				rowWidth = 0
 			}
@@ -632,18 +622,18 @@ func getNodeWidth(n *element.Node, c *cstyle.CSS) float32 {
 func setWidth(n *element.Node, c *cstyle.CSS, width float32) float32 {
 	self := c.State[n.Properties.Id]
 
-	if n.CStyle["width"] != "" {
-		return utils.ConvertToPixels(n.CStyle["width"], self.EM, c.State[n.Parent.Properties.Id].Width) + self.Padding.Left + self.Padding.Right
+	if n.Style("width") != "" {
+		return utils.ConvertToPixels(n.Style("width"), self.EM, c.State[n.Parent.Properties.Id].Width) + self.Padding.Left + self.Padding.Right
 	}
 
 	var maxWidth, minWidth float32
 	maxWidth = 10e9
-	if n.CStyle["min-width"] != "" {
-		minWidth = utils.ConvertToPixels(n.CStyle["min-width"], self.EM, c.State[n.Parent.Properties.Id].Width)
+	if n.Style("min-width") != "" {
+		minWidth = utils.ConvertToPixels(n.Style("min-width"), self.EM, c.State[n.Parent.Properties.Id].Width)
 		minWidth += self.Padding.Left + self.Padding.Right
 	}
-	if n.CStyle["max-width"] != "" {
-		maxWidth = utils.ConvertToPixels(n.CStyle["min-width"], self.EM, c.State[n.Parent.Properties.Id].Width)
+	if n.Style("max-width") != "" {
+		maxWidth = utils.ConvertToPixels(n.Style("min-width"), self.EM, c.State[n.Parent.Properties.Id].Width)
 		maxWidth += self.Padding.Left + self.Padding.Right
 	}
 
@@ -653,17 +643,17 @@ func setWidth(n *element.Node, c *cstyle.CSS, width float32) float32 {
 func setHeight(n *element.Node, c *cstyle.CSS, height float32) float32 {
 	self := c.State[n.Properties.Id]
 
-	if n.CStyle["height"] != "" {
-		return utils.ConvertToPixels(n.CStyle["height"], self.EM, c.State[n.Parent.Properties.Id].Height)
+	if n.Style("height") != "" {
+		return utils.ConvertToPixels(n.Style("height"), self.EM, c.State[n.Parent.Properties.Id].Height)
 	}
 
 	var maxHeight, minHeight float32
 	maxHeight = 10e9
-	if n.CStyle["min-height"] != "" {
-		minHeight = utils.ConvertToPixels(n.CStyle["min-height"], self.EM, c.State[n.Parent.Properties.Id].Height)
+	if n.Style("min-height") != "" {
+		minHeight = utils.ConvertToPixels(n.Style("min-height"), self.EM, c.State[n.Parent.Properties.Id].Height)
 	}
-	if n.CStyle["max-height"] != "" {
-		maxHeight = utils.ConvertToPixels(n.CStyle["min-height"], self.EM, c.State[n.Parent.Properties.Id].Height)
+	if n.Style("max-height") != "" {
+		maxHeight = utils.ConvertToPixels(n.Style("min-height"), self.EM, c.State[n.Parent.Properties.Id].Height)
 	}
 
 	return utils.Max(minHeight, utils.Min(height, maxHeight))
@@ -711,10 +701,10 @@ func getInnerSize(n *element.Node, c *cstyle.CSS) (float32, float32) {
 
 	w += self.Padding.Left + self.Padding.Right
 	h += self.Padding.Top + self.Padding.Bottom
-	if n.CStyle["width"] != "" {
+	if n.Style("width") != "" {
 		w = self.Width
 	}
-	if n.CStyle["height"] != "" {
+	if n.Style("height") != "" {
 		h = self.Height
 	}
 
@@ -1033,7 +1023,7 @@ func alignRow(rows [][]int, n *element.Node, c *cstyle.CSS, align, content strin
 
 				offset := sum + self.Y + self.Padding.Top + vState.Margin.Top + contentOffset
 
-				if n.CStyle["height"] != "" || n.CStyle["min-height"] != "" {
+				if n.Style("height") != "" || n.Style("min-height") != "" {
 					offset += ((os) * float32(ci))
 				}
 
@@ -1047,7 +1037,7 @@ func alignRow(rows [][]int, n *element.Node, c *cstyle.CSS, align, content strin
 
 				offset := sum + self.Y + self.Padding.Top + vState.Margin.Top + contentOffset
 
-				if n.CStyle["height"] != "" || n.CStyle["min-height"] != "" {
+				if n.Style("height") != "" || n.Style("min-height") != "" {
 					offset += (os * float32(ci+1)) - (os / 2)
 				}
 
@@ -1064,7 +1054,7 @@ func alignRow(rows [][]int, n *element.Node, c *cstyle.CSS, align, content strin
 
 				offset := sum + self.Y + self.Padding.Top + vState.Margin.Top + contentOffset
 
-				if n.CStyle["height"] != "" || n.CStyle["min-height"] != "" {
+				if n.Style("height") != "" || n.Style("min-height") != "" {
 					offset += os * float32(ci+1)
 				}
 
@@ -1082,7 +1072,7 @@ func alignRow(rows [][]int, n *element.Node, c *cstyle.CSS, align, content strin
 
 				offset := sum + self.Y + self.Padding.Top + vState.Margin.Top
 
-				if n.CStyle["height"] != "" || n.CStyle["min-height"] != "" {
+				if n.Style("height") != "" || n.Style("min-height") != "" {
 					offset += ((os) * float32(ci))
 				}
 

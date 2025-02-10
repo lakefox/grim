@@ -7,17 +7,8 @@ import (
 
 func Init() cstyle.Plugin {
 	return cstyle.Plugin{
-		Selector: func(n *element.Node) bool {
-			styles := map[string]string{
-				"text-align": "*",
-			}
-			matches := true
-			for name, value := range styles {
-				if (n.CStyle[name] != value || n.CStyle[name] == "") && !(value == "*") {
-					matches = false
-				}
-			}
-			return matches
+		Selector: func(n *element.Node, c *cstyle.CSS) bool {
+			return c.Styles[n.Properties.Id]["text-align"] != "" || n.Style("text-align") != ""
 		},
 		Handler: func(n *element.Node, c *cstyle.CSS) {
 			self := c.State[n.Properties.Id]
@@ -29,12 +20,12 @@ func Init() cstyle.Plugin {
 			for _, v := range n.Children {
 				// This prevents using absolutely positionioned elements in the alignment of text
 				// + Will need to add the other styles
-				if v.CStyle["position"] != "absolute" {
+				if v.Style("position") != "absolute" {
 					nChildren = append(nChildren, v)
 				}
 			}
 
-			if n.CStyle["text-align"] == "center" {
+			if n.Style("text-align") == "center" {
 				if len(nChildren) > 0 {
 					minX = c.State[nChildren[0].Properties.Id].X
 					baseY := c.State[nChildren[0].Properties.Id].Y + c.State[nChildren[0].Properties.Id].Height
@@ -71,7 +62,7 @@ func Init() cstyle.Plugin {
 						c.State[nChildren[a].Properties.Id] = cState
 					}
 				}
-			} else if n.CStyle["text-align"] == "right" {
+			} else if n.Style("text-align") == "right" {
 				if len(nChildren) > 0 {
 					minX = c.State[nChildren[0].Properties.Id].X
 					baseY := c.State[nChildren[0].Properties.Id].Y + c.State[nChildren[0].Properties.Id].Height

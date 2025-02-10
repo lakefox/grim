@@ -9,43 +9,48 @@ import (
 
 func Init() cstyle.Transformer {
 	return cstyle.Transformer{
-		Selector: func(n *element.Node) bool {
-			if n.CStyle["overflow"] != "" || n.CStyle["overflow-x"] != "" || n.CStyle["overflow-y"] != "" {
+		Selector: func(n *element.Node, c *cstyle.CSS) bool {
+			style := c.Styles[n.Properties.Id]
+			if style["overflow"] != "" || style["overflow-x"] != "" || style["overflow-y"] != "" {
 				return true
 			} else {
 				return false
 			}
 		},
 		Handler: func(n *element.Node, c *cstyle.CSS) *element.Node {
-			overflowProps := strings.Split(n.CStyle["overflow"], " ")
-			if n.CStyle["overflow-y"] == "" {
+			style := c.Styles[n.Properties.Id]
+
+			overflowProps := strings.Split(style["overflow"], " ")
+			if n.Style("overflow-y") == "" {
 				val := overflowProps[0]
 				if len(overflowProps) >= 2 {
 					val = overflowProps[1]
 				}
-				n.CStyle["overflow-y"] = val
+				n.Style("overflow-y", val)
 			}
-			if n.CStyle["overflow-x"] == "" {
-				n.CStyle["overflow-x"] = overflowProps[0]
+			if style["overflow-x"] == "" {
+				n.Style("overflow-x", overflowProps[0])
 			}
 
-			if n.CStyle["position"] == "" {
-				n.CStyle["position"] = "relative"
+			if style["position"] == "" {
+				n.Style("position", "relative")
 			}
 
 			trackWidth := "14px"
 			thumbWidth := "8px"
 			thumbMargin := "3px"
-			if n.CStyle["scrollbar-width"] == "thin" {
+			if n.Style("scrollbar-width") == "thin" {
 				trackWidth = "10px"
 				thumbWidth = "6px"
 				thumbMargin = "2px"
 			}
-			if n.CStyle["scrollbar-width"] == "none" {
+			if n.Style("scrollbar-width") == "none" {
 				return n
 			}
 
-			splitStr := strings.Split(n.CStyle["scrollbar-color"], " ")
+			ps := c.PsuedoStyles[n.Properties.Id]
+
+			splitStr := strings.Split(n.Style("scrollbar-color"), " ")
 
 			// Initialize the variables
 			var backgroundColor, thumbColor string
@@ -64,40 +69,40 @@ func Init() cstyle.Transformer {
 			// X scrollbar
 			xScrollbar := false
 
-			if n.CStyle["overflow-x"] == "scroll" || n.CStyle["overflow-x"] == "auto" {
+			if n.Style("overflow-x") == "scroll" || n.Style("overflow-x") == "auto" {
 				scrollbar := n.CreateElement("grim-track")
 
-				scrollbar.CStyle["position"] = "absolute"
-				scrollbar.CStyle["bottom"] = "0px"
-				scrollbar.CStyle["left"] = "0"
-				scrollbar.CStyle["width"] = "100%"
-				scrollbar.CStyle["height"] = trackWidth
-				scrollbar.CStyle["background"] = backgroundColor
-				scrollbar.CStyle["z-index"] = "99999"
+				scrollbar.Style("position", "absolute")
+				scrollbar.Style("bottom", "0px")
+				scrollbar.Style("left", "0")
+				scrollbar.Style("width", "100%")
+				scrollbar.Style("height", trackWidth)
+				scrollbar.Style("background", backgroundColor)
+				scrollbar.Style("z-index", "99999")
 				scrollbar.SetAttribute("direction", "x")
 
 				thumb := n.CreateElement("grim-thumbx")
-				thumb.CStyle["position"] = "absolute"
-				thumb.CStyle["left"] = strconv.Itoa(n.ScrollLeft) + "px"
-				thumb.CStyle["top"] = thumbMargin
-				thumb.CStyle["height"] = thumbWidth
-				thumb.CStyle["width"] = "20px"
-				thumb.CStyle["background"] = thumbColor
-				thumb.CStyle["cursor"] = "pointer"
-				thumb.CStyle["border-radius"] = "10px"
-				thumb.CStyle["z-index"] = "99999"
+				thumb.Style("position", "absolute")
+				thumb.Style("left", strconv.Itoa(n.ScrollLeft)+"px")
+				thumb.Style("top", thumbMargin)
+				thumb.Style("height", thumbWidth)
+				thumb.Style("width", "20px")
+				thumb.Style("background", thumbColor)
+				thumb.Style("cursor", "pointer")
+				thumb.Style("border-radius", "10px")
+				thumb.Style("z-index", "99999")
 
-				for k, v := range n.PseudoElements["::-webkit-scrollbar"] {
-					scrollbar.CStyle[k] = v
-					thumb.CStyle[k] = v
+				for k, v := range ps["::-webkit-scrollbar"] {
+					scrollbar.Style(k, v)
+					thumb.Style(k, v)
 				}
 
-				for k, v := range n.PseudoElements["::-webkit-scrollbar-track"] {
-					scrollbar.CStyle[k] = v
+				for k, v := range ps["::-webkit-scrollbar-track"] {
+					scrollbar.Style(k, v)
 				}
 
-				for k, v := range n.PseudoElements["::-webkit-scrollbar-thumb"] {
-					thumb.CStyle[k] = v
+				for k, v := range ps["::-webkit-scrollbar-thumb"] {
+					thumb.Style(k, v)
 				}
 
 				scrollbar.Properties.Id = element.GenerateUniqueId(n, scrollbar.TagName)
@@ -108,66 +113,70 @@ func Init() cstyle.Transformer {
 
 			// Y scrollbar
 
-			if n.CStyle["overflow-y"] == "scroll" || n.CStyle["overflow-y"] == "auto" {
+			if n.Style("overflow-y") == "scroll" || n.Style("overflow-y") == "auto" {
 				scrollbar := n.CreateElement("grim-track")
 
-				scrollbar.CStyle["position"] = "absolute"
-				scrollbar.CStyle["top"] = "0"
-				scrollbar.CStyle["right"] = "0"
-				scrollbar.CStyle["width"] = trackWidth
-				scrollbar.CStyle["height"] = "100%"
-				scrollbar.CStyle["background"] = backgroundColor
-				scrollbar.CStyle["z-index"] = "99999"
+				scrollbar.Style("position", "absolute")
+				scrollbar.Style("top", "0")
+				scrollbar.Style("right", "0")
+				scrollbar.Style("width", trackWidth)
+				scrollbar.Style("height", "100%")
+				scrollbar.Style("background", backgroundColor)
+				scrollbar.Style("z-index", "99999")
 				scrollbar.SetAttribute("direction", "y")
 
 				if xScrollbar {
-					scrollbar.CStyle["height"] = "calc(100% - " + trackWidth + ")"
+					scrollbar.Style("height", "calc(100% - "+trackWidth+")")
 				}
 
 				thumb := n.CreateElement("grim-thumby")
 
-				thumb.CStyle["position"] = "absolute"
-				thumb.CStyle["top"] = strconv.Itoa(n.ScrollTop) + "px"
-				thumb.CStyle["left"] = "0"
-				thumb.CStyle["width"] = thumbWidth
-				thumb.CStyle["height"] = "20px"
-				thumb.CStyle["background"] = thumbColor
-				thumb.CStyle["cursor"] = "pointer"
-				thumb.CStyle["margin-left"] = thumbMargin
-				thumb.CStyle["border-radius"] = "10px"
-				thumb.CStyle["z-index"] = "99999"
+				thumb.Style("position", "absolute")
+				thumb.Style("top", strconv.Itoa(n.ScrollTop)+"px")
+				thumb.Style("left", "0")
+				thumb.Style("width", thumbWidth)
+				thumb.Style("height", "20px")
+				thumb.Style("background", thumbColor)
+				thumb.Style("cursor", "pointer")
+				thumb.Style("margin-left", thumbMargin)
+				thumb.Style("border-radius", "10px")
+				thumb.Style("z-index", "99999")
 
-				for k, v := range n.PseudoElements["::-webkit-scrollbar"] {
-					scrollbar.CStyle[k] = v
-					thumb.CStyle[k] = v
+				for k, v := range ps["::-webkit-scrollbar"] {
+					scrollbar.Style(k, v)
+					thumb.Style(k, v)
 				}
 
-				for k, v := range n.PseudoElements["::-webkit-scrollbar-track"] {
-					scrollbar.CStyle[k] = v
+				for k, v := range ps["::-webkit-scrollbar-track"] {
+					scrollbar.Style(k, v)
 				}
 
-				for k, v := range n.PseudoElements["::-webkit-scrollbar-thumb"] {
-					thumb.CStyle[k] = v
+				for k, v := range ps["::-webkit-scrollbar-thumb"] {
+					thumb.Style(k, v)
 				}
 				scrollbar.Properties.Id = element.GenerateUniqueId(n, scrollbar.TagName)
 				scrollbar.AppendChild(&thumb)
 
-				if strings.Contains(n.CStyle["width"], "calc") {
-					n.CStyle["width"] = "calc(" + n.CStyle["width"] + "-" + trackWidth + ")"
+				// !DEVMAN,NOTE: This prevents recursion
+				if !strings.Contains(style["width"], "calc") {
+					n.Style("width", "calc("+style["width"]+"-"+trackWidth+")")
 				}
 
-				pr := n.CStyle["padding-right"]
+				pr := style["padding-right"]
 				if pr == "" {
-					if n.CStyle["padding"] != "" {
-						pr = n.CStyle["padding"]
+					if style["padding"] != "" {
+						pr = style["padding"]
+					}
+				}
+				
+				if !strings.Contains(pr, "calc") {
+					if pr != "" {
+						n.Style("padding-right", "calc("+pr+"+"+trackWidth+")")
+					} else {
+						n.Style("padding-right", trackWidth)
 					}
 				}
 
-				if pr != "" && !strings.Contains(pr, "calc") {
-					n.CStyle["padding-right"] = "calc(" + pr + "+" + trackWidth + ")"
-				} else {
-					n.CStyle["padding-right"] = trackWidth
-				}
 				n.AppendChild(&scrollbar)
 			}
 

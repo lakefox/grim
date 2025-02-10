@@ -4,21 +4,32 @@ import (
 	"fmt"
 	"grim/cstyle"
 	"grim/element"
+	"grim/lgc"
 	"strconv"
 	"strings"
 )
 
 func Init() cstyle.Transformer {
 	return cstyle.Transformer{
-		Selector: func(n *element.Node) bool {
-			return n.CStyle["flex"] != ""
+		Selector: func(n *element.Node, c *cstyle.CSS) bool {
+			return n.Style("flex") != ""
 		},
 		Handler: func(n *element.Node, c *cstyle.CSS) *element.Node {
-			flex, _ := parseFlex(n.CStyle["flex"])
+			flex, err := parseFlex(n.Style("flex"))
 
-			n.CStyle["flex-basis"] = flex.FlexBasis
-			n.CStyle["flex-grow"] = flex.FlexGrow
-			n.CStyle["flex-shrink"] = flex.FlexShrink
+			if err != nil {
+				panic(lgc.Error(
+					lgc.Desc(
+						lgc.Red("Error Parsing flex values"),
+						lgc.CrossMark("Input: "+lgc.String(n.Style("flex"))),
+						err,
+					),
+				))
+			}
+
+			n.Style("flex-basis", flex.FlexBasis)
+			n.Style("flex-grow", flex.FlexGrow)
+			n.Style("flex-shrink", flex.FlexShrink)
 
 			return n
 		},
