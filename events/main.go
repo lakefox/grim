@@ -143,7 +143,7 @@ func (m *Monitor) RunEvents(n *element.Node) bool {
 
 	// !ISSUE: find a way to remove this GetStyles
 	if evt.ScrollX != 0 || evt.ScrollY != 0 {
-		styledEl, _ = m.CSS.GetStyles(n)
+		styledEl = m.CSS.Styles[n.Properties.Id]
 	}
 
 	if evt.ScrollX != 0 {
@@ -548,7 +548,6 @@ func ProcessKeyEvent(self element.State, key int) {
 	case 67:
 		// Copy: copy the selected text (in this case, print it)
 		// if key == 17 || key == 345 {
-		// 	fmt.Println("Copy:", n.Value)
 		// } else {
 		// 	// Otherwise, append 'C' to the text
 		// 	n.Value += "C"

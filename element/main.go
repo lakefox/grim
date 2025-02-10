@@ -111,6 +111,9 @@ type BoxSpacing struct {
 // Option 3: (0 args) .Style("background") -> "" -- Returns all inline styles as a string
 // [!DEVMAN]Note: Contains all user inputed styles, all inline styles over ride stylesheet styles
 func (n *Node) Style(value ...string) string {
+	if n.style == nil {
+		n.style = map[string]string{}
+	}
 	if len(value) == 2 {
 		n.style[value[0]] = value[1] // Setter
 	} else if len(value) == 1 {

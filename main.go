@@ -19,7 +19,7 @@ import (
 	marginblock "grim/cstyle/transformers/margin-block"
 	"grim/cstyle/transformers/ol"
 	"grim/cstyle/transformers/scrollbar"
-	"grim/cstyle/transformers/text"
+	// "grim/cstyle/transformers/text"
 	"grim/cstyle/transformers/ul"
 	"grim/font"
 	"grim/library"
@@ -89,7 +89,7 @@ func New(adapterFunction *adapter.Adapter, width, height int) Window {
 	css.AddPlugin(flex.Init())
 	css.AddPlugin(crop.Init())
 
-	css.AddTransformer(text.Init())
+	// css.AddTransformer(text.Init())
 	css.AddTransformer(banda.Init())
 	css.AddTransformer(scrollbar.Init())
 	css.AddTransformer(flexprep.Init())
@@ -101,8 +101,8 @@ func New(adapterFunction *adapter.Adapter, width, height int) Window {
 
 	el := element.Node{}
 	document := el.CreateElement("ROOT")
-	document.CStyle["width"] = strconv.Itoa(width) + "px"
-	document.CStyle["height"] = strconv.Itoa(height) + "px"
+	// document.CStyle["width"] = strconv.Itoa(width) + "px"
+	// document.CStyle["height"] = strconv.Itoa(height) + "px"
 	document.Properties.Id = "ROOT"
 
 	s := scripts.Scripts{}
@@ -216,8 +216,12 @@ func open(data *Window) {
 	}
 
 	debug := false
-	data.CSS.Document["ROOT"].CStyle["width"] = strconv.Itoa(int(data.CSS.Width)) + "px"
-	data.CSS.Document["ROOT"].CStyle["height"] = strconv.Itoa(int(data.CSS.Height)) + "px"
+	data.CSS.Styles = map[string]map[string]string{}
+	data.CSS.PsuedoStyles = map[string]map[string]map[string]string{}
+
+	data.CSS.Styles["ROOT"] = map[string]string{}
+	data.CSS.Styles["ROOT"]["width"] = strconv.Itoa(int(data.CSS.Width)) + "px"
+	data.CSS.Styles["ROOT"]["height"] = strconv.Itoa(int(data.CSS.Height)) + "px"
 
 	data.CSS.Adapter.Library = &shelf
 	data.CSS.Adapter.Init(int(data.CSS.Width), int(data.CSS.Height))
@@ -260,8 +264,8 @@ func open(data *Window) {
 		data.CSS.Width = float32(wh["width"])
 		data.CSS.Height = float32(wh["height"])
 
-		data.CSS.Document["ROOT"].CStyle["width"] = strconv.Itoa(wh["width"]) + "px"
-		data.CSS.Document["ROOT"].CStyle["height"] = strconv.Itoa(wh["height"]) + "px"
+		data.CSS.Styles["ROOT"]["width"] = strconv.Itoa(wh["width"]) + "px"
+		data.CSS.Styles["ROOT"]["height"] = strconv.Itoa(wh["height"]) + "px"
 		rd = getRenderData(data, &shelf, &monitor)
 	})
 
@@ -379,7 +383,7 @@ func AddStyles(c cstyle.CSS, node *element.Node, parent *element.Node) *element.
 	n := *node
 	n.Parent = parent
 	// !DEVMAN: Copying is done here, would like to remove this and add it to ComputeNodeStyle, so I can save a tree climb
-	n.CStyle, n.PseudoElements = c.GetStyles(&n)
+	c.GetStyles(&n)
 
 	if len(node.Children) > 0 {
 		n.Children = make([]*element.Node, 0, len(node.Children))
