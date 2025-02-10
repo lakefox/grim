@@ -35,6 +35,7 @@ func (a *Adapter) DispatchEvent(event element.Event) {
 
 type FileSystem struct {
 	Paths     []string
+	Sources   []string
 	ReadFile  func(path string) ([]byte, error)
 	WriteFile func(path string, data []byte)
 }
@@ -45,6 +46,7 @@ func (fs *FileSystem) AddFile(path string) {
 
 func (fs *FileSystem) AddDir(path string) error {
 	// Walk through the directory and collect all file paths
+	fs.Sources = append(fs.Sources, path)
 	err := filepath.Walk(path, func(filePath string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err

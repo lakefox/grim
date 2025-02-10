@@ -232,7 +232,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 
 	// Cache the style map
 	style := n.CStyle
-	self.Background = color.Parse(style, "background")
+	self.Background, _ = color.Parse(style, "background")
 	self.Border, _ = border.Parse(style, self, parent)
 
 	if style["font-size"] == "" {

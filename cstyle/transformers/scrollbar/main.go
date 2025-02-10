@@ -152,7 +152,10 @@ func Init() cstyle.Transformer {
 				scrollbar.Properties.Id = element.GenerateUniqueId(n, scrollbar.TagName)
 				scrollbar.AppendChild(&thumb)
 
-				n.CStyle["width"] = "calc(" + n.CStyle["width"] + "-" + trackWidth + ")"
+				if strings.Contains(n.CStyle["width"], "calc") {
+					n.CStyle["width"] = "calc(" + n.CStyle["width"] + "-" + trackWidth + ")"
+				}
+
 				pr := n.CStyle["padding-right"]
 				if pr == "" {
 					if n.CStyle["padding"] != "" {
@@ -160,7 +163,7 @@ func Init() cstyle.Transformer {
 					}
 				}
 
-				if pr != "" {
+				if pr != "" && !strings.Contains(pr, "calc") {
 					n.CStyle["padding-right"] = "calc(" + pr + "+" + trackWidth + ")"
 				} else {
 					n.CStyle["padding-right"] = trackWidth

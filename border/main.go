@@ -108,10 +108,10 @@ func Parse(cssProperties map[string]string, self, parent element.State) (element
 	leftWidthPx := utils.ConvertToPixels(leftWidth, self.EM, parent.Width)
 
 	// Parse colors
-	topParsedColor := color.Color(topColor)
-	rightParsedColor := color.Color(rightColor)
-	bottomParsedColor := color.Color(bottomColor)
-	leftParsedColor := color.Color(leftColor)
+	topParsedColor, _ := color.Color(topColor)
+	rightParsedColor, _ := color.Color(rightColor)
+	bottomParsedColor, _ := color.Color(bottomColor)
+	leftParsedColor, _ := color.Color(leftColor)
 
 	width := self.Width + self.Border.Left.Width + self.Border.Right.Width
 	height := self.Height + self.Border.Top.Width + self.Border.Bottom.Width

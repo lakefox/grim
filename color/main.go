@@ -8,12 +8,12 @@ import (
 )
 
 // ParseRGBA parses a CSS color string and returns an RGBA color
-func ParseRGBA(color string) ic.RGBA {
+func ParseRGBA(color string) (ic.RGBA, error) {
 	color = strings.TrimSpace(strings.ToLower(color))
 
 	// Named color
 	if namedColor, ok := namedColors[color]; ok {
-		return namedColor
+		return namedColor, nil
 	}
 
 	// Hex color format: #RRGGBB or #RRGGBBAA
@@ -30,7 +30,7 @@ func ParseRGBA(color string) ic.RGBA {
 
 		rgb, err := strconv.ParseUint(hexValue, 16, 32)
 		if err != nil {
-			return ic.RGBA{}
+			return ic.RGBA{}, fmt.Errorf("Invalid hex code")
 		}
 
 		// Check if it's #RRGGBB or #RRGGBBAA
@@ -39,7 +39,7 @@ func ParseRGBA(color string) ic.RGBA {
 			alpha = uint8(rgb >> 24)
 		}
 
-		return ic.RGBA{uint8(rgb >> 16), uint8((rgb >> 8) & 0xFF), uint8(rgb & 0xFF), alpha}
+		return ic.RGBA{uint8(rgb >> 16), uint8((rgb >> 8) & 0xFF), uint8(rgb & 0xFF), alpha}, nil
 	}
 
 	// RGB or RGBA color format: rgb(255, 0, 0) or rgba(255, 0, 0, 0.5)
@@ -56,124 +56,124 @@ func ParseRGBA(color string) ic.RGBA {
 		return parseHSLA(color)
 	}
 
-	return ic.RGBA{}
+	return ic.RGBA{}, fmt.Errorf("Unable to parse color")
 }
 
-func parseRGB(rgb string) ic.RGBA {
+func parseRGB(rgb string) (ic.RGBA, error) {
 	rgbValues := strings.TrimSuffix(strings.TrimPrefix(rgb, "rgb("), ")")
 	rgbParts := strings.Split(rgbValues, ",")
 
 	if len(rgbParts) != 3 {
-		return ic.RGBA{}
+		return ic.RGBA{}, fmt.Errorf("Not enough values to parse RGB")
 	}
 
 	r, err := strconv.Atoi(strings.TrimSpace(rgbParts[0]))
 	if err != nil {
-		return ic.RGBA{}
+		return ic.RGBA{}, err
 	}
 
 	g, err := strconv.Atoi(strings.TrimSpace(rgbParts[1]))
 	if err != nil {
-		return ic.RGBA{}
+		return ic.RGBA{}, err
 	}
 
 	b, err := strconv.Atoi(strings.TrimSpace(rgbParts[2]))
 	if err != nil {
-		return ic.RGBA{}
+		return ic.RGBA{}, err
 	}
 
-	return ic.RGBA{uint8(r), uint8(g), uint8(b), 255}
+	return ic.RGBA{uint8(r), uint8(g), uint8(b), 255}, nil
 }
 
-func parseRGBA(rgba string) ic.RGBA {
+func parseRGBA(rgba string) (ic.RGBA, error) {
 	rgbaValues := strings.TrimSuffix(strings.TrimPrefix(rgba, "rgba("), ")")
 	rgbaParts := strings.Split(rgbaValues, ",")
 
 	if len(rgbaParts) != 4 {
-		return ic.RGBA{}
+		return ic.RGBA{}, fmt.Errorf("Not enough values to parse RGBA")
 	}
 
 	r, err := strconv.Atoi(strings.TrimSpace(rgbaParts[0]))
 	if err != nil {
-		return ic.RGBA{}
+		return ic.RGBA{}, err
 	}
 
 	g, err := strconv.Atoi(strings.TrimSpace(rgbaParts[1]))
 	if err != nil {
-		return ic.RGBA{}
+		return ic.RGBA{}, err
 	}
 
 	b, err := strconv.Atoi(strings.TrimSpace(rgbaParts[2]))
 	if err != nil {
-		return ic.RGBA{}
+		return ic.RGBA{}, err
 	}
 
 	alpha, err := strconv.ParseFloat(strings.TrimSpace(rgbaParts[3]), 64)
 	if err != nil {
-		return ic.RGBA{}
+		return ic.RGBA{}, err
 	}
 
-	return ic.RGBA{uint8(r), uint8(g), uint8(b), uint8(alpha * 255)}
+	return ic.RGBA{uint8(r), uint8(g), uint8(b), uint8(alpha * 255)}, nil
 }
 
-func parseHSL(hsl string) ic.RGBA {
+func parseHSL(hsl string) (ic.RGBA, error) {
 	hslValues := strings.TrimSuffix(strings.TrimPrefix(hsl, "hsl("), ")")
 	hslParts := strings.Split(hslValues, ",")
 
 	if len(hslParts) != 3 {
-		return ic.RGBA{}
+		return ic.RGBA{}, fmt.Errorf("Not enough values to parse HSL")
 	}
 
 	h, err := strconv.Atoi(strings.TrimSpace(hslParts[0]))
 	if err != nil {
-		return ic.RGBA{}
+		return ic.RGBA{}, err
 	}
 
 	s, err := strconv.Atoi(strings.TrimSpace(strings.TrimSuffix(hslParts[1], "%")))
 	if err != nil {
-		return ic.RGBA{}
+		return ic.RGBA{}, err
 	}
 
 	l, err := strconv.Atoi(strings.TrimSpace(strings.TrimSuffix(hslParts[2], "%")))
 	if err != nil {
-		return ic.RGBA{}
+		return ic.RGBA{}, err
 	}
 
 	return hslToRGB(uint16(h), float64(s)/100, float64(l)/100)
 }
 
-func parseHSLA(hsla string) ic.RGBA {
+func parseHSLA(hsla string) (ic.RGBA, error) {
 	hslaValues := strings.TrimSuffix(strings.TrimPrefix(hsla, "hsla("), ")")
 	hslaParts := strings.Split(hslaValues, ",")
 
 	if len(hslaParts) != 4 {
-		return ic.RGBA{}
+		return ic.RGBA{}, fmt.Errorf("Not enough values to parse HSLA")
 	}
 
 	h, err := strconv.Atoi(strings.TrimSpace(hslaParts[0]))
 	if err != nil {
-		return ic.RGBA{}
+		return ic.RGBA{}, err
 	}
 
 	s, err := strconv.Atoi(strings.TrimSpace(strings.TrimSuffix(hslaParts[1], "%")))
 	if err != nil {
-		return ic.RGBA{}
+		return ic.RGBA{}, err
 	}
 
 	l, err := strconv.Atoi(strings.TrimSpace(strings.TrimSuffix(hslaParts[2], "%")))
 	if err != nil {
-		return ic.RGBA{}
+		return ic.RGBA{}, err
 	}
 
 	alpha, err := strconv.ParseFloat(strings.TrimSpace(hslaParts[3]), 64)
 	if err != nil {
-		return ic.RGBA{}
+		return ic.RGBA{}, err
 	}
 
 	return hslToRGB(uint16(h), float64(s)/100, float64(l)/100, alpha)
 }
 
-func hslToRGB(hue uint16, saturation, lightness float64, alpha ...float64) ic.RGBA {
+func hslToRGB(hue uint16, saturation, lightness float64, alpha ...float64) (ic.RGBA, error) {
 	var r, g, b float64
 
 	if saturation == 0 {
@@ -229,7 +229,7 @@ func hslToRGB(hue uint16, saturation, lightness float64, alpha ...float64) ic.RG
 		alphaValue = uint8(alpha[0] * 255)
 	}
 
-	return ic.RGBA{uint8(r), uint8(g), uint8(b), alphaValue}
+	return ic.RGBA{uint8(r), uint8(g), uint8(b), alphaValue}, nil
 }
 
 var namedColors = map[string]ic.RGBA{
@@ -375,7 +375,7 @@ var namedColors = map[string]ic.RGBA{
 	"yellowgreen":          {154, 205, 50, 255},
 }
 
-func Parse(styles map[string]string, t string) ic.RGBA {
+func Parse(styles map[string]string, t string) (ic.RGBA, error) {
 	if t == "font" {
 		return ParseRGBA(styles["color"])
 	} else if t == "decoration" {
@@ -385,18 +385,18 @@ func Parse(styles map[string]string, t string) ic.RGBA {
 		if !ok {
 			backgroundColor, ok = styles["background"]
 			if !ok {
-				return ic.RGBA{}
+				return ic.RGBA{}, fmt.Errorf("Color not found")
 			}
 		}
 
 		// Parse the background color and return the result
 		return ParseRGBA(backgroundColor)
 	} else {
-		return ic.RGBA{255, 255, 255, 0}
+		return ic.RGBA{255, 255, 255, 0}, fmt.Errorf("Color not found")
 	}
 }
 
-func Color(color string) ic.RGBA {
+func Color(color string) (ic.RGBA, error) {
 	if color == "" {
 		color = "rgba(0,0,0,1)"
 	}

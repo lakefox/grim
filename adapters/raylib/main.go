@@ -121,9 +121,6 @@ func (wm *WindowManager) LoadTextures(nodes []element.State) {
 					matches = (rt.Width == int32(tb.Dx()) && rt.Height == int32(tb.Dy()))
 				}
 				// Unload existing texture if there is a mismatch
-				// !MAJOR: There is a bad memory leak somewhere... it has to do with loading and unloading textures (fonts) quickly
-				// + could be with font, getfont, this or somewhere else. memory profiles don't show it
-				// + https://chatgpt.com/c/67107cb6-9edc-800e-bf2a-cea9aeeb01b5
 				if exists && (!matches || !inLibrary) {
 					rl.UnloadTexture(*rt)
 					delete(wm.Textures, key)

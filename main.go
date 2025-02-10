@@ -14,6 +14,7 @@ import (
 	"grim/cstyle/transformers/banda"
 	flexprep "grim/cstyle/transformers/flex"
 	img "grim/cstyle/transformers/image"
+	"time"
 
 	marginblock "grim/cstyle/transformers/margin-block"
 	"grim/cstyle/transformers/ol"
@@ -287,7 +288,6 @@ func open(data *Window) {
 			if pos[0] < int(data.CSS.Width) && pos[1] < int(data.CSS.Height) {
 				currentEvent.Position = pos
 				monitor.GetEvents(&currentEvent)
-				fmt.Println(monitor.EventMap)
 				rd = getRenderData(data, &shelf, &monitor)
 			}
 		}
@@ -353,11 +353,11 @@ func getRenderData(data *Window, shelf *library.Shelf, monitor *events.Monitor) 
 	// + This modify events to return effected nodes
 
 	dc := data.CSS.Document["ROOT"].Children[0]
-	// start := time.Now()
+	start := time.Now()
 	newDoc := AddStyles(data.CSS, dc, data.CSS.Document["ROOT"])
-	// fmt.Println(time.Since(start))
 
 	data.CSS.ComputeNodeStyle(newDoc)
+	fmt.Println(time.Since(start))
 
 	rd := data.Render(newDoc, shelf)
 
