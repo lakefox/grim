@@ -28,85 +28,81 @@ func GetXY(n element.Node, state map[string]element.State) (float32, float32) {
 	return offsetX, offsetY
 }
 
-type WidthHeight struct {
+type BoxSizing struct {
 	Width  float32
 	Height float32
 }
 
-func GetWH(n element.Node, state map[string]element.State) (WidthHeight, element.MarginPadding, element.MarginPadding) {
+func FindBounds(n element.Node, style map[string]string, state map[string]element.State) (BoxSizing, element.BoxSpacing, element.BoxSpacing) {
 	s := state
 	self := s[n.Properties.Id]
 	var parent element.State
 
-	if n.CStyle == nil {
-		n.CStyle = make(map[string]string)
-	}
-
 	fs := self.EM
 
-	var pwh WidthHeight
+	var pwh BoxSizing
 	if n.Parent != nil {
 		parent = s[n.Parent.Properties.Id]
 		// pwh = GetWH(*n.Parent, state)
-		pwh = WidthHeight{
+		pwh = BoxSizing{
 			Width:  parent.Width,
 			Height: parent.Height,
 		}
 	} else {
-		pwh = WidthHeight{}
-		if width, exists := n.CStyle["width"]; exists {
+		pwh = BoxSizing{}
+		if width, exists := style["width"]; exists {
 			if f, err := strconv.ParseFloat(strings.TrimSuffix(width, "px"), 32); err == nil {
 				pwh.Width = float32(f)
 			}
 		}
-		if height, exists := n.CStyle["height"]; exists {
+		if height, exists := style["height"]; exists {
 			if f, err := strconv.ParseFloat(strings.TrimSuffix(height, "px"), 32); err == nil {
 				pwh.Height = float32(f)
 			}
 		}
 	}
 
-	wStyle := n.CStyle["width"]
+	wStyle := style["width"]
 
-	if wStyle == "" && n.CStyle["display"] != "inline" {
+	if wStyle == "" && style["display"] != "inline" {
 		wStyle = "100%"
 	}
 
 	width := ConvertToPixels(wStyle, fs, pwh.Width)
-	height := ConvertToPixels(n.CStyle["height"], fs, pwh.Height)
+	height := ConvertToPixels(style["height"], fs, pwh.Height)
 
-	if minWidth, exists := n.CStyle["min-width"]; exists {
+	if minWidth, exists := style["min-width"]; exists {
 		width = Max(width, ConvertToPixels(minWidth, fs, pwh.Width))
 	}
-	if maxWidth, exists := n.CStyle["max-width"]; exists {
+	if maxWidth, exists := style["max-width"]; exists {
 		width = Min(width, ConvertToPixels(maxWidth, fs, pwh.Width))
 	}
-	if minHeight, exists := n.CStyle["min-height"]; exists {
+	if minHeight, exists := style["min-height"]; exists {
 		height = Max(height, ConvertToPixels(minHeight, fs, pwh.Height))
 	}
-	if maxHeight, exists := n.CStyle["max-height"]; exists {
+	if maxHeight, exists := style["max-height"]; exists {
 		height = Min(height, ConvertToPixels(maxHeight, fs, pwh.Height))
 	}
 
-	wh := WidthHeight{
+	wh := BoxSizing{
 		Width:  width,
 		Height: height,
 	}
 
-	m := GetMP(n, wh, state, "margin")
-	p := GetMP(n, wh, state, "padding")
+	m := getMP(n, style, wh, state, "margin")
+	p := getMP(n, style, wh, state, "padding")
 
 	if n.Parent != nil {
 		wh.Width += p.Left + p.Right
 		wh.Height += p.Top + p.Bottom
 	}
 
-	if wStyle == "100%" && n.CStyle["position"] != "absolute" {
+	if wStyle == "100%" && style["position"] != "absolute" {
 		wh.Width -= (m.Right + m.Left + self.Border.Left.Width + self.Border.Right.Width + parent.Padding.Left + parent.Padding.Right + p.Left + p.Right)
 	}
 
-	if n.CStyle["height"] == "100%" {
-		if n.CStyle["position"] == "absolute" {
+	if style["height"] == "100%" {
+		if style["position"] == "absolute" {
 			wh.Height -= (m.Top + m.Bottom)
 		} else {
 			wh.Height -= (m.Top + m.Bottom + parent.Padding.Top + parent.Padding.Bottom)
@@ -116,14 +112,13 @@ func GetWH(n element.Node, state map[string]element.State) (WidthHeight, element
 	return wh, m, p
 }
 
-func GetMP(n element.Node, wh WidthHeight, state map[string]element.State, t string) element.MarginPadding {
+func getMP(n element.Node, style map[string]string, wh BoxSizing, state map[string]element.State, t string) element.BoxSpacing {
 	s := state
 	self := s[n.Properties.Id]
 	fs := self.EM
-	m := element.MarginPadding{}
+	m := element.BoxSpacing{}
 
 	// Cache style properties
-	style := n.CStyle
 	leftKey, rightKey, topKey, bottomKey := t+"-left", t+"-right", t+"-top", t+"-bottom"
 
 	leftStyle := style[leftKey]
@@ -133,6 +128,7 @@ func GetMP(n element.Node, wh WidthHeight, state map[string]element.State, t str
 
 	if style[t] != "" {
 		left, right, top, bottom := convertMarginToIndividualProperties(style[t])
+
 		if leftStyle == "" {
 			leftStyle = left
 		}
@@ -163,9 +159,9 @@ func GetMP(n element.Node, wh WidthHeight, state map[string]element.State, t str
 		siblingMargin := float32(0)
 		firstChild := false
 		// Margin Collapse
-		if n.Parent != nil && ParentStyleProp(n.Parent, "display", func(prop string) bool {
-			return prop == "flex"
-		}) {
+		// !ISSUE: Check margin collapse
+		// if n.Parent != nil && n.Parent.CStyle["display"] == "flex" {
+		if n.Parent != nil {
 			sibIndex := -1
 			for i, v := range n.Parent.Children {
 				if v.Properties.Id == n.Properties.Id {
@@ -210,7 +206,7 @@ func GetMP(n element.Node, wh WidthHeight, state map[string]element.State, t str
 		if style["margin"] == "auto" && leftStyle == "" && rightStyle == "" {
 			// pwh := GetWH(*n.Parent, state)
 			parent := s[n.Parent.Properties.Id]
-			pwh := WidthHeight{
+			pwh := BoxSizing{
 				Width: parent.Width,
 			}
 			m.Left = Max((pwh.Width-wh.Width)/2, 0)
@@ -372,24 +368,6 @@ func GetInnerText(n *html.Node) string {
 	return result.String()
 }
 
-func GetPositionOffsetNode(n *element.Node) *element.Node {
-	pos := n.CStyle["position"]
-
-	if pos == "relative" || pos == "absolute" {
-		return n
-	} else {
-		if n.Parent.TagName != "ROOT" {
-			if n.Parent.CStyle != nil {
-				return GetPositionOffsetNode(n.Parent)
-			} else {
-				return nil
-			}
-		} else {
-			return n.Parent
-		}
-	}
-}
-
 func ChildrenHaveText(n *element.Node) bool {
 	for _, child := range n.Children {
 		if len(strings.TrimSpace(child.InnerText)) != 0 {
@@ -451,11 +429,13 @@ func NodeToHTML(node *element.Node) (string, string) {
 		}
 	}
 
+	styles := node.Styles()
+
 	// Add style if present
-	if len(node.CStyle) > 0 {
+	if len(styles) > 0 {
 
 		style := ""
-		for key, value := range node.CStyle {
+		for key, value := range styles {
 			if key != "inlineText" {
 				style += key + ":" + value + ";"
 			}
@@ -505,16 +485,6 @@ func InnerHTML(node *element.Node) string {
 	return buffer.String()
 }
 
-func ParentStyleProp(n *element.Node, prop string, selector func(string) bool) bool {
-	if n.Parent != nil {
-		if selector(n.Parent.CStyle[prop]) {
-			return true
-		} else {
-			return ParentStyleProp(n.Parent, prop, selector)
-		}
-	}
-	return false
-}
 func RGBAtoString(c ic.RGBA) string {
 	return fmt.Sprintf("R%d%d%d%d", c.R, c.G, c.B, c.A)
 }

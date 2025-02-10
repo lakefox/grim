@@ -20,12 +20,12 @@ import (
 )
 
 type Plugin struct {
-	Selector func(*element.Node) bool
+	Selector func(*element.Node, *CSS) bool
 	Handler  func(*element.Node, *CSS)
 }
 
 type Transformer struct {
-	Selector func(*element.Node) bool
+	Selector func(*element.Node, *CSS) bool
 	Handler  func(*element.Node, *CSS) *element.Node
 }
 
@@ -41,6 +41,8 @@ type CSS struct {
 	Path         string
 	StyleSheets  int
 	State        map[string]element.State
+	Styles       map[string]map[string]string
+	PsuedoStyles map[string]map[string]map[string]string
 }
 
 func (c *CSS) StyleSheet(path string) {
@@ -103,7 +105,7 @@ func (c *CSS) QuickStyles(n *element.Node) map[string]string {
 
 	// Inherit styles from parent
 	if n.Parent != nil {
-		ps := n.Parent.CStyle
+		ps := n.Parent.Styles()
 		for _, prop := range inheritedProps {
 			if value, ok := ps[prop]; ok && value != "" {
 				styles[prop] = value
@@ -112,29 +114,38 @@ func (c *CSS) QuickStyles(n *element.Node) map[string]string {
 	}
 
 	// Add node's own styles
-	for k, v := range n.CStyle {
+	for k, v := range n.Styles() {
 		styles[k] = v
 	}
 
 	return styles
 }
 
-func (c *CSS) GetStyles(n *element.Node) (map[string]string, map[string]map[string]string) {
+// !ISSUE: GetStyles only needs to be ran if a new node is added, and the inital run, or a style tag innerHTML chanages
+// + rest can be done with a modified QuickStyles
+// + kinda see that note for a complete list
+
+func (c *CSS) GetStyles(n *element.Node) {
 	styles := make(map[string]string)
 	pseudoStyles := make(map[string]map[string]string)
 
 	// Inherit styles from parent
 	if n.Parent != nil {
-		ps := n.Parent.CStyle
-		for _, prop := range inheritedProps {
-			if value, ok := ps[prop]; ok && value != "" {
-				styles[prop] = value
+		if n.TagName == "text" {
+			styles = c.Styles[n.Parent.Properties.Id]
+		} else {
+			ps := c.Styles[n.Parent.Properties.Id]
+			for _, prop := range inheritedProps {
+				if value, ok := ps[prop]; ok && value != "" {
+					styles[prop] = value
+				}
 			}
 		}
+
 	}
 
 	// Add node's own styles
-	for k, v := range n.CStyle {
+	for k, v := range n.Styles() {
 		styles[k] = v
 	}
 
@@ -185,14 +196,16 @@ func (c *CSS) GetStyles(n *element.Node) (map[string]string, map[string]map[stri
 
 	// Handle z-index inheritance
 	if n.Parent != nil && styles["z-index"] == "" {
-		if parentZIndex, ok := n.Parent.CStyle["z-index"]; ok && parentZIndex != "" {
+		parentZIndex := n.Parent.Style("z-index")
+		if parentZIndex != "" {
 			z, _ := strconv.Atoi(parentZIndex)
 			z += 1
 			styles["z-index"] = strconv.Itoa(z)
 		}
 	}
 
-	return styles, pseudoStyles
+	c.Styles[n.Properties.Id] = styles
+	c.PsuedoStyles[n.Properties.Id] = pseudoStyles
 }
 
 func (c *CSS) AddPlugin(plugin Plugin) {
@@ -222,7 +235,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 	}
 
 	for _, v := range c.Transformers {
-		if v.Selector(n) {
+		if v.Selector(n, c) {
 			v.Handler(n, c)
 		}
 	}
@@ -231,7 +244,17 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 	parent := s[n.Parent.Properties.Id]
 
 	// Cache the style map
-	style := n.CStyle
+	style := c.Styles[n.Properties.Id]
+
+	if style == nil {
+		style = map[string]string{}
+	}
+
+	// Map added styles to the style object
+	for k, v := range n.Styles() {
+		style[k] = v
+	}
+
 	self.Background, _ = color.Parse(style, "background")
 	self.Border, _ = border.Parse(style, self, parent)
 
@@ -258,13 +281,14 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 
 	c.State[n.Properties.Id] = self
 
-	wh, m, p := utils.GetWH(*n, c.State)
+	c.State[n.Properties.Id] = self
+	wh, m, p := utils.FindBounds(*n, style, c.State)
 
 	self.Margin = m
 	self.Padding = p
 	self.Width = wh.Width
 	self.Height = wh.Height
-	self.Cursor = n.CStyle["cursor"]
+	self.Cursor = style["cursor"]
 	c.State[n.Properties.Id] = self
 
 	x, y := parent.X, parent.Y
@@ -275,8 +299,26 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 	var top, left, right, bottom bool
 
 	if style["position"] == "absolute" {
-		bas := utils.GetPositionOffsetNode(n.Parent)
-		base := s[bas.Properties.Id]
+		// !DEVMAN: Properties.Id is the ancestory of an element with colons seperating them
+		// + if we split them up we can check the parents without recusion or a while (for true) loop
+		// + NOTE: See utils.GenerateUnqineId to see how they are made
+		ancestors := strings.Split(n.Properties.Id, ":")
+
+		var offsetNode string
+		// Should skip the current element and the ROOT
+		for i := len(ancestors) - 2; i > 0; i-- {
+			offsetNode = strings.Join(ancestors[0:i], ":")
+			pos := c.Styles[offsetNode]["position"]
+			if pos == "relative" || pos == "absolute" {
+				break
+			}
+		}
+		// Deflaut to ROOT if not found
+		if offsetNode == "" {
+			offsetNode = "ROOT"
+		}
+
+		base := s[offsetNode]
 		if topVal := style["top"]; topVal != "" {
 			y = utils.ConvertToPixels(topVal, self.EM, parent.Width) + base.Y
 			top = true
@@ -295,15 +337,16 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 		}
 	} else {
 		for i, v := range n.Parent.Children {
-			if v.CStyle["position"] != "absolute" {
+			if c.Styles[v.Properties.Id]["position"] != "absolute" {
 				if v.Properties.Id == n.Properties.Id {
 					if i > 0 {
 						sib := n.Parent.Children[i-1]
+						sibStyle := c.Styles[sib.Properties.Id]
 						sibling := s[sib.Properties.Id]
-						if sib.CStyle["position"] != "absolute" {
+						if sibStyle["position"] != "absolute" {
 							if style["display"] == "inline" {
 								y = sibling.Y
-								if sib.CStyle["display"] != "inline" {
+								if sibStyle["display"] != "inline" {
 									y += sibling.Height
 								}
 							} else {
@@ -345,22 +388,27 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 		n.InnerText = strings.TrimSpace(n.InnerText)
 		italic := false
 
-		if n.CStyle["font-style"] == "italic" {
+		if style["font-style"] == "italic" {
 			italic = true
 		}
 
 		if c.Fonts == nil {
 			c.Fonts = map[string]imgFont.Face{}
 		}
-		fid := n.CStyle["font-family"] + fmt.Sprint(self.EM, n.CStyle["font-weight"], italic)
+		fid := style["font-family"] + fmt.Sprint(self.EM, style["font-weight"], italic)
 
 		if c.Fonts[fid] == nil {
-			f, _ := font.LoadFont(n.CStyle["font-family"], int(self.EM), n.CStyle["font-weight"], italic, &c.Adapter.FileSystem)
+			f, err := font.LoadFont(style["font-family"], int(self.EM), style["font-weight"], italic, &c.Adapter.FileSystem)
+
+			if err != nil {
+				panic(err)
+			}
 			c.Fonts[fid] = f
 		}
+
 		fnt := c.Fonts[fid]
 
-		metadata := font.GetMetaData(n, &c.State, &fnt)
+		metadata := font.GetMetaData(n, style, &c.State, &fnt)
 		key := font.Key(metadata)
 		exists := c.Adapter.Library.Check(key)
 		var width int
@@ -380,11 +428,11 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 			self.Textures = append(self.Textures, c.Adapter.Library.Set(key, data))
 		}
 
-		if n.CStyle["height"] == "" && n.CStyle["min-height"] == "" {
+		if style["height"] == "" && style["min-height"] == "" {
 			self.Height = float32(metadata.LineHeight)
 		}
 
-		if n.CStyle["width"] == "" && n.CStyle["min-width"] == "" {
+		if style["width"] == "" && style["min-width"] == "" {
 			self.Width = float32(width)
 		}
 	}
@@ -426,14 +474,16 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 		v := n.Children[i]
 		v.Parent = n
 		cState := c.ComputeNodeStyle(v)
+		vStyle := c.Styles[v.Properties.Id]
 
 		if style["height"] == "" && style["max-height"] == "" {
-			if v.CStyle["position"] != "absolute" && cState.Y+cState.Height > childYOffset {
+			if vStyle["position"] != "absolute" && cState.Y+cState.Height > childYOffset {
 				childYOffset = cState.Y + cState.Height
 				self.Height = cState.Y - self.Border.Top.Width - self.Y + cState.Height
 				self.Height += cState.Margin.Top + cState.Margin.Bottom + cState.Padding.Top + cState.Padding.Bottom + cState.Border.Top.Width + cState.Border.Bottom.Width
 			}
 		}
+		
 		sh := int((cState.Y + cState.Height) - self.Y)
 		if self.ScrollHeight < sh {
 			if n.Children[i].TagName != "grim-track" {
@@ -448,7 +498,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 			}
 		}
 
-		if cState.Width > self.Width && n.CStyle["width"] == "" {
+		if cState.Width > self.Width && style["width"] == "" {
 			self.Width = cState.Width
 		}
 	}
@@ -465,7 +515,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 	c.State[n.Properties.Id] = self
 
 	for _, v := range plugins {
-		if v.Selector(n) {
+		if v.Selector(n, c) {
 			v.Handler(n, c)
 		}
 	}

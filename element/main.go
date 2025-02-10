@@ -24,7 +24,6 @@ type Node struct {
 	Parent          *Node
 	Children        []*Node
 	style           map[string]string
-	CStyle          map[string]string
 	Id              string
 	ClassList       ClassList
 	Href            string
@@ -80,8 +79,8 @@ type State struct {
 	Textures        []string
 	EM              float32
 	Background      ic.RGBA
-	Margin          MarginPadding
-	Padding         MarginPadding
+	Margin          BoxSpacing
+	Padding         BoxSpacing
 	Cursor          string
 	Crop            Crop
 	Hidden          bool
@@ -99,7 +98,7 @@ type Crop struct {
 	Height int
 }
 
-type MarginPadding struct {
+type BoxSpacing struct {
 	Top    float32
 	Left   float32
 	Right  float32
@@ -124,6 +123,10 @@ func (n *Node) Style(value ...string) string {
 		return styleString
 	}
 	return ""
+}
+
+func (n *Node) Styles() map[string]string {
+	return n.style
 }
 
 // !MAN: Node Attribute getter/setter
@@ -236,7 +239,6 @@ func (n *Node) CreateElement(name string) Node {
 		OuterHTML: "",
 		InnerHTML: "",
 		Children:  []*Node{},
-		CStyle:    make(map[string]string),
 		Id:        "",
 		ClassList: ClassList{
 			classes: []string{},
@@ -257,7 +259,7 @@ func (n *Node) CreateElement(name string) Node {
 }
 
 func GenerateUniqueId(parent *Node, tagName string) string {
-	return parent.Properties.Id+tagName+strconv.Itoa(len(parent.Children))
+	return parent.Properties.Id + tagName + strconv.Itoa(len(parent.Children))
 }
 
 func (n *Node) AppendChild(c *Node) {
@@ -328,8 +330,8 @@ func (n *Node) Blur() {
 }
 
 func (n *Node) GetContext(width, height int) *canvas.Canvas {
-	n.CStyle["width"] = strconv.Itoa(width) + "px"
-	n.CStyle["height"] = strconv.Itoa(height) + "px"
+	n.Style("width", strconv.Itoa(width)+"px")
+	n.Style("height", strconv.Itoa(height)+"px")
 	ctx := canvas.NewCanvas(width, height)
 	n.Canvas = ctx
 	return ctx

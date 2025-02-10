@@ -240,19 +240,35 @@ func Key(text *MetaData) string {
 	return key
 }
 
-func GetMetaData(n *element.Node, state *map[string]element.State, font *font.Face) *MetaData {
+func GetMetaData(n *element.Node, style map[string]string, state *map[string]element.State, font *font.Face) *MetaData {
 	s := *state
 	self := s[n.Properties.Id]
 	parent := s[n.Parent.Properties.Id]
+
+	// !DEVMAN: In some cases like a span the width will be unset. In that case
+	// + find the closest parent that has a width greater than 0
+	if parent.Width == 0 {
+		ancestors := strings.Split(n.Properties.Id, ":")
+
+		var parentId string
+		// Should skip the current element and the ROOT
+		for i := len(ancestors) - 2; i > 0; i-- {
+			parentId = strings.Join(ancestors[0:i], ":")
+			if s[parentId].Width > 0 {
+				parent = s[parentId]
+				break
+			}
+		}
+	}
 
 	// self.Textures = []string{}
 
 	text := MetaData{}
 	text.Font = font
-	letterSpacing := utils.ConvertToPixels(n.CStyle["letter-spacing"], self.EM, parent.Width)
-	wordSpacing := utils.ConvertToPixels(n.CStyle["word-spacing"], self.EM, parent.Width)
-	lineHeight := utils.ConvertToPixels(n.CStyle["line-height"], self.EM, parent.Width)
-	underlineoffset := utils.ConvertToPixels(n.CStyle["text-underline-offset"], self.EM, parent.Width)
+	letterSpacing := utils.ConvertToPixels(style["letter-spacing"], self.EM, parent.Width)
+	wordSpacing := utils.ConvertToPixels(style["word-spacing"], self.EM, parent.Width)
+	lineHeight := utils.ConvertToPixels(style["line-height"], self.EM, parent.Width)
+	underlineoffset := utils.ConvertToPixels(style["text-underline-offset"], self.EM, parent.Width)
 
 	if lineHeight == 0 {
 		lineHeight = self.EM + 3
@@ -263,53 +279,53 @@ func GetMetaData(n *element.Node, state *map[string]element.State, font *font.Fa
 	text.LetterSpacing = int(letterSpacing)
 	wb := " "
 
-	if n.CStyle["word-wrap"] == "break-word" {
+	if style["word-wrap"] == "break-word" {
 		wb = ""
 	}
 
-	if n.CStyle["text-wrap"] == "wrap" || n.CStyle["text-wrap"] == "balance" {
+	if style["text-wrap"] == "wrap" || style["text-wrap"] == "balance" {
 		wb = ""
 	}
 
 	var dt float32
 
-	if n.CStyle["text-decoration-thickness"] == "auto" || n.CStyle["text-decoration-thickness"] == "" {
+	if style["text-decoration-thickness"] == "auto" || style["text-decoration-thickness"] == "" {
 		dt = self.EM / 7
 	} else {
-		dt = utils.ConvertToPixels(n.CStyle["text-decoration-thickness"], self.EM, parent.Width)
+		dt = utils.ConvertToPixels(style["text-decoration-thickness"], self.EM, parent.Width)
 	}
 
-	col, err := cc.Parse(n.CStyle, "font")
+	col, err := cc.Parse(style, "font")
 
 	if err != nil {
 		col = color.RGBA{0, 0, 0, 255}
 	}
 
-	if n.CStyle["text-decoration-color"] == "" {
-		n.CStyle["text-decoration-color"] = n.CStyle["color"]
+	if style["text-decoration-color"] == "" {
+		style["text-decoration-color"] = style["color"]
 	}
 
 	text.Color = col
-	text.DecorationColor, _ = cc.Parse(n.CStyle, "decoration")
-	text.Align = n.CStyle["text-align"]
+	text.DecorationColor, _ = cc.Parse(style, "decoration")
+	text.Align = style["text-align"]
 	text.WordBreak = wb
 	text.WordSpacing = int(wordSpacing)
 	text.LetterSpacing = int(letterSpacing)
-	text.WhiteSpace = n.CStyle["white-space"]
+	text.WhiteSpace = style["white-space"]
 	text.DecorationThickness = int(dt)
-	text.Overlined = n.CStyle["text-decoration"] == "overline"
-	text.Underlined = n.CStyle["text-decoration"] == "underline"
-	text.LineThrough = n.CStyle["text-decoration"] == "line-through"
+	text.Overlined = style["text-decoration"] == "overline"
+	text.Underlined = style["text-decoration"] == "underline"
+	text.LineThrough = style["text-decoration"] == "line-through"
 	text.EM = int(self.EM)
 	text.Width = int(parent.Width)
 	text.Text = n.InnerText
 	text.UnderlineOffset = int(underlineoffset)
 
-	if n.CStyle["text-underline-offset"] == "" {
+	if style["text-underline-offset"] == "" {
 		text.UnderlineOffset = 2
 	}
 
-	if n.CStyle["word-spacing"] == "" {
+	if style["word-spacing"] == "" {
 		// !ISSUE: is word spacing actually impleamented
 		text.WordSpacing, _ = MeasureSpace(&text)
 	}
