@@ -1,7 +1,6 @@
 package flex
 
 import (
-	"fmt"
 	"grim/cstyle"
 	"grim/cstyle/plugins/inline"
 	"grim/element"
@@ -16,7 +15,6 @@ func Init() cstyle.Plugin {
 			return n.Style("display") == "flex"
 		},
 		Handler: func(n *element.Node, c *cstyle.CSS) {
-			fmt.Println("FELX", n.Properties.Id)
 			self := c.State[n.Properties.Id]
 			if len(n.Children) == 0 {
 				return

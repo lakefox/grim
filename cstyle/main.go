@@ -34,7 +34,6 @@ type CSS struct {
 	Height       float32
 	Plugins      []Plugin
 	Transformers []Transformer
-	Document     map[string]*element.Node
 	Fonts        map[string]imgFont.Face
 	StyleMap     map[string][]*parser.StyleMap
 	Adapter      *adapter.Adapter
@@ -275,6 +274,8 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 
 	if self.Z > 0 {
 		self.Z = parent.Z + 1
+	} else {
+		self.Z += parent.Z+1
 	}
 
 	c.State[n.Properties.Id] = self
@@ -511,6 +512,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 			v.Handler(n, c)
 		}
 	}
-	
+
+
 	return self
 }

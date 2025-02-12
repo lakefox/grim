@@ -163,20 +163,24 @@ func Init() cstyle.Transformer {
 					n.Style("width", "calc("+style["width"]+"-"+trackWidth+")")
 				}
 
-				pr := style["padding-right"]
-				if pr == "" {
-					if style["padding"] != "" {
-						pr = style["padding"]
-					}
-				}
-
-				if !strings.Contains(pr, "calc") {
-					if pr != "" {
-						n.Style("padding-right", "calc("+pr+"+"+trackWidth+")")
-					} else {
-						n.Style("padding-right", trackWidth)
-					}
-				}
+				// pr := style["padding-right"]
+				// if pr == "" {
+				// 	if style["padding"] != "" {
+				// 		pr = style["padding"]
+				// 	}
+				// }
+				//
+				// if pr != "" {
+				// 	if !strings.Contains(style["padding-right"], "calc") {
+				// 		n.Style("padding-right", "calc("+pr+"+"+trackWidth+")")
+				// 	} else {
+				// 		n.Style("padding-right", pr)
+				// 	}
+				// } else {
+				// 	n.Style("padding-right", trackWidth)
+				// }
+				//
+				n.Style("padding-right", trackWidth)
 
 				n.AppendChild(&scrollbar)
 			}
