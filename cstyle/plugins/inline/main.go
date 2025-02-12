@@ -9,7 +9,7 @@ import (
 func Init() cstyle.Plugin {
 	return cstyle.Plugin{
 		Selector: func(n *element.Node, c *cstyle.CSS) bool {
-			return c.Styles[n.Properties.Id]["display"] == "inline" || n.Style("display") == "inline"
+			return n.Style("display") == "inline"
 		},
 		Handler: func(n *element.Node, c *cstyle.CSS) {
 			self := c.State[n.Properties.Id]
@@ -19,6 +19,7 @@ func Init() cstyle.Plugin {
 			if copyOfX < parent.X+parent.Padding.Left {
 				copyOfX = parent.X + parent.Padding.Left
 			}
+
 
 			// xCollect := float32(0)
 			for i, v := range n.Parent.Children {

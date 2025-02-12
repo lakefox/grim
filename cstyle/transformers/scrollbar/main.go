@@ -10,7 +10,7 @@ import (
 func Init() cstyle.Transformer {
 	return cstyle.Transformer{
 		Selector: func(n *element.Node, c *cstyle.CSS) bool {
-			style := c.Styles[n.Properties.Id]
+			style := n.Styles()
 			if style["overflow"] != "" || style["overflow-x"] != "" || style["overflow-y"] != "" {
 				return true
 			} else {
@@ -18,7 +18,7 @@ func Init() cstyle.Transformer {
 			}
 		},
 		Handler: func(n *element.Node, c *cstyle.CSS) *element.Node {
-			style := c.Styles[n.Properties.Id]
+			style := n.Styles() 
 
 			overflowProps := strings.Split(style["overflow"], " ")
 			if n.Style("overflow-y") == "" {
@@ -133,7 +133,8 @@ func Init() cstyle.Transformer {
 
 				thumb.Style("position", "absolute")
 				thumb.Style("top", strconv.Itoa(n.ScrollTop)+"px")
-				thumb.Style("left", "0")
+				// !ISSUE: parse the string then calculate the offset for thin and normal
+				thumb.Style("right", "3px")
 				thumb.Style("width", thumbWidth)
 				thumb.Style("height", "20px")
 				thumb.Style("background", thumbColor)
@@ -168,7 +169,7 @@ func Init() cstyle.Transformer {
 						pr = style["padding"]
 					}
 				}
-				
+
 				if !strings.Contains(pr, "calc") {
 					if pr != "" {
 						n.Style("padding-right", "calc("+pr+"+"+trackWidth+")")

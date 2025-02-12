@@ -8,7 +8,7 @@ import (
 func Init() cstyle.Plugin {
 	return cstyle.Plugin{
 		Selector: func(n *element.Node, c *cstyle.CSS) bool {
-			return c.Styles[n.Properties.Id]["text-align"] != "" || n.Style("text-align") != ""
+			return n.Style("text-align") != ""
 		},
 		Handler: func(n *element.Node, c *cstyle.CSS) {
 			self := c.State[n.Properties.Id]
@@ -16,7 +16,6 @@ func Init() cstyle.Plugin {
 			maxXW := float32(0)
 
 			nChildren := []*element.Node{}
-
 			for _, v := range n.Children {
 				// This prevents using absolutely positionioned elements in the alignment of text
 				// + Will need to add the other styles
@@ -25,7 +24,9 @@ func Init() cstyle.Plugin {
 				}
 			}
 
-			if n.Style("text-align") == "center" {
+
+			align := n.Style("text-align")
+			if align == "center" {
 				if len(nChildren) > 0 {
 					minX = c.State[nChildren[0].Properties.Id].X
 					baseY := c.State[nChildren[0].Properties.Id].Y + c.State[nChildren[0].Properties.Id].Height
@@ -46,6 +47,7 @@ func Init() cstyle.Plugin {
 							for a := last; a < i+1; a++ {
 								cState := c.State[nChildren[a].Properties.Id]
 								cState.X += self.Padding.Left + ((((self.Width - (self.Padding.Left + self.Padding.Right)) + (self.Border.Left.Width + self.Border.Right.Width)) - (maxXW - minX)) / 2) - (minX - self.X)
+
 								c.State[nChildren[a].Properties.Id] = cState
 							}
 							minX = 9e15
@@ -59,10 +61,11 @@ func Init() cstyle.Plugin {
 					for a := last; a < len(nChildren); a++ {
 						cState := c.State[nChildren[a].Properties.Id]
 						cState.X += self.Padding.Left + ((((self.Width - (self.Padding.Left + self.Padding.Right)) + (self.Border.Left.Width + self.Border.Right.Width)) - (maxXW - minX)) / 2) - (minX - self.X)
+
 						c.State[nChildren[a].Properties.Id] = cState
 					}
 				}
-			} else if n.Style("text-align") == "right" {
+			} else if align == "right" {
 				if len(nChildren) > 0 {
 					minX = c.State[nChildren[0].Properties.Id].X
 					baseY := c.State[nChildren[0].Properties.Id].Y + c.State[nChildren[0].Properties.Id].Height

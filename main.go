@@ -19,7 +19,7 @@ import (
 	marginblock "grim/cstyle/transformers/margin-block"
 	"grim/cstyle/transformers/ol"
 	"grim/cstyle/transformers/scrollbar"
-	// "grim/cstyle/transformers/text"
+	"grim/cstyle/transformers/text"
 	"grim/cstyle/transformers/ul"
 	"grim/font"
 	"grim/library"
@@ -46,13 +46,13 @@ var mastercss string
 
 type Window struct {
 	CSS cstyle.CSS
-	// document element.Node
+	document element.Node
 
 	Scripts scripts.Scripts
 }
 
 func (w *Window) Document() *element.Node {
-	return w.CSS.Document["ROOT"].Children[0]
+	return &w.document
 }
 
 // !TODO: Add a Mux option to all a http server to map to the window
@@ -71,7 +71,7 @@ func (window *Window) Path(path string) {
 
 	window.CSS.Path = filepath.Dir(path)
 
-	CreateNode(htmlNodes, window.CSS.Document["ROOT"], &window.CSS)
+	CreateNode(htmlNodes, &window.document)
 	open(window)
 }
 
@@ -89,7 +89,7 @@ func New(adapterFunction *adapter.Adapter, width, height int) Window {
 	css.AddPlugin(flex.Init())
 	css.AddPlugin(crop.Init())
 
-	// css.AddTransformer(text.Init())
+	css.AddTransformer(text.Init())
 	css.AddTransformer(banda.Init())
 	css.AddTransformer(scrollbar.Init())
 	css.AddTransformer(flexprep.Init())
@@ -101,20 +101,15 @@ func New(adapterFunction *adapter.Adapter, width, height int) Window {
 
 	el := element.Node{}
 	document := el.CreateElement("ROOT")
-	// document.CStyle["width"] = strconv.Itoa(width) + "px"
-	// document.CStyle["height"] = strconv.Itoa(height) + "px"
 	document.Properties.Id = "ROOT"
 
 	s := scripts.Scripts{}
 	s.Add(a.Init())
 
-	css.Document = map[string]*element.Node{
-		"ROOT": &document,
-	}
-
 	return Window{
 		CSS:     css,
 		Scripts: s,
+		document: document,
 	}
 }
 
@@ -154,7 +149,6 @@ func (w *Window) Render(doc *element.Node, shelf *library.Shelf) []element.State
 
 		exists := shelf.Check(key)
 		bounds := shelf.Bounds(key)
-		// fmt.Println(n.Properties.Id, self.Width, self.Height, bounds)
 
 		if exists && bounds[0] == int(wbw) && bounds[1] == int(hbw) {
 			lookup := make(map[string]struct{}, len(self.Textures))
@@ -216,12 +210,10 @@ func open(data *Window) {
 	}
 
 	debug := false
-	data.CSS.Styles = map[string]map[string]string{}
 	data.CSS.PsuedoStyles = map[string]map[string]map[string]string{}
 
-	data.CSS.Styles["ROOT"] = map[string]string{}
-	data.CSS.Styles["ROOT"]["width"] = strconv.Itoa(int(data.CSS.Width)) + "px"
-	data.CSS.Styles["ROOT"]["height"] = strconv.Itoa(int(data.CSS.Height)) + "px"
+	data.document.Style("width", strconv.Itoa(int(data.CSS.Width)) + "px")
+	data.document.Style("height", strconv.Itoa(int(data.CSS.Height)) + "px")
 
 	data.CSS.Adapter.Library = &shelf
 	data.CSS.Adapter.Init(int(data.CSS.Width), int(data.CSS.Height))
@@ -264,8 +256,8 @@ func open(data *Window) {
 		data.CSS.Width = float32(wh["width"])
 		data.CSS.Height = float32(wh["height"])
 
-		data.CSS.Styles["ROOT"]["width"] = strconv.Itoa(wh["width"]) + "px"
-		data.CSS.Styles["ROOT"]["height"] = strconv.Itoa(wh["height"]) + "px"
+		data.document.Style("width", strconv.Itoa(wh["width"]) + "px")
+		data.document.Style("height", strconv.Itoa(wh["height"]) + "px")
 		rd = getRenderData(data, &shelf, &monitor)
 	})
 
@@ -356,26 +348,25 @@ func getRenderData(data *Window, shelf *library.Shelf, monitor *events.Monitor) 
 	// !ISSUE: Move this inside of ComputeNodeStyle
 	// + This modify events to return effected nodes
 
-	dc := data.CSS.Document["ROOT"].Children[0]
+	dc := data.document.Children[0]
 	start := time.Now()
-	newDoc := AddStyles(data.CSS, dc, data.CSS.Document["ROOT"])
+	newDoc := AddStyles(data.CSS, dc, &data.document)
 
 	data.CSS.ComputeNodeStyle(newDoc)
-	fmt.Println(time.Since(start))
 
 	rd := data.Render(newDoc, shelf)
 
 	data.CSS.Adapter.Load(rd)
 
-	AddHTMLAndAttrs(data.CSS.Document["ROOT"], data.CSS.State)
-	// fmt.Println(data.document.InnerHTML)
+	AddHTMLAndAttrs(&data.document, data.CSS.State)
 
-	data.Scripts.Run(data.CSS.Document["ROOT"])
+	data.Scripts.Run(&data.document)
 	shelf.Clean()
+	fmt.Println(time.Since(start))
 
 	// !TODO: Should return effected node, then render those specific
 	// + I think have node.ComputeNodeStyle would make this nice
-	monitor.RunEvents(data.CSS.Document["ROOT"].Children[0])
+	monitor.RunEvents(data.document.Children[0])
 	return rd
 }
 
@@ -401,7 +392,7 @@ func AddStyles(c cstyle.CSS, node *element.Node, parent *element.Node) *element.
 	return &n
 }
 
-func CreateNode(node *html.Node, parent *element.Node, css *cstyle.CSS) {
+func CreateNode(node *html.Node, parent *element.Node) {
 	if node.Type == html.ElementNode {
 		newNode := parent.CreateElement(node.Data)
 		for _, attr := range node.Attr {
@@ -436,21 +427,20 @@ func CreateNode(node *html.Node, parent *element.Node, css *cstyle.CSS) {
 			}
 		}
 		newNode.InnerText = strings.TrimSpace(utils.GetInnerText(node))
-		
+
 		newNode.Properties.Id = element.GenerateUniqueId(parent, node.Data)
 		// Recursively traverse child nodes
 		for child := node.FirstChild; child != nil; child = child.NextSibling {
 			if child.Type == html.ElementNode {
-				CreateNode(child, &newNode, css)
+				CreateNode(child, &newNode)
 			}
 		}
 		parent.AppendChild(&newNode)
-		css.Document[newNode.Properties.Id] = &newNode
 
 	} else {
 		for child := node.FirstChild; child != nil; child = child.NextSibling {
 			if child.Type == html.ElementNode {
-				CreateNode(child, parent, css)
+				CreateNode(child, parent)
 			}
 		}
 	}

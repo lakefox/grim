@@ -143,7 +143,7 @@ func (m *Monitor) RunEvents(n *element.Node) bool {
 
 	// !ISSUE: find a way to remove this GetStyles
 	if evt.ScrollX != 0 || evt.ScrollY != 0 {
-		styledEl = m.CSS.Styles[n.Properties.Id]
+		styledEl = n.Styles()
 	}
 
 	if evt.ScrollX != 0 {

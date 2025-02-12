@@ -262,7 +262,7 @@ func (n *Node) CreateElement(name string) Node {
 }
 
 func GenerateUniqueId(parent *Node, tagName string) string {
-	return parent.Properties.Id + tagName + strconv.Itoa(len(parent.Children))
+	return parent.Properties.Id + ":" + tagName + strconv.Itoa(len(parent.Children))
 }
 
 func (n *Node) AppendChild(c *Node) {

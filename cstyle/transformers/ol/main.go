@@ -25,7 +25,7 @@ func Init() cstyle.Transformer {
 				dot := li.CreateElement("div")
 				content := li.CreateElement("div")
 
-				for k, v := range c.Styles[v.Properties.Id] {
+				for k, v := range v.Styles() {
 					li.Style(k, v)
 					dot.Style(k, v)
 					content.Style(k, v)

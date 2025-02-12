@@ -33,7 +33,7 @@ func Init() cstyle.Transformer {
 				content := li.CreateElement("div")
 				content.InnerText = v.InnerText
 
-				for k, v := range c.Styles[v.Properties.Id] {
+				for k, v := range v.Styles() {
 					content.Style(k, v)
 				}
 				// content.CStyle = c.QuickStyles(&content)

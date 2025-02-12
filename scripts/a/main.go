@@ -15,7 +15,6 @@ func Init() scripts.Script {
 			// for i := range *links {
 			// 	v := *links
 			// 	v[i].AddEventListener("click", func(e element.Event) {
-			// 		fmt.Println("click", v[i].Href)
 			// 		open(v[i].Href)
 			// 	})
 			// }
