@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"bytes"
 	"fmt"
 	"grim/element"
 	ic "image/color"
@@ -366,123 +365,6 @@ func GetInnerText(n *html.Node) string {
 	getText(n)
 
 	return result.String()
-}
-
-func ChildrenHaveText(n *element.Node) bool {
-	for _, child := range n.Children {
-		if len(strings.TrimSpace(child.InnerText)) != 0 {
-			return true
-		}
-		// Recursively check if any child nodes have text
-		if ChildrenHaveText(child) {
-			return true
-		}
-	}
-	return false
-}
-
-func NodeToHTML(node *element.Node) (string, string) {
-	// if node.TagName == "text" {
-	// 	return node.InnerText + " ", ""
-	// }
-
-	var buffer bytes.Buffer
-	buffer.WriteString("<" + node.TagName)
-
-	if node.ContentEditable {
-		buffer.WriteString(" contentEditable=\"true\"")
-	}
-
-	// Add ID if present
-	if node.Id != "" {
-		buffer.WriteString(" id=\"" + node.Id + "\"")
-	}
-
-	// Add ID if present
-	if node.Title != "" {
-		buffer.WriteString(" title=\"" + node.Title + "\"")
-	}
-
-	// Add ID if present
-	if node.Src != "" {
-		buffer.WriteString(" src=\"" + node.Src + "\"")
-	}
-
-	// Add ID if present
-	if node.Href != "" {
-		buffer.WriteString(" href=\"" + node.Href + "\"")
-	}
-
-	// Add class list if present
-	if len(node.ClassList.Classes()) > 0 {
-		classes := ""
-		for _, v := range node.ClassList.Classes() {
-			if len(v) > 0 {
-				if string(v[0]) != ":" {
-					classes += v + " "
-				}
-			}
-		}
-		classes = strings.TrimSpace(classes)
-		if len(classes) > 0 {
-			buffer.WriteString(" class=\"" + classes + "\"")
-		}
-	}
-
-	styles := node.Styles()
-
-	// Add style if present
-	if len(styles) > 0 {
-
-		style := ""
-		for key, value := range styles {
-			if key != "inlineText" {
-				style += key + ":" + value + ";"
-			}
-		}
-		style = strings.TrimSpace(style)
-
-		if len(style) > 0 {
-			buffer.WriteString(" style=\"" + style + "\"")
-		}
-	}
-
-	// Add other attributes if present
-	buffer.WriteString(node.Attribute())
-
-	buffer.WriteString(">")
-
-	// Add inner text if present
-	if node.InnerText != "" && !ChildrenHaveText(node) {
-		buffer.WriteString(node.InnerText)
-	}
-	return buffer.String(), "</" + node.TagName + ">"
-}
-
-func OuterHTML(node *element.Node) string {
-	var buffer bytes.Buffer
-
-	tag, closing := NodeToHTML(node)
-
-	buffer.WriteString(tag)
-
-	// Recursively add children
-	for _, child := range node.Children {
-		buffer.WriteString(OuterHTML(child))
-	}
-
-	buffer.WriteString(closing)
-
-	return buffer.String()
-}
-
-func InnerHTML(node *element.Node) string {
-	var buffer bytes.Buffer
-	// Recursively add children
-	for _, child := range node.Children {
-		buffer.WriteString(OuterHTML(child))
-	}
-	return buffer.String()
 }
 
 func RGBAtoString(c ic.RGBA) string {

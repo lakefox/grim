@@ -20,10 +20,7 @@ func Init() cstyle.Plugin {
 				copyOfX = parent.X + parent.Padding.Left
 			}
 
-
-			// xCollect := float32(0)
 			for i, v := range n.Parent.Children {
-				// vState := c.State[v.Properties.Id]
 				if i > 0 {
 					if v.Style("position") != "absolute" {
 						if v.Properties.Id == n.Properties.Id {

@@ -139,7 +139,6 @@ func (w *Window) Render(doc *element.Node, shelf *library.Shelf) []element.State
 			delete(s, k)
 		}
 	}
-
 	for k, self := range store {
 		// Option: Have Grim render all elements
 		wbw := int(self.Width + self.Border.Left.Width + self.Border.Right.Width)
@@ -345,9 +344,6 @@ func getRenderData(data *Window, shelf *library.Shelf, monitor *events.Monitor) 
 	}
 	fmt.Println("_______________________")
 
-	// !ISSUE: Move this inside of ComputeNodeStyle
-	// + This modify events to return effected nodes
-
 	dc := data.document.Children[0]
 	start := time.Now()
 	newDoc := AddStyles(data.CSS, dc, &data.document)
@@ -358,14 +354,15 @@ func getRenderData(data *Window, shelf *library.Shelf, monitor *events.Monitor) 
 
 	data.CSS.Adapter.Load(rd)
 
-	AddHTMLAndAttrs(&data.document, data.CSS.State)
+	AddScroll(&data.document, data.CSS.State)
 
 	data.Scripts.Run(&data.document)
 	shelf.Clean()
 	fmt.Println(time.Since(start))
-
+	// fmt.Println(newDoc.OuterHTML())
 	// !TODO: Should return effected node, then render those specific
 	// + I think have node.ComputeNodeStyle would make this nice
+
 	monitor.RunEvents(data.document.Children[0])
 	return rd
 }
@@ -374,6 +371,7 @@ func AddStyles(c cstyle.CSS, node *element.Node, parent *element.Node) *element.
 	n := *node
 	n.Parent = parent
 	// !DEVMAN: Copying is done here, would like to remove this and add it to ComputeNodeStyle, so I can save a tree climb
+	// + Maybe just have this copy the node and the styles don't need to be recomputed everytime 
 	c.GetStyles(&n)
 
 	if len(node.Children) > 0 {
@@ -446,18 +444,12 @@ func CreateNode(node *html.Node, parent *element.Node) {
 	}
 }
 
-func AddHTMLAndAttrs(n *element.Node, s map[string]element.State) {
-	// Head is not renderable
-
-	n.InnerHTML = utils.InnerHTML(n)
-	tag, closing := utils.NodeToHTML(n)
-	n.OuterHTML = tag + n.InnerHTML + closing
-
+func AddScroll(n *element.Node, s map[string]element.State) {
 	// !NOTE: This is the only spot you can pierce the vale
 	n.ScrollHeight = s[n.Properties.Id].ScrollHeight
 	n.ScrollWidth = s[n.Properties.Id].ScrollWidth
 	for i := range n.Children {
-		AddHTMLAndAttrs(n.Children[i], s)
+		AddScroll(n.Children[i], s)
 	}
 }
 
@@ -548,7 +540,46 @@ func localizePath(rootPath, filePath string) string {
 
 	return "./" + absPath
 }
+func wrapTextNodes(n *html.Node) {
+	var toWrap []*html.Node
 
+	for c := n.FirstChild; c != nil; c = c.NextSibling {
+		if c.Type == html.TextNode {
+			trimmed := strings.TrimSpace(c.Data)
+			if trimmed != "" {
+				toWrap = append(toWrap, c)
+			}
+		}
+	}
+
+	for _, c := range toWrap {
+		if c.Parent != nil { // Ensure the parent exists before modifying
+			words := strings.Fields(c.Data)
+			var lastNode *html.Node
+			for _, word := range words {
+				newNode := &html.Node{
+					Type: html.ElementNode,
+					Data: "text",
+					FirstChild: &html.Node{
+						Type: html.TextNode,
+						Data: word,
+					},
+				}
+				if lastNode == nil {
+					c.Parent.InsertBefore(newNode, c)
+				} else {
+					c.Parent.InsertBefore(newNode, lastNode.NextSibling)
+				}
+				lastNode = newNode
+			}
+			c.Parent.RemoveChild(c)
+		}
+	}
+
+	for c := n.FirstChild; c != nil; c = c.NextSibling {
+		wrapTextNodes(c)
+	}
+}
 func encapsulateText(htmlString string) string {
 	openOpen := regexp.MustCompile(`(<\w+[^>]*>)([^<]+)(<\w+[^>]*>)`)
 	closeOpen := regexp.MustCompile(`(</\w+[^>]*>)([^<]+)(<\w+[^>]*>)`)

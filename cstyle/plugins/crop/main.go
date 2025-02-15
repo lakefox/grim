@@ -124,7 +124,6 @@ func Init() cstyle.Plugin {
 						width = int(child.Width) - int(diff)
 					}
 
-					// !ISSUE: Elements disappear when out of view during the resize, because the element is cropped to much
 					child.Crop = element.Crop{
 						X:      xCrop,
 						Y:      yCrop,

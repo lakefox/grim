@@ -141,7 +141,6 @@ func (m *Monitor) RunEvents(n *element.Node) bool {
 
 	var styledEl map[string]string
 
-	// !ISSUE: find a way to remove this GetStyles
 	if evt.ScrollX != 0 || evt.ScrollY != 0 {
 		styledEl = n.Styles()
 	}
@@ -568,6 +567,7 @@ func ProcessKeyEvent(self element.State, key int) {
 	}
 }
 
+// !ISSUE: Optiomise this to just take the element
 func hasAutoOrScroll(styledEl map[string]string) bool {
 	overflowKeys := []string{"overflow", "overflow-x", "overflow-y"}
 	for _, key := range overflowKeys {

@@ -233,12 +233,6 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 		if v.Selector(n, c) {
 			v.Handler(n, c)
 		}
-
-		// if st, ok := c.Styles[n.Properties.Id]; ok {
-		// 	for k,v  := range st {
-		// 		n.Style(k,v)
-		// 	}
-		// }
 	}
 
 	plugins := c.Plugins
@@ -299,7 +293,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 
 	if style["position"] == "absolute" {
 		// !DEVMAN: Properties.Id is the ancestory of an element with colons seperating them
-		// + if we split them up we can check the parents without recusion or a while (for true) loop
+		// + if we split them up we can check the parents without recursion or a while (for true) loop
 		// + NOTE: See utils.GenerateUnqineId to see how they are made
 		ancestors := strings.Split(n.Properties.Id, ":")
 
@@ -378,7 +372,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 
 	c.State[n.Properties.Id] = self
 
-	if !utils.ChildrenHaveText(n) && len(n.InnerText) > 0 {
+	if !element.ChildrenHaveText(n) && len(n.InnerText) > 0 {
 		n.InnerText = strings.TrimSpace(n.InnerText)
 		italic := false
 
@@ -405,7 +399,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 		metadata := font.GetMetaData(n, style, &c.State, &fnt)
 		key := font.Key(metadata)
 		exists := c.Adapter.Library.Check(key)
-		// var width int
+		var width int
 		if exists {
 			lookup := make(map[string]struct{}, len(self.Textures))
 			for _, v := range self.Textures {
@@ -415,10 +409,10 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 			if _, found := lookup[key]; !found {
 				self.Textures = append(self.Textures, key)
 			}
-			// width, _ = font.MeasureText(metadata, metadata.Text+" ")
+			width, _ = font.MeasureText(metadata, metadata.Text+" ")
 		} else {
 			var data *image.RGBA
-			data, _ = font.Render(metadata)
+			data, width = font.Render(metadata)
 			self.Textures = append(self.Textures, c.Adapter.Library.Set(key, data))
 		}
 
@@ -426,9 +420,9 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 			self.Height = float32(metadata.LineHeight)
 		}
 
-		// if style["width"] == "" && style["min-width"] == "" {
-		// 	self.Width = float32(width)
-		// }
+		if style["width"] == "" && style["min-width"] == "" {
+			self.Width = float32(width)
+		}
 	}
 
 	// Load canvas into textures
@@ -463,7 +457,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 	self.ScrollHeight = 0
 	self.ScrollWidth = 0
 	var childYOffset float32
-	
+
 	for i := 0; i < len(n.Children); i++ {
 		v := n.Children[i]
 		v.Parent = n

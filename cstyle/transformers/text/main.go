@@ -18,7 +18,7 @@ var nonRenderTags = map[string]bool{
 func Init() cstyle.Transformer {
 	return cstyle.Transformer{
 		Selector: func(n *element.Node, c *cstyle.CSS) bool {
-			if n.TagName == "text" && len(n.Children) == 0 {
+			if len(strings.TrimSpace(n.InnerText)) > 0 && !element.ChildrenHaveText(n) {
 				return true
 			} else {
 				return false

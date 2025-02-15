@@ -1,6 +1,7 @@
 package textAlign
 
 import (
+	// "fmt"
 	"grim/cstyle"
 	"grim/element"
 )
@@ -26,6 +27,7 @@ func Init() cstyle.Plugin {
 
 
 			align := n.Style("text-align")
+			// fmt.Println(n.Properties.Id, align, nChildren, n.Children)
 			if align == "center" {
 				if len(nChildren) > 0 {
 					minX = c.State[nChildren[0].Properties.Id].X
@@ -60,9 +62,11 @@ func Init() cstyle.Plugin {
 					maxXW = c.State[nChildren[len(nChildren)-1].Properties.Id].X + c.State[nChildren[len(nChildren)-1].Properties.Id].Width
 					for a := last; a < len(nChildren); a++ {
 						cState := c.State[nChildren[a].Properties.Id]
+						// fmt.Println("1",a,n.Properties.Id, nChildren[a].Properties.Id, cState.X)
 						cState.X += self.Padding.Left + ((((self.Width - (self.Padding.Left + self.Padding.Right)) + (self.Border.Left.Width + self.Border.Right.Width)) - (maxXW - minX)) / 2) - (minX - self.X)
 
 						c.State[nChildren[a].Properties.Id] = cState
+						// fmt.Println("2",a,n.Properties.Id, nChildren[a].Properties.Id, cState.X)
 					}
 				}
 			} else if align == "right" {

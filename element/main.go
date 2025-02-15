@@ -1,11 +1,13 @@
 package element
 
 import (
+	"bytes"
 	"fmt"
 	"grim/canvas"
 	ic "image/color"
 	"slices"
 	"strconv"
+	"strings"
 )
 
 // !NOTE: With the current rendering scheme, all transform/plugin modifications are perserved in the document copy, then thrown away
@@ -13,14 +15,9 @@ import (
 // + then compute the styles locally? Is there a need to modify the element at all? If computestyle just made a copy of the props
 // + and computed off of that, passing them to the children.
 
-// !TODO: Make the Node immutable (to transformers) then all style changes need to only be changed in local variables
-// + then ComputeStlyle should output a state not node, make functional,
-
 type Node struct {
 	TagName         string
 	InnerText       string
-	InnerHTML       string
-	OuterHTML       string
 	Parent          *Node
 	Children        []*Node
 	style           map[string]string
@@ -159,6 +156,19 @@ func (n *Node) Attribute(value ...string) string {
 // 	return n.innerText // Getter
 // }
 
+// !MAN: Generates the InnerHTML of an element
+// !TODO: Add a setter
+func (n *Node) InnerHTML() string {
+	return InnerHTML(n)
+}
+
+// !MAN: Generates the OuterHTML of an element
+// !TODO: Add a setter
+func (n *Node) OuterHTML() string {
+	tag, closing := NodeToHTML(n)
+	return tag + InnerHTML(n) + closing
+}
+
 type ClassList struct {
 	classes []string
 }
@@ -239,8 +249,6 @@ func (n *Node) CreateElement(name string) Node {
 	return Node{
 		TagName:   name,
 		InnerText: "",
-		OuterHTML: "",
-		InnerHTML: "",
 		Children:  []*Node{},
 		Id:        "",
 		ClassList: ClassList{
@@ -402,6 +410,123 @@ func funcInSlice(f func(Event), slice []func(Event)) bool {
 	for _, item := range slice {
 		// Compare function values directly
 		if fmt.Sprintf("%p", item) == fmt.Sprintf("%p", f) {
+			return true
+		}
+	}
+	return false
+}
+
+func NodeToHTML(node *Node) (string, string) {
+	// if node.TagName == "text" {
+	// 	return node.InnerText + " ", ""
+	// }
+
+	var buffer bytes.Buffer
+	buffer.WriteString("<" + node.TagName)
+
+	if node.ContentEditable {
+		buffer.WriteString(" contentEditable=\"true\"")
+	}
+
+	// Add ID if present
+	if node.Id != "" {
+		buffer.WriteString(" id=\"" + node.Id + "\"")
+	}
+
+	// Add ID if present
+	if node.Title != "" {
+		buffer.WriteString(" title=\"" + node.Title + "\"")
+	}
+
+	// Add ID if present
+	if node.Src != "" {
+		buffer.WriteString(" src=\"" + node.Src + "\"")
+	}
+
+	// Add ID if present
+	if node.Href != "" {
+		buffer.WriteString(" href=\"" + node.Href + "\"")
+	}
+
+	// Add class list if present
+	if len(node.ClassList.Classes()) > 0 {
+		classes := ""
+		for _, v := range node.ClassList.Classes() {
+			if len(v) > 0 {
+				if string(v[0]) != ":" {
+					classes += v + " "
+				}
+			}
+		}
+		classes = strings.TrimSpace(classes)
+		if len(classes) > 0 {
+			buffer.WriteString(" class=\"" + classes + "\"")
+		}
+	}
+
+	styles := node.Styles()
+
+	// Add style if present
+	if len(styles) > 0 {
+
+		style := ""
+		for key, value := range styles {
+			if key != "inlineText" {
+				style += key + ":" + value + ";"
+			}
+		}
+		style = strings.TrimSpace(style)
+
+		if len(style) > 0 {
+			buffer.WriteString(" style=\"" + style + "\"")
+		}
+	}
+
+	// Add other attributes if present
+	buffer.WriteString(node.Attribute())
+
+	buffer.WriteString(">")
+
+	// Add inner text if present
+	if node.InnerText != "" && !ChildrenHaveText(node) {
+		buffer.WriteString(node.InnerText)
+	}
+	return buffer.String(), "</" + node.TagName + ">"
+}
+
+func OuterHTML(node *Node) string {
+	var buffer bytes.Buffer
+
+	tag, closing := NodeToHTML(node)
+
+	buffer.WriteString(tag)
+
+	// Recursively add children
+	for _, child := range node.Children {
+		buffer.WriteString(OuterHTML(child))
+	}
+
+	buffer.WriteString(closing)
+
+	return buffer.String()
+}
+
+func InnerHTML(node *Node) string {
+	var buffer bytes.Buffer
+	// Recursively add children
+	for _, child := range node.Children {
+		buffer.WriteString(OuterHTML(child))
+	}
+	return buffer.String()
+}
+
+func ChildrenHaveText(n *Node) bool {
+	for _, child := range n.Children {
+		if len(strings.TrimSpace(child.InnerText)) != 0 {
+			return true
+		}
+		// Recursively check if any child nodes have text
+		if ChildrenHaveText(child) {
 			return true
 		}
 	}
