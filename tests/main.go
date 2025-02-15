@@ -23,7 +23,7 @@ func main() {
 	qsa := document.QuerySelector(`ul`)
 
 	for _, v := range qsa.Children {
-		fmt.Println("qsa: ", v.OuterHTML)
+		fmt.Println("qsa: ", v.OuterHTML())
 	}
 	// body:has(h1.class + h1)> h1[attr="test"]#id.class:has(input:is(input[type="text"]) + div),a {
 }

@@ -129,7 +129,7 @@ func (c *CSS) GetStyles(n *element.Node) {
 
 	// Inherit styles from parent
 	if n.Parent != nil {
-		ps := n.Parent.Styles() 
+		ps := n.Parent.Styles()
 		for _, prop := range inheritedProps {
 			if value, ok := ps[prop]; ok && value != "" {
 				styles[prop] = value
@@ -198,8 +198,8 @@ func (c *CSS) GetStyles(n *element.Node) {
 	}
 
 	for k, v := range styles {
-		n.Style(k,v)
-	}	
+		n.Style(k, v)
+	}
 	c.PsuedoStyles[n.Properties.Id] = pseudoStyles
 }
 
@@ -239,7 +239,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 	parent := s[n.Parent.Properties.Id]
 
 	// Cache the style map
-	style := map[string]string{}	
+	style := map[string]string{}
 	//
 	// Map added styles to the style object
 	for k, v := range n.Styles() {
@@ -269,7 +269,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 	if self.Z > 0 {
 		self.Z = parent.Z + 1
 	} else {
-		self.Z += parent.Z+1
+		self.Z += parent.Z + 1
 	}
 
 	c.State[n.Properties.Id] = self
@@ -506,7 +506,6 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 			v.Handler(n, c)
 		}
 	}
-
 
 	return self
 }

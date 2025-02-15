@@ -390,6 +390,15 @@ func AddStyles(c cstyle.CSS, node *element.Node, parent *element.Node) *element.
 	return &n
 }
 
+func AddScroll(n *element.Node, s map[string]element.State) {
+	// !NOTE: This is the only spot you can pierce the vale
+	n.ScrollHeight = s[n.Properties.Id].ScrollHeight
+	n.ScrollWidth = s[n.Properties.Id].ScrollWidth
+	for i := range n.Children {
+		AddScroll(n.Children[i], s)
+	}
+}
+
 func CreateNode(node *html.Node, parent *element.Node) {
 	if node.Type == html.ElementNode {
 		newNode := parent.CreateElement(node.Data)
@@ -441,15 +450,6 @@ func CreateNode(node *html.Node, parent *element.Node) {
 				CreateNode(child, parent)
 			}
 		}
-	}
-}
-
-func AddScroll(n *element.Node, s map[string]element.State) {
-	// !NOTE: This is the only spot you can pierce the vale
-	n.ScrollHeight = s[n.Properties.Id].ScrollHeight
-	n.ScrollWidth = s[n.Properties.Id].ScrollWidth
-	for i := range n.Children {
-		AddScroll(n.Children[i], s)
 	}
 }
 
