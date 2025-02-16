@@ -7,10 +7,8 @@ import (
 	"grim/color"
 	"grim/element"
 	"grim/font"
-	"grim/parser"
 	"grim/utils"
 	"image"
-	"sort"
 	"strconv"
 	"strings"
 
@@ -35,173 +33,13 @@ type CSS struct {
 	Plugins      []Plugin
 	Transformers []Transformer
 	Fonts        map[string]imgFont.Face
-	StyleMap     map[string][]*parser.StyleMap
+	// StyleMap     map[string][]*parser.StyleMap
 	Adapter      *adapter.Adapter
 	Path         string
 	StyleSheets  int
 	State        map[string]element.State
-	PsuedoStyles map[string]map[string]map[string]string
-}
-
-func (c *CSS) StyleSheet(path string) {
-	// Parse the CSS file
-	data, _ := c.Adapter.FileSystem.ReadFile(path)
-	styleMaps := parser.ParseCSS(string(data), c.StyleSheets)
-	c.StyleSheets++
-
-	if c.StyleMap == nil {
-		c.StyleMap = map[string][]*parser.StyleMap{}
 	}
 
-	for k, v := range styleMaps {
-		if c.StyleMap[k] == nil {
-			c.StyleMap[k] = []*parser.StyleMap{}
-		}
-		c.StyleMap[k] = append(c.StyleMap[k], v...)
-	}
-}
-
-func (c *CSS) StyleTag(css string) {
-	styleMaps := parser.ParseCSS(css, c.StyleSheets)
-	c.StyleSheets++
-
-	if c.StyleMap == nil {
-		c.StyleMap = map[string][]*parser.StyleMap{}
-	}
-
-	for k, v := range styleMaps {
-		if c.StyleMap[k] == nil {
-			c.StyleMap[k] = []*parser.StyleMap{}
-		}
-		c.StyleMap[k] = append(c.StyleMap[k], v...)
-	}
-}
-
-var inheritedProps = []string{
-	"color",
-	"cursor",
-	"font",
-	"font-family",
-	"font-style",
-	"font-weight",
-	"letter-spacing",
-	"line-height",
-	// "text-align",
-	"text-indent",
-	"text-justify",
-	"text-shadow",
-	"text-transform",
-	"text-decoration",
-	"visibility",
-	"word-spacing",
-	"display",
-	"scrollbar-color",
-}
-
-func (c *CSS) QuickStyles(n *element.Node) map[string]string {
-	styles := make(map[string]string)
-
-	// Inherit styles from parent
-	if n.Parent != nil {
-		ps := n.Parent.Styles()
-		for _, prop := range inheritedProps {
-			if value, ok := ps[prop]; ok && value != "" {
-				styles[prop] = value
-			}
-		}
-	}
-
-	// Add node's own styles
-	for k, v := range n.Styles() {
-		styles[k] = v
-	}
-
-	return styles
-}
-
-// !ISSUE: GetStyles only needs to be ran if a new node is added, and the inital run, or a style tag innerHTML chanages
-// + rest can be done with a modified QuickStyles
-// + kinda see that note for a complete list
-
-func (c *CSS) GetStyles(n *element.Node) {
-	styles := make(map[string]string)
-	pseudoStyles := make(map[string]map[string]string)
-
-	// Inherit styles from parent
-	if n.Parent != nil {
-		ps := n.Parent.Styles()
-		for _, prop := range inheritedProps {
-			if value, ok := ps[prop]; ok && value != "" {
-				styles[prop] = value
-			}
-		}
-	}
-
-	// Add node's own styles
-	for k, v := range n.Styles() {
-		styles[k] = v
-	}
-
-	baseSelectors := element.GenBaseElements(n)
-	testedSelectors := map[string]bool{}
-
-	// !DEVMAN: You need to pre-sort the selectors by their .Sheet field to create the
-	// + cascading effect of CSS
-
-	styleMaps := []*parser.StyleMap{}
-	for _, v := range baseSelectors {
-		sm := c.StyleMap[v]
-		styleMaps = append(styleMaps, sm...)
-	}
-	sort.Slice(styleMaps, func(i, j int) bool {
-		return styleMaps[i].Sheet < styleMaps[j].Sheet
-	})
-	for _, m := range styleMaps {
-		if element.ShouldTestSelector(n, m.Selector) {
-			testedSelectors[m.Selector] = true
-			match, isPseudo := element.TestSelector(n, m.Selector)
-			if match {
-				if isPseudo {
-					pseudoSelector := "::" + strings.Split(m.Selector, "::")[1]
-					if pseudoStyles[pseudoSelector] == nil {
-						pseudoStyles[pseudoSelector] = map[string]string{}
-					}
-					for k, v := range *m.Styles {
-						if pseudoStyles[pseudoSelector] == nil {
-							pseudoStyles[pseudoSelector] = map[string]string{}
-						}
-						pseudoStyles[pseudoSelector][k] = v
-					}
-				} else {
-					for k, v := range *m.Styles {
-						styles[k] = v
-					}
-				}
-			}
-		}
-	}
-
-	// Parse inline styles
-	inlineStyles := parser.ParseStyleAttribute(n.GetAttribute("style"))
-	for k, v := range inlineStyles {
-		styles[k] = v
-	}
-
-	// Handle z-index inheritance
-	if n.Parent != nil && styles["z-index"] == "" {
-		parentZIndex := n.Parent.Style("z-index")
-		if parentZIndex != "" {
-			z, _ := strconv.Atoi(parentZIndex)
-			z += 1
-			styles["z-index"] = strconv.Itoa(z)
-		}
-	}
-
-	for k, v := range styles {
-		n.Style(k, v)
-	}
-	c.PsuedoStyles[n.Properties.Id] = pseudoStyles
-}
 
 func (c *CSS) AddPlugin(plugin Plugin) {
 	c.Plugins = append(c.Plugins, plugin)
@@ -268,8 +106,6 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 
 	if self.Z > 0 {
 		self.Z = parent.Z + 1
-	} else {
-		self.Z += parent.Z + 1
 	}
 
 	c.State[n.Properties.Id] = self

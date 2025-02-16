@@ -20,6 +20,7 @@ func Init() cstyle.Transformer {
 					continue
 				}
 				dot := v.CreateElement("div")
+				element.QuickStyles(&dot)
 				dot.Style("background", "#000")
 				dot.Style("border-radius", "100px")
 				dot.Style("width", "5px")
@@ -27,6 +28,7 @@ func Init() cstyle.Transformer {
 				dot.Style("margin-right", "10px")
 
 				content := v.CreateElement("div")
+				element.QuickStyles(&content)
 				content.InnerText = v.InnerText
 
 				for k, v := range v.Styles() {
@@ -34,8 +36,8 @@ func Init() cstyle.Transformer {
 				}
 
 				content.Style("display", "block")
-				v.AppendChild(&dot)
-				v.AppendChild(&content)
+				v.Children = append(v.Children, &dot)
+				v.Children = append(v.Children, &content)
 
 				n.Children[i].Style("display", "flex")
 				n.Children[i].Style("align-items", "center")

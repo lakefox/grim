@@ -20,6 +20,7 @@ func Init() cstyle.Transformer {
 			tN := n.CreateElement(n.TagName)
 			var maxOS int
 			var widths []int
+			// !ISSUE: Update this to match ul
 			for i, v := range n.Children {
 				li := n.CreateElement("li")
 				dot := li.CreateElement("div")

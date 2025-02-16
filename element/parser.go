@@ -1,18 +1,18 @@
-package parser
+package element
 
 import (
-	"grim/element"
 	"regexp"
 	"strings"
 )
 
 type StyleMap struct {
-	Selector string
-	Styles   *map[string]string
-	Sheet int
+	Selector     string
+	Styles       *map[string]string
+	Sheet        int
+	PsuedoStyles map[string]map[string]map[string]string
 }
 
-func ParseCSS(css string, sheet int) map[string][]*StyleMap {
+func ParseCSS(css string) map[string][]*StyleMap {
 	// Remove comments
 	css = removeComments(css)
 
@@ -28,7 +28,7 @@ func ParseCSS(css string, sheet int) map[string][]*StyleMap {
 		for _, s := range selectors {
 			styles := parseStyles(styleBlock)
 
-			sel := element.ExtractBaseElements(s)
+			sel := ExtractBaseElements(s)
 			smm := map[string]*StyleMap{}
 			for _, is := range sel {
 				for _, v := range is {
@@ -142,4 +142,3 @@ func removeComments(css string) string {
 	commentRegex := regexp.MustCompile(`(?s)/\*.*?\*/`)
 	return commentRegex.ReplaceAllString(css, "")
 }
-

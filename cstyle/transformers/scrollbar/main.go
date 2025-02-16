@@ -18,7 +18,7 @@ func Init() cstyle.Transformer {
 			}
 		},
 		Handler: func(n *element.Node, c *cstyle.CSS) *element.Node {
-			style := n.Styles() 
+			style := n.Styles()
 
 			overflowProps := strings.Split(style["overflow"], " ")
 			if n.Style("overflow-y") == "" {
@@ -48,7 +48,7 @@ func Init() cstyle.Transformer {
 				return n
 			}
 
-			ps := c.PsuedoStyles[n.Properties.Id]
+			ps := n.StyleSheets.PsuedoStyles[n.Properties.Id]
 
 			splitStr := strings.Split(n.Style("scrollbar-color"), " ")
 

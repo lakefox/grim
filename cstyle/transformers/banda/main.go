@@ -8,7 +8,7 @@ import (
 func Init() cstyle.Transformer {
 	return cstyle.Transformer{
 		Selector: func(n *element.Node, c *cstyle.CSS) bool {
-			ps := c.PsuedoStyles[n.Properties.Id]
+			ps := n.StyleSheets.PsuedoStyles[n.Properties.Id]
 			if ps["::before"] != nil || ps["::after"] != nil {
 				return true
 			} else {
@@ -16,7 +16,7 @@ func Init() cstyle.Transformer {
 			}
 		},
 		Handler: func(n *element.Node, c *cstyle.CSS) *element.Node {
-			ps := c.PsuedoStyles[n.Properties.Id]
+			ps := n.StyleSheets.PsuedoStyles[n.Properties.Id]
 			if ps["::before"] != nil {
 				before := n.CreateElement("before")
 				before.Parent = n

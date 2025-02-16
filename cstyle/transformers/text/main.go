@@ -39,16 +39,11 @@ func Init() cstyle.Transformer {
 					if len(strings.TrimSpace(words[a])) > 0 {
 						el := n.CreateElement("text")
 						el.InnerText = DecodeHTMLEscapes(words[a])
-						el.Parent = n
 
-						qs := c.QuickStyles(&el)
-
-						for k, v := range qs {
-							el.Style(k, v)
-						}
+						el.Parent = n.Parent
+						element.QuickStyles(&el)
 						el.Style("display", "inline")
-						// el.Style["margin-top"] = "10px"
-						n.Parent.InsertAfter(&el, n)
+						InsertAfter(n.Parent, &el, n)
 					}
 				}
 
@@ -57,18 +52,12 @@ func Init() cstyle.Transformer {
 					if len(strings.TrimSpace(words[i])) > 0 {
 						el := n.CreateElement("text")
 						el.InnerText = DecodeHTMLEscapes(words[i])
+
 						el.Parent = n
-
-						qs := c.QuickStyles(&el)
-
-						for k, v := range qs {
-							el.Style(k, v)
-						}
+						element.QuickStyles(&el)
 						el.Style("display", "inline")
 						el.Style("font-size", "1em")
-						// el.Style["margin-top"] = "10px"
-
-						n.AppendChild(&el)
+						AppendChild(n, &el)
 					}
 				}
 			}
@@ -80,4 +69,25 @@ func Init() cstyle.Transformer {
 
 func DecodeHTMLEscapes(input string) string {
 	return html.UnescapeString(input)
+}
+
+func InsertAfter(n, c, tgt *element.Node) {
+	c.Properties.Id = element.GenerateUniqueId(n, c.TagName)
+	nodeIndex := -1
+	for i, v := range n.Children {
+		if v.Properties.Id == tgt.Properties.Id {
+			nodeIndex = i
+			break
+		}
+	}
+	if nodeIndex > -1 {
+		n.Children = append(n.Children[:nodeIndex+1], append([]*element.Node{c}, n.Children[nodeIndex+1:]...)...)
+	} else {
+		AppendChild(n, c)
+	}
+}
+
+func AppendChild(n, c *element.Node) {
+	c.Properties.Id = element.GenerateUniqueId(n, c.TagName)
+	n.Children = append(n.Children, c)
 }

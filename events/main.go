@@ -122,21 +122,43 @@ func (m *Monitor) RunEvents(n *element.Node) bool {
 		}
 		eventListeners = append(eventListeners, "mouseleave")
 	}
+	// !NOTE: I think the issue is when these change to a different state no update is happening
 
+	stateChange := false
 	if evt.Hover {
+		if n.Hovered == false {
+			stateChange = true
+		}
 		n.Hovered = true
 	} else {
+		if n.Hovered == true {
+			stateChange = true
+		}
 		n.Hovered = false
 	}
 
 	if len(m.Focus.Nodes) > 0 && m.Focus.Selected > -1 {
 		if m.Focus.Nodes[m.Focus.Selected] == n.Properties.Id {
-			n.Focus()
+			if n.Focused == false {
+				stateChange = true
+			}
+			n.Focused = true
 		} else {
-			n.Blur()
+			if n.Focused == true {
+				stateChange = true
+			}
+			n.Focused = false
 		}
 	} else {
-		n.Blur()
+		if n.Focused == true {
+			stateChange = true
+		}
+		n.Focused = false
+	}
+
+
+	if stateChange {
+		n.StyleSheets.GetStyles(n)
 	}
 
 	var styledEl map[string]string

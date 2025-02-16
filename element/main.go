@@ -36,6 +36,7 @@ type Node struct {
 	Checked         bool
 	Focused         bool
 	Hovered         bool
+	StyleSheets        *Styles
 
 	// !NOTE: ScrollHeight is the amount of scroll left, not the total amount of scroll
 	// + if you  want the same scrollHeight like js the add the height of the element to it
@@ -137,6 +138,9 @@ func (n *Node) Styles() map[string]string {
 func (n *Node) Attribute(value ...string) string {
 	if len(value) == 2 {
 		n.attribute[value[0]] = value[1] // Setter
+		if n.Parent != nil {
+			n.StyleSheets.GetStyles(n)
+		}
 	} else if len(value) == 1 {
 		return n.attribute[value[0]]
 	} else {
@@ -172,7 +176,7 @@ func (n *Node) OuterHTML() string {
 type ClassList struct {
 	classes []string
 }
-
+// !ISSUE: Need to getstyles here
 func (c *ClassList) Add(class string) {
 	if !slices.Contains(c.classes, class) {
 		c.classes = append(c.classes, class)
@@ -217,13 +221,16 @@ type BorderRadius struct {
 	BottomLeft  float32
 	BottomRight float32
 }
-
+// !ISSUE: Keep theses getter/setters or only use the other one
 func (n *Node) GetAttribute(name string) string {
 	return n.attribute[name]
 }
 
 func (n *Node) SetAttribute(key, value string) {
 	n.attribute[key] = value
+	if n.Parent != nil {
+		n.StyleSheets.GetStyles(n)
+	}
 }
 
 func (n *Node) CreateElement(name string) Node {
@@ -261,6 +268,7 @@ func (n *Node) CreateElement(name string) Node {
 		Value:           "",
 		TabIndex:        ti,
 		ContentEditable: false,
+		StyleSheets: n.StyleSheets,
 		Properties: Properties{
 			Id:             "",
 			EventListeners: make(map[string][]func(Event)),
@@ -277,12 +285,17 @@ func (n *Node) AppendChild(c *Node) {
 	c.Parent = n
 	c.Properties.Id = GenerateUniqueId(n, c.TagName)
 	n.Children = append(n.Children, c)
+	if n.Parent != nil {
+		n.StyleSheets.GetStyles(c)
+	}
 }
 
 func (n *Node) InsertAfter(c, tgt *Node) {
 	c.Parent = n
 	c.Properties.Id = GenerateUniqueId(n, c.TagName)
-
+	if n.Parent != nil {
+		n.StyleSheets.GetStyles(c)
+	}
 	nodeIndex := -1
 	for i, v := range n.Children {
 		if v.Properties.Id == tgt.Properties.Id {
@@ -302,7 +315,9 @@ func (n *Node) InsertBefore(c, tgt *Node) {
 	// Set Id
 
 	c.Properties.Id = GenerateUniqueId(n, c.TagName)
-
+	if n.Parent != nil {
+		n.StyleSheets.GetStyles(c)
+	}
 	nodeIndex := -1
 	for i, v := range n.Children {
 		if v.Properties.Id == tgt.Properties.Id {
@@ -334,10 +349,16 @@ func (n *Node) Remove() {
 
 func (n *Node) Focus() {
 	n.Focused = true
+	if n.Parent != nil {
+		n.StyleSheets.GetStyles(n)
+	}
 }
 
 func (n *Node) Blur() {
 	n.Focused = false
+	if n.Parent != nil {
+		n.StyleSheets.GetStyles(n)
+	}
 }
 
 func (n *Node) GetContext(width, height int) *canvas.Canvas {

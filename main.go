@@ -45,10 +45,10 @@ import (
 var mastercss string
 
 type Window struct {
-	CSS cstyle.CSS
+	CSS      cstyle.CSS
 	document element.Node
-
-	Scripts scripts.Scripts
+	Styles   element.Styles
+	Scripts  scripts.Scripts
 }
 
 func (w *Window) Document() *element.Node {
@@ -62,27 +62,33 @@ func (window *Window) Path(path string) {
 	styleSheets, styleTags, htmlNodes := parseHTMLFromFile(path, window.CSS.Adapter.FileSystem)
 
 	for _, v := range styleSheets {
-		window.CSS.StyleSheet(v)
+		data, _ := window.CSS.Adapter.FileSystem.ReadFile(v)
+		window.Styles.StyleTag(string(data))
 	}
 
 	for _, v := range styleTags {
-		window.CSS.StyleTag(v)
+		window.Styles.StyleTag(v)
 	}
 
 	window.CSS.Path = filepath.Dir(path)
 
-	CreateNode(htmlNodes, &window.document)
+	CreateNode(htmlNodes, &window.document, &window.Styles)
 	open(window)
 }
 
 func New(adapterFunction *adapter.Adapter, width, height int) Window {
+	w := Window{}
+	w.Styles = element.Styles{
+		PsuedoStyles: map[string]map[string]map[string]string{},
+		StyleMap:     map[string][]*element.StyleMap{},
+	}
 	css := cstyle.CSS{
 		Width:   float32(width),
 		Height:  float32(height),
 		Adapter: adapterFunction,
 	}
 
-	css.StyleTag(mastercss)
+	w.Styles.StyleTag(mastercss)
 	// This is still apart of computestyle
 	css.AddPlugin(inline.Init())
 	css.AddPlugin(textAlign.Init())
@@ -102,15 +108,15 @@ func New(adapterFunction *adapter.Adapter, width, height int) Window {
 	el := element.Node{}
 	document := el.CreateElement("ROOT")
 	document.Properties.Id = "ROOT"
-
+	document.StyleSheets = &w.Styles
 	s := scripts.Scripts{}
 	s.Add(a.Init())
 
-	return Window{
-		CSS:     css,
-		Scripts: s,
-		document: document,
-	}
+	w.CSS = css
+	w.Scripts = s
+	w.document = document
+
+	return w
 }
 
 func (w *Window) Render(doc *element.Node, shelf *library.Shelf) []element.State {
@@ -209,10 +215,9 @@ func open(data *Window) {
 	}
 
 	debug := false
-	data.CSS.PsuedoStyles = map[string]map[string]map[string]string{}
 
-	data.document.Style("width", strconv.Itoa(int(data.CSS.Width)) + "px")
-	data.document.Style("height", strconv.Itoa(int(data.CSS.Height)) + "px")
+	data.document.Style("width", strconv.Itoa(int(data.CSS.Width))+"px")
+	data.document.Style("height", strconv.Itoa(int(data.CSS.Height))+"px")
 
 	data.CSS.Adapter.Library = &shelf
 	data.CSS.Adapter.Init(int(data.CSS.Width), int(data.CSS.Height))
@@ -255,8 +260,8 @@ func open(data *Window) {
 		data.CSS.Width = float32(wh["width"])
 		data.CSS.Height = float32(wh["height"])
 
-		data.document.Style("width", strconv.Itoa(wh["width"]) + "px")
-		data.document.Style("height", strconv.Itoa(wh["height"]) + "px")
+		data.document.Style("width", strconv.Itoa(wh["width"])+"px")
+		data.document.Style("height", strconv.Itoa(wh["height"])+"px")
 		rd = getRenderData(data, &shelf, &monitor)
 	})
 
@@ -358,12 +363,13 @@ func getRenderData(data *Window, shelf *library.Shelf, monitor *events.Monitor) 
 
 	data.Scripts.Run(&data.document)
 	shelf.Clean()
-	fmt.Println(time.Since(start))
+
 	// fmt.Println(newDoc.OuterHTML())
 	// !TODO: Should return effected node, then render those specific
 	// + I think have node.ComputeNodeStyle would make this nice
 
 	monitor.RunEvents(data.document.Children[0])
+	fmt.Println(time.Since(start))
 	return rd
 }
 
@@ -371,8 +377,8 @@ func AddStyles(c cstyle.CSS, node *element.Node, parent *element.Node) *element.
 	n := *node
 	n.Parent = parent
 	// !DEVMAN: Copying is done here, would like to remove this and add it to ComputeNodeStyle, so I can save a tree climb
-	// + Maybe just have this copy the node and the styles don't need to be recomputed everytime 
-	c.GetStyles(&n)
+	// + Maybe just have this copy the node and the styles don't need to be recomputed everytime
+	// c.GetStyles(&n)
 
 	if len(node.Children) > 0 {
 		n.Children = make([]*element.Node, 0, len(node.Children))
@@ -399,9 +405,12 @@ func AddScroll(n *element.Node, s map[string]element.State) {
 	}
 }
 
-func CreateNode(node *html.Node, parent *element.Node) {
+func CreateNode(node *html.Node, parent *element.Node, stylesheets *element.Styles) {
 	if node.Type == html.ElementNode {
 		newNode := parent.CreateElement(node.Data)
+		newNode.Parent = parent
+		newNode.StyleSheets = stylesheets
+		newNode.Properties.Id = element.GenerateUniqueId(parent, node.Data)
 		for _, attr := range node.Attr {
 			switch attr.Key {
 			case "class":
@@ -435,11 +444,10 @@ func CreateNode(node *html.Node, parent *element.Node) {
 		}
 		newNode.InnerText = strings.TrimSpace(utils.GetInnerText(node))
 
-		newNode.Properties.Id = element.GenerateUniqueId(parent, node.Data)
 		// Recursively traverse child nodes
 		for child := node.FirstChild; child != nil; child = child.NextSibling {
 			if child.Type == html.ElementNode {
-				CreateNode(child, &newNode)
+				CreateNode(child, &newNode, stylesheets)
 			}
 		}
 		parent.AppendChild(&newNode)
@@ -447,7 +455,7 @@ func CreateNode(node *html.Node, parent *element.Node) {
 	} else {
 		for child := node.FirstChild; child != nil; child = child.NextSibling {
 			if child.Type == html.ElementNode {
-				CreateNode(child, parent)
+				CreateNode(child, parent, stylesheets)
 			}
 		}
 	}
