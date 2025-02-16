@@ -90,6 +90,9 @@ func QuickStyles(n *Node)  {
 // + kinda see that note for a complete list
 
 func (s Styles) GetStyles(n *Node) {
+	if strings.Contains(n.Properties.Id, "head") {
+		return
+	}
 	fmt.Println(n.Properties.Id)
 	styles := make(map[string]string)
 	pseudoStyles := make(map[string]map[string]string)

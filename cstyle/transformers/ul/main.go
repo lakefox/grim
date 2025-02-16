@@ -1,6 +1,7 @@
 package ul
 
 import (
+	"fmt"
 	"grim/cstyle"
 	"grim/element"
 )
@@ -41,9 +42,16 @@ func Init() cstyle.Transformer {
 
 				n.Children[i].Style("display", "flex")
 				n.Children[i].Style("align-items", "center")
-
+				element.QuickStyles(v)
+				v.Properties.Id = element.GenerateUniqueId(n, v.TagName)
+				dot.Properties.Id = element.GenerateUniqueId(v, dot.TagName)
+				content.Properties.Id = element.GenerateUniqueId(v, content.TagName)
 				n.Children[i] = v
+				
 			}
+
+			fmt.Println(n.OuterHTML())
+
 			return n
 		},
 	}

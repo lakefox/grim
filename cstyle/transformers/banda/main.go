@@ -29,9 +29,9 @@ func Init() cstyle.Transformer {
 				before.InnerText = ps["::before"]["content"][1 : len(ps["::before"]["content"])-1]
 
 				if len(n.Children) == 0 {
-					n.AppendChild(&before)
+					AppendChild(n,&before)
 				} else {
-					n.InsertBefore(&before, n.Children[0])
+					InsertBefore(n, &before, n.Children[0])
 				}
 			}
 
@@ -46,10 +46,32 @@ func Init() cstyle.Transformer {
 
 				after.InnerText = ps["::after"]["content"][1 : len(ps["::after"]["content"])-1]
 
-				n.AppendChild(&after)
+				AppendChild(n, &after)
 			}
 
 			return n
 		},
 	}
+}
+
+func InsertBefore(n, c, tgt *element.Node) {
+	c.Properties.Id = element.GenerateUniqueId(n, c.TagName)
+	nodeIndex := -1
+	for i, v := range n.Children {
+		if v.Properties.Id == tgt.Properties.Id {
+			nodeIndex = i
+			break
+		}
+	}
+
+	if nodeIndex > 0 {
+		n.Children = append(n.Children[:nodeIndex], append([]*element.Node{c}, n.Children[nodeIndex:]...)...)
+	} else {
+		n.Children = append([]*element.Node{c}, n.Children...)
+	}
+}
+
+func AppendChild(n, c *element.Node) {
+	c.Properties.Id = element.GenerateUniqueId(n, c.TagName)
+	n.Children = append(n.Children, c)
 }
