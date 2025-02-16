@@ -10,3 +10,4 @@ comment
 .DS_Store
 tests
 grimui.pxd
+icon.pxd
