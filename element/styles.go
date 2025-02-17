@@ -1,14 +1,13 @@
 package element
 
 import (
-	"fmt"
 	"sort"
 	"strconv"
 	"strings"
 )
 
 type Styles struct {
-	StyleMap map[string][]*StyleMap
+	StyleMap     map[string][]*StyleMap
 	PsuedoStyles map[string]map[string]map[string]string
 }
 
@@ -66,7 +65,7 @@ var inheritedProps = []string{
 	"scrollbar-color",
 }
 
-func QuickStyles(n *Node)  {
+func QuickStyles(n *Node) {
 	styles := make(map[string]string)
 
 	// Inherit styles from parent
@@ -93,7 +92,7 @@ func (s Styles) GetStyles(n *Node) {
 	if strings.Contains(n.Properties.Id, "head") {
 		return
 	}
-	fmt.Println(n.Properties.Id)
+	// fmt.Println(n.Properties.Id)
 	styles := make(map[string]string)
 	pseudoStyles := make(map[string]map[string]string)
 

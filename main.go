@@ -443,7 +443,7 @@ func CreateNode(node *html.Node, parent *element.Node, stylesheets *element.Styl
 			}
 		}
 		newNode.InnerText = strings.TrimSpace(utils.GetInnerText(node))
-
+parent.StyleSheets.GetStyles(&newNode)
 		// Recursively traverse child nodes
 		for child := node.FirstChild; child != nil; child = child.NextSibling {
 			if child.Type == html.ElementNode {
@@ -451,9 +451,6 @@ func CreateNode(node *html.Node, parent *element.Node, stylesheets *element.Styl
 			}
 		}
 		parent.AppendChild(&newNode)
-
-		parent.StyleSheets.GetStyles(&newNode)
-
 	} else {
 		for child := node.FirstChild; child != nil; child = child.NextSibling {
 			if child.Type == html.ElementNode {

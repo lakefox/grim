@@ -36,7 +36,7 @@ type Node struct {
 	Checked         bool
 	Focused         bool
 	Hovered         bool
-	StyleSheets        *Styles
+	StyleSheets     *Styles
 
 	// !NOTE: ScrollHeight is the amount of scroll left, not the total amount of scroll
 	// + if you  want the same scrollHeight like js the add the height of the element to it
@@ -145,7 +145,7 @@ func (n *Node) Attribute(value ...string) string {
 		return n.attribute[value[0]]
 	} else {
 		attributeString := ""
-		for k, v := range n.style {
+		for k, v := range n.attribute {
 			attributeString += " " + k + "=\"" + v + "\""
 		}
 		return attributeString
@@ -176,6 +176,7 @@ func (n *Node) OuterHTML() string {
 type ClassList struct {
 	classes []string
 }
+
 // !ISSUE: Need to getstyles here
 func (c *ClassList) Add(class string) {
 	if !slices.Contains(c.classes, class) {
@@ -221,6 +222,7 @@ type BorderRadius struct {
 	BottomLeft  float32
 	BottomRight float32
 }
+
 // !ISSUE: Keep theses getter/setters or only use the other one
 func (n *Node) GetAttribute(name string) string {
 	return n.attribute[name]
@@ -268,7 +270,7 @@ func (n *Node) CreateElement(name string) Node {
 		Value:           "",
 		TabIndex:        ti,
 		ContentEditable: false,
-		StyleSheets: n.StyleSheets,
+		StyleSheets:     n.StyleSheets,
 		Properties: Properties{
 			Id:             "",
 			EventListeners: make(map[string][]func(Event)),

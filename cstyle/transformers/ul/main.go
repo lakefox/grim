@@ -1,7 +1,6 @@
 package ul
 
 import (
-	"fmt"
 	"grim/cstyle"
 	"grim/element"
 )
@@ -12,45 +11,41 @@ func Init() cstyle.Transformer {
 			return n.TagName == "ul"
 		},
 		Handler: func(n *element.Node, c *cstyle.CSS) *element.Node {
-			// The reason tN (temporary Node) is used, is because we have to go through the n.Children and it makes it hard to insert/remove the old one
-			// its better to just replace it
-
-			// !ISSUE: make stylable
+			// !TODO: make ul/ol stylable
 			for i, v := range n.Children {
 				if v.TagName != "li" {
 					continue
 				}
 				dot := v.CreateElement("div")
+				dot.Parent = n
 				element.QuickStyles(&dot)
-				dot.Style("background", "#000")
+				dot.Style("background-color", "#000")
 				dot.Style("border-radius", "100px")
 				dot.Style("width", "5px")
 				dot.Style("height", "5px")
 				dot.Style("margin-right", "10px")
 
-				content := v.CreateElement("div")
-				element.QuickStyles(&content)
-				content.InnerText = v.InnerText
-
-				for k, v := range v.Styles() {
-					content.Style(k, v)
-				}
-
-				content.Style("display", "block")
+				// content := v.CreateElement("div")
+				// element.QuickStyles(&content)
+				// content.InnerText = v.InnerText
+				//
+				// for k, v := range v.Styles() {
+				// 	content.Style(k, v)
+				// }
+				//
+				// content.Style("display", "block")
 				v.Children = append(v.Children, &dot)
-				v.Children = append(v.Children, &content)
-
-				n.Children[i].Style("display", "flex")
-				n.Children[i].Style("align-items", "center")
-				element.QuickStyles(v)
-				v.Properties.Id = element.GenerateUniqueId(n, v.TagName)
+				// v.Children = append(v.Children, &content)
+				// element.QuickStyles(v)
+				v.Style("display", "flex")
+				v.Style("align-items", "center")
+				
 				dot.Properties.Id = element.GenerateUniqueId(v, dot.TagName)
-				content.Properties.Id = element.GenerateUniqueId(v, content.TagName)
+				// fmt.Println(dot.Properties.Id )
+				// content.Properties.Id = element.GenerateUniqueId(v, content.TagName)
 				n.Children[i] = v
 				
 			}
-
-			fmt.Println(n.OuterHTML())
 
 			return n
 		},
