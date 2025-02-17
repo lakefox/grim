@@ -130,29 +130,6 @@ func (n *Node) Styles() map[string]string {
 	return n.style
 }
 
-// !MAN: Node Attribute getter/setter
-// Option 1: (2 args) .Attribute("value","test") -> "" -- Sets the value attribute of the element
-// Option 2: (1 args) .Attribute("value") -> "" -- Gets the value attribute
-// Option 3: (0 args) .Attribute("value") -> "" -- Returns all attributes as a string
-// [!DEVMAN]Note: Contains all user inputed attributes
-func (n *Node) Attribute(value ...string) string {
-	if len(value) == 2 {
-		n.attribute[value[0]] = value[1] // Setter
-		if n.Parent != nil {
-			n.StyleSheets.GetStyles(n)
-		}
-	} else if len(value) == 1 {
-		return n.attribute[value[0]]
-	} else {
-		attributeString := ""
-		for k, v := range n.attribute {
-			attributeString += " " + k + "=\"" + v + "\""
-		}
-		return attributeString
-	}
-	return ""
-}
-
 // func (n *Node) InnerText(value ...string) string {
 // 	if len(value) > 0 {
 // 		n.innerText = value[0] // Setter
@@ -163,6 +140,7 @@ func (n *Node) Attribute(value ...string) string {
 // !MAN: Generates the InnerHTML of an element
 // !TODO: Add a setter
 func (n *Node) InnerHTML() string {
+	// !TODO: Will need to update the styles once this can be parsed
 	return InnerHTML(n)
 }
 
@@ -347,6 +325,7 @@ func (n *Node) Remove() {
 	if nodeIndex > 0 {
 		n.Parent.Children = append(n.Parent.Children[:nodeIndex], n.Parent.Children[nodeIndex+1:]...)
 	}
+	n.StyleSheets.GetStyles(n.Parent)
 }
 
 func (n *Node) Focus() {
@@ -505,8 +484,12 @@ func NodeToHTML(node *Node) (string, string) {
 		}
 	}
 
+	attributeString := ""
+	for k, v := range node.attribute {
+		attributeString += " " + k + "=\"" + v + "\""
+	}
 	// Add other attributes if present
-	buffer.WriteString(node.Attribute())
+	buffer.WriteString(attributeString)
 
 	buffer.WriteString(">")
 
