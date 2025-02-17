@@ -201,7 +201,9 @@ type BorderRadius struct {
 	BottomRight float32
 }
 
-// !ISSUE: Keep theses getter/setters or only use the other one
+// !MAN: Attribute getter
+// + name: string containing the attribute name
+// [!DEVMAN]Note: If you want to get all of the attributes use the .attribute prop (only for element)
 func (n *Node) GetAttribute(name string) string {
 	return n.attribute[name]
 }
