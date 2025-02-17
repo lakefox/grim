@@ -142,6 +142,10 @@ func (w *Window) Render(doc *element.Node, shelf *library.Shelf) []element.State
 	// Iterate over the map and delete keys not in the set
 	for k := range s {
 		if _, found := keysSet[k]; !found {
+			textures := s[k].Textures
+			for _, t := range textures {
+				shelf.Delete(t)
+			}
 			delete(s, k)
 		}
 	}
@@ -182,7 +186,7 @@ func (w *Window) Render(doc *element.Node, shelf *library.Shelf) []element.State
 				can.Fill()
 				can.ClosePath()
 
-				shelf.Set(key, can.RGBA)
+				shelf.Set(key, *can.RGBA)
 				self.Textures = append([]string{key}, self.Textures...)
 				store[k] = self
 			}
@@ -210,7 +214,7 @@ func flatten(n *element.Node) []*element.Node {
 // + or content update
 func open(data *Window) {
 	shelf := library.Shelf{
-		Textures:   map[string]*image.RGBA{},
+		Textures:   map[string]image.RGBA{},
 		References: map[string]bool{},
 	}
 

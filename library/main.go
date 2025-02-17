@@ -7,14 +7,14 @@ import (
 // Borrow checker for images
 
 type Shelf struct {
-	Textures       map[string]*image.RGBA
+	Textures       map[string]image.RGBA
 	References     map[string]bool
 	UnloadCallback func(string)
 }
 
-func (s *Shelf) Set(key string, img *image.RGBA) string {
+func (s *Shelf) Set(key string, img image.RGBA) string {
 	if s.Textures == nil {
-		s.Textures = map[string]*image.RGBA{}
+		s.Textures = map[string]image.RGBA{}
 	}
 	if s.References == nil {
 		s.References = map[string]bool{}
@@ -27,8 +27,7 @@ func (s *Shelf) Set(key string, img *image.RGBA) string {
 
 func (s *Shelf) Get(key string) (*image.RGBA, bool) {
 	a, exists := s.Textures[key]
-
-	return a, exists
+	return &a, exists
 }
 
 // Check marks the reference as true if the texture exists.
@@ -42,7 +41,8 @@ func (s *Shelf) Check(key string) bool {
 
 func (s *Shelf) Bounds(key string) []int {
 	if _, exists := s.Textures[key]; exists {
-		b := s.Textures[key].Bounds()
+		img := s.Textures[key]
+		b := img.Bounds()
 		return []int{b.Dx(), b.Dy()}
 	} else {
 		return []int{0, 0}

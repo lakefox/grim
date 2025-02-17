@@ -205,7 +205,7 @@ func Draw(n *element.State, shelf *library.Shelf) {
 			if n.Border.Left.Width > 0 {
 				drawBorderSide(ctx, "left", n.Border.Left, n, n.Border.Left.Style)
 			}
-			n.Textures = append(n.Textures, shelf.Set(key, ctx.RGBA))
+			n.Textures = append(n.Textures, shelf.Set(key, *ctx.RGBA))
 		}
 
 	}

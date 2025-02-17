@@ -34,12 +34,11 @@ type CSS struct {
 	Transformers []Transformer
 	Fonts        map[string]imgFont.Face
 	// StyleMap     map[string][]*parser.StyleMap
-	Adapter      *adapter.Adapter
-	Path         string
-	StyleSheets  int
-	State        map[string]element.State
-	}
-
+	Adapter     *adapter.Adapter
+	Path        string
+	StyleSheets int
+	State       map[string]element.State
+}
 
 func (c *CSS) AddPlugin(plugin Plugin) {
 	c.Plugins = append(c.Plugins, plugin)
@@ -249,7 +248,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 		} else {
 			var data *image.RGBA
 			data, width = font.Render(metadata)
-			self.Textures = append(self.Textures, c.Adapter.Library.Set(key, data))
+			self.Textures = append(self.Textures, c.Adapter.Library.Set(key, *data))
 		}
 
 		if style["height"] == "" && style["min-height"] == "" {
@@ -278,7 +277,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 				n.Canvas.RGBA = resized
 			}
 
-			can := shelf.Set(key, n.Canvas.RGBA)
+			can := shelf.Set(key, *n.Canvas.RGBA)
 			if !found {
 				self.Textures = append(self.Textures, can)
 			}
