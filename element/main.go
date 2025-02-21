@@ -102,12 +102,11 @@ type BoxSpacing struct {
 	Right  float32
 	Bottom float32
 }
-// !ISSUE: The subheadings aren't working
 // !MAN: Node Style getter/setter
 // + Option 1: (2 args) .Style("background","yellow") -> "" -- Sets the inline value of background
 // + Option 2: (1 args) .Style("background") -> "" -- Gets the inline value of background
 // + Option 3: (0 args) .Style("background") -> "" -- Returns all inline styles as a string
-// [!DEVMAN]Note: Contains all user inputed styles, all inline styles over ride stylesheet styles
+// + [!DEVMAN]Note: Contains all user inputed styles, all inline styles over ride stylesheet styles
 func (n *Node) Style(value ...string) string {
 	if n.style == nil {
 		n.style = map[string]string{}
