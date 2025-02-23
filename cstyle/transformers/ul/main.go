@@ -39,12 +39,12 @@ func Init() cstyle.Transformer {
 				// element.QuickStyles(v)
 				v.Style("display", "flex")
 				v.Style("align-items", "center")
-				
+
 				dot.Properties.Id = element.GenerateUniqueId(v, dot.TagName)
 				// fmt.Println(dot.Properties.Id )
 				// content.Properties.Id = element.GenerateUniqueId(v, content.TagName)
 				n.Children[i] = v
-				
+
 			}
 
 			return n

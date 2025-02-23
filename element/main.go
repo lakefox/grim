@@ -202,7 +202,7 @@ type BorderRadius struct {
 
 // !MAN: Attribute getter
 // + name: string containing the attribute name
-// [!DEVMAN]Note: If you want to get all of the attributes use the .attribute prop (only for element)
+// + [!DEVMAN]Note: If you want to get all of the attributes use the .attribute prop (only for element)
 func (n *Node) GetAttribute(name string) string {
 	return n.attribute[name]
 }

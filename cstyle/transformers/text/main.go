@@ -28,7 +28,6 @@ func Init() cstyle.Transformer {
 			if nonRenderTags[n.TagName] {
 				return n
 			}
-
 			words := strings.Split(strings.TrimSpace(n.InnerText), " ")
 			n.InnerText = ""
 			if n.Style("display") == "inline" {
@@ -43,6 +42,13 @@ func Init() cstyle.Transformer {
 						el.Parent = n.Parent
 						element.QuickStyles(&el)
 						el.Style("display", "inline")
+						if el.Style("height") == "" {
+							h := el.Style("line-height")
+							if h == "" {
+								h = "1em"
+							}
+							el.Style("height", h)
+						}
 						InsertAfter(n.Parent, &el, n)
 					}
 				}
@@ -57,11 +63,17 @@ func Init() cstyle.Transformer {
 						element.QuickStyles(&el)
 						el.Style("display", "inline")
 						el.Style("font-size", "1em")
+						if el.Style("height") == "" {
+							h := el.Style("line-height")
+							if h == "" {
+								h = "1em"
+							}
+							el.Style("height", h)
+						}
 						AppendChild(n, &el)
 					}
 				}
 			}
-
 			return n
 		},
 	}

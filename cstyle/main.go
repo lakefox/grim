@@ -33,11 +33,10 @@ type CSS struct {
 	Plugins      []Plugin
 	Transformers []Transformer
 	Fonts        map[string]imgFont.Face
-	// StyleMap     map[string][]*parser.StyleMap
-	Adapter     *adapter.Adapter
-	Path        string
-	StyleSheets int
-	State       map[string]element.State
+	Adapter      *adapter.Adapter
+	Path         string
+	StyleSheets  int
+	State        map[string]element.State
 }
 
 func (c *CSS) AddPlugin(plugin Plugin) {
@@ -74,7 +73,6 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 
 	plugins := c.Plugins
 	parent := s[n.Parent.Properties.Id]
-
 	// Cache the style map
 	style := map[string]string{}
 	//
@@ -125,7 +123,6 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 	y += offsetY
 
 	var top, left, right, bottom bool
-
 	if style["position"] == "absolute" {
 		// !DEVMAN: Properties.Id is the ancestory of an element with colons seperating them
 		// + if we split them up we can check the parents without recursion or a while (for true) loop
@@ -335,7 +332,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 
 	border.Draw(&self, shelf)
 	c.State[n.Properties.Id] = self
-
+	
 	for _, v := range plugins {
 		if v.Selector(n, c) {
 			v.Handler(n, c)

@@ -382,7 +382,6 @@ func AddStyles(c cstyle.CSS, node *element.Node, parent *element.Node) *element.
 	n.Parent = parent
 	// !DEVMAN: Copying is done here, would like to remove this and add it to ComputeNodeStyle, so I can save a tree climb
 	// + Maybe just have this copy the node and the styles don't need to be recomputed everytime
-	// c.GetStyles(&n)
 
 	if len(node.Children) > 0 {
 		n.Children = make([]*element.Node, 0, len(node.Children))
