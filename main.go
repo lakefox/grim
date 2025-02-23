@@ -446,7 +446,7 @@ func CreateNode(node *html.Node, parent *element.Node, stylesheets *element.Styl
 			}
 		}
 		newNode.InnerText = strings.TrimSpace(utils.GetInnerText(node))
-parent.StyleSheets.GetStyles(&newNode)
+		parent.StyleSheets.GetStyles(&newNode)
 		// Recursively traverse child nodes
 		for child := node.FirstChild; child != nil; child = child.NextSibling {
 			if child.Type == html.ElementNode {
@@ -637,7 +637,9 @@ func removeHTMLComments(htmlString string) string {
 // important to allow the notspans to be injected, the spaces after removing the comments cause the regexp to fail
 func removeWhitespaceBetweenTags(html string) string {
 	// Create a regular expression to match spaces between angle brackets
-	re := regexp.MustCompile(`>\s+<`)
+	re := regexp.MustCompile(`\t`)
+	html = re.ReplaceAllString(html, "    ")
+	re = regexp.MustCompile(`\s+`)
 	// Replace all matches of spaces between angle brackets with "><"
-	return re.ReplaceAllString(html, "><")
+	return re.ReplaceAllString(html, " ")
 }
