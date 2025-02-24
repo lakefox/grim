@@ -116,7 +116,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 	self.Height = wh.Height
 	self.Cursor = style["cursor"]
 	c.State[n.Properties.Id] = self
-
+	
 	x, y := parent.X, parent.Y
 	offsetX, offsetY := utils.GetXY(*n, c.State)
 	x += offsetX
@@ -248,12 +248,14 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 			self.Textures = append(self.Textures, c.Adapter.Library.Set(key, *data))
 		}
 
-		if style["height"] == "" && style["min-height"] == "" {
+		if (style["height"] == "" && style["min-height"] == "") || n.TagName == "text" {
 			self.Height = float32(metadata.LineHeight)
+			n.Style("height", strconv.Itoa(int(self.Height))+"px")
 		}
 
 		if style["width"] == "" && style["min-width"] == "" {
 			self.Width = float32(width)
+			n.Style("width", strconv.Itoa(int(self.Width))+"px")
 		}
 	}
 
