@@ -9,25 +9,8 @@ import (
 type Styles struct {
 	StyleMap     map[string][]*StyleMap
 	PsuedoStyles map[string]map[string]map[string]string
+	Styles       map[string]string
 }
-
-// func StyleSheet(path string) {
-// 	// Parse the CSS file
-// 	data, _ := c.Adapter.FileSystem.ReadFile(path)
-// 	styleMaps := ParseCSS(string(data), c.StyleSheets)
-// 	c.StyleSheets++
-//
-// 	if c.StyleMap == nil {
-// 		c.StyleMap = map[string][]*StyleMap{}
-// 	}
-//
-// 	for k, v := range styleMaps {
-// 		if c.StyleMap[k] == nil {
-// 			c.StyleMap[k] = []*StyleMap{}
-// 		}
-// 		c.StyleMap[k] = append(c.StyleMap[k], v...)
-// 	}
-// }
 
 func (s Styles) StyleTag(css string) {
 	styleMaps := ParseCSS(css)
@@ -169,5 +152,6 @@ func (s Styles) GetStyles(n *Node) {
 	for k, v := range styles {
 		n.Style(k, v)
 	}
+	n.StyleSheets.Styles = styles
 	s.PsuedoStyles[n.Properties.Id] = pseudoStyles
 }

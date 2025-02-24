@@ -126,7 +126,7 @@ func getMP(n element.Node, style map[string]string, wh BoxSizing, state map[stri
 	bottomStyle := style[bottomKey]
 
 	if style[t] != "" {
-		left, right, top, bottom := convertMarginToIndividualProperties(style[t])
+		left, right, top, bottom := ConvertMarginToIndividualProperties(style[t])
 
 		if leftStyle == "" {
 			leftStyle = left
@@ -216,7 +216,7 @@ func getMP(n element.Node, style map[string]string, wh BoxSizing, state map[stri
 	return m
 }
 
-func convertMarginToIndividualProperties(margin string) (string, string, string, string) {
+func ConvertMarginToIndividualProperties(margin string) (string, string, string, string) {
 	parts := strings.Fields(margin)
 	switch len(parts) {
 	case 1:

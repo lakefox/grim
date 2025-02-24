@@ -3,6 +3,7 @@ package scrollbar
 import (
 	"grim/cstyle"
 	"grim/element"
+	"grim/utils"
 	"strconv"
 	"strings"
 )
@@ -163,7 +164,16 @@ func Init() cstyle.Transformer {
 					n.Style("width", "calc("+style["width"]+"-"+trackWidth+")")
 				}
 
-				n.Style("padding-right", trackWidth)
+				pr := n.Style("padding-right")
+
+				if pr == "" && n.Style("padding") != "" {
+					n.Style("padding-right", "calc("+n.StyleSheets.Styles["padding"]+" + "+trackWidth+")")
+				} else if n.Style("padding") != "" {
+					_,r,_,_ := utils.ConvertMarginToIndividualProperties(n.Style("padding"))
+					n.Style("padding-right", "calc("+r+" + "+trackWidth+")")
+				} else {
+					n.Style("padding-right", trackWidth)
+				}
 
 				n.AppendChild(&scrollbar)
 			}
