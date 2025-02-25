@@ -32,7 +32,6 @@ import (
 	"grim/utils"
 	"net/url"
 	"path/filepath"
-	"regexp"
 	"strconv"
 	"strings"
 
@@ -466,9 +465,9 @@ func CreateNode(node *html.Node, parent *element.Node, stylesheets *element.Styl
 func parseHTMLFromFile(path string, fs adapter.FileSystem) ([]string, []string, *html.Node) {
 	file, _ := fs.ReadFile(path)
 
-	htmlContent := removeHTMLComments(string(file))
-
-	doc, _ := html.Parse(strings.NewReader(encapsulateText(removeWhitespaceBetweenTags(htmlContent))))
+	doc, _ := html.Parse(strings.NewReader(string(file)))
+	wrapAllTextNodes(doc)
+	unwrapSingleTextChildren(doc)
 
 	// Extract stylesheet link tags and style tags
 	stylesheets := extractStylesheets(doc, filepath.Dir(path))
@@ -590,56 +589,63 @@ func wrapTextNodes(n *html.Node) {
 		wrapTextNodes(c)
 	}
 }
-func encapsulateText(htmlString string) string {
-	openOpen := regexp.MustCompile(`(<\w+[^>]*>)([^<]+)(<\w+[^>]*>)`)
-	closeOpen := regexp.MustCompile(`(</\w+[^>]*>)([^<]+)(<\w+[^>]*>)`)
-	closeClose := regexp.MustCompile(`(<\/\w+[^>]*>)([^<]+)(<\/\w+[^>]*>)`)
-	a := matchFactory(openOpen)
-	t := openOpen.ReplaceAllStringFunc(htmlString, a)
-	b := matchFactory(closeOpen)
-	u := closeOpen.ReplaceAllStringFunc(t, b)
-	c := matchFactory(closeClose)
-	v := closeClose.ReplaceAllStringFunc(u, c)
-	return v
-}
 
-func matchFactory(re *regexp.Regexp) func(string) string {
-	return func(match string) string {
-		submatches := re.FindStringSubmatch(match)
-		if len(submatches) != 4 {
-			return match
+// wrapAllTextNodes wraps all non-empty text nodes with <text> elements
+func wrapAllTextNodes(n *html.Node) {
+	// Skip script and style tags
+	if n.Type == html.ElementNode && (n.Data == "script" || n.Data == "style") {
+		return
+	}
+
+	// Process children (collect first to avoid traversal issues)
+	var children []*html.Node
+	for c := n.FirstChild; c != nil; c = c.NextSibling {
+		children = append(children, c)
+	}
+
+	for _, child := range children {
+		// Wrap text nodes
+		if child.Type == html.TextNode && strings.TrimSpace(child.Data) != "" {
+			textEl := &html.Node{
+				Type: html.ElementNode,
+				Data: "text",
+			}
+
+			n.InsertBefore(textEl, child)
+			n.RemoveChild(child)
+			textEl.AppendChild(child)
 		}
 
-		// Process submatches
-		if len(removeWhitespace(submatches[2])) > 0 {
-			return submatches[1] + "<text>" + submatches[2] + "</text>" + submatches[3]
-		} else {
-			return match
-		}
+		// Process child's children recursively
+		wrapAllTextNodes(child)
 	}
 }
-func removeWhitespace(htmlString string) string {
-	// Remove extra white space
-	reSpaces := regexp.MustCompile(`\s+`)
-	htmlString = reSpaces.ReplaceAllString(htmlString, " ")
 
-	// Trim leading and trailing white space
-	htmlString = strings.TrimSpace(htmlString)
+// unwrapSingleTextChildren removes <text> elements that are the only child of their parent
+func unwrapSingleTextChildren(n *html.Node) {
+	// Skip script and style tags
+	if n.Type == html.ElementNode && (n.Data == "script" || n.Data == "style") {
+		return
+	}
 
-	return htmlString
-}
+	// Check if this element has exactly one child and it's a <text> element
+	if n.Type == html.ElementNode && n.Data != "text" && n.FirstChild != nil &&
+		n.FirstChild.NextSibling == nil && n.FirstChild.Type == html.ElementNode &&
+		n.FirstChild.Data == "text" {
 
-func removeHTMLComments(htmlString string) string {
-	re := regexp.MustCompile(`<!--[\s\S]*?-->`)
-	return re.ReplaceAllString(htmlString, "")
-}
+		textEl := n.FirstChild
+		textContent := textEl.FirstChild
 
-// important to allow the notspans to be injected, the spaces after removing the comments cause the regexp to fail
-func removeWhitespaceBetweenTags(html string) string {
-	// Create a regular expression to match spaces between angle brackets
-	re := regexp.MustCompile(`\t`)
-	html = re.ReplaceAllString(html, "    ")
-	re = regexp.MustCompile(`\s+`)
-	// Replace all matches of spaces between angle brackets with "><"
-	return re.ReplaceAllString(html, " ")
+		if textContent != nil {
+			// Move the text content directly under this element
+			textEl.RemoveChild(textContent)
+			n.InsertBefore(textContent, textEl)
+			n.RemoveChild(textEl)
+		}
+	}
+
+	// Process all children recursively
+	for c := n.FirstChild; c != nil; c = c.NextSibling {
+		unwrapSingleTextChildren(c)
+	}
 }
