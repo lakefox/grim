@@ -1,7 +1,6 @@
 package element
 
 import (
-	"regexp"
 	"strconv"
 	"strings"
 )
@@ -366,54 +365,110 @@ func TestSelector(n *Node, selector string) (bool, bool) {
 }
 
 func ParseSelector(selector string) SelectorParts {
-	// Initialize parts
 	parts := SelectorParts{
 		Attribute: make(map[string]string),
 	}
 
-	// Regular expressions for components
-	tagRegex := `^[a-zA-Z][a-zA-Z0-9-]*`
-	idRegex := `#([a-zA-Z0-9_-]+)`
-	classRegex := `\.([a-zA-Z0-9_-]+)`
-	attrRegex := `\[(.+?)\]`
+	// Parse character by character
+	i := 0
+	length := len(selector)
 
-	// Extract tag name
-	tagMatch := regexp.MustCompile(tagRegex).FindString(selector)
-	if tagMatch != "" {
-		parts.TagName = tagMatch
-		selector = strings.TrimPrefix(selector, tagMatch)
+	// Parse tag name (if present)
+	start := i
+	for i < length && isValidTagChar(selector[i], i == start) {
+		i++
+	}
+	if start < i {
+		parts.TagName = selector[start:i]
 	}
 
-	// Extract attributes
-	attrMatches := regexp.MustCompile(attrRegex).FindAllStringSubmatch(selector, -1)
-	for _, match := range attrMatches {
-		attr := match[1]
-		kv := strings.SplitN(attr, "=", 2)
-		if len(kv) == 2 {
-			key := kv[0]
-			value := strings.Trim(kv[1], `"`)
-			parts.Attribute[key] = value
-		} else {
-			// Handle attributes without values
-			parts.Attribute[kv[0]] = ""
+	// Parse the rest of the selector
+	for i < length {
+		switch selector[i] {
+		case '#': // ID
+			i++ // Skip #
+			start = i
+			for i < length && isValidIdClassChar(selector[i]) {
+				i++
+			}
+			if start < i {
+				parts.Id = selector[start:i]
+			}
+
+		case '.': // Class
+			i++ // Skip .
+			start = i
+			for i < length && isValidIdClassChar(selector[i]) {
+				i++
+			}
+			if start < i {
+				parts.ClassList = append(parts.ClassList, selector[start:i])
+			}
+
+		case '[': // Attribute
+			i++ // Skip [
+			start = i
+			var attrName string
+			var attrValue string
+
+			// Parse attribute name
+			for i < length && selector[i] != '=' && selector[i] != ']' {
+				i++
+			}
+			attrName = strings.TrimSpace(selector[start:i])
+
+			// Parse attribute value if present
+			if i < length && selector[i] == '=' {
+				i++ // Skip =
+				// Skip quotes if present
+				if i < length && (selector[i] == '"' || selector[i] == '\'') {
+					quote := selector[i]
+					i++ // Skip opening quote
+					start = i
+					for i < length && selector[i] != quote {
+						i++
+					}
+					attrValue = selector[start:i]
+					if i < length {
+						i++ // Skip closing quote
+					}
+				} else {
+					start = i
+					for i < length && selector[i] != ']' {
+						i++
+					}
+					attrValue = strings.TrimSpace(selector[start:i])
+				}
+			}
+
+			// Skip to closing bracket
+			for i < length && selector[i] != ']' {
+				i++
+			}
+			if i < length {
+				i++ // Skip ]
+			}
+
+			parts.Attribute[attrName] = attrValue
+
+		default:
+			i++ // Skip any other character
 		}
-		selector = strings.Replace(selector, match[0], "", 1)
-	}
-
-	// Extract ID
-	idMatch := regexp.MustCompile(idRegex).FindStringSubmatch(selector)
-	if len(idMatch) > 1 {
-		parts.Id = idMatch[1]
-		selector = strings.Replace(selector, idMatch[0], "", 1)
-	}
-
-	// Extract classes
-	classMatches := regexp.MustCompile(classRegex).FindAllStringSubmatch(selector, -1)
-	for _, match := range classMatches {
-		parts.ClassList = append(parts.ClassList, match[1])
 	}
 
 	return parts
+}
+
+// Helper functions to check character validity
+func isValidTagChar(c byte, isFirst bool) bool {
+	if isFirst {
+		return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
+	}
+	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '-'
+}
+
+func isValidIdClassChar(c byte) bool {
+	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_' || c == '-'
 }
 
 func CompareSelector(selector string, n *Node) bool {

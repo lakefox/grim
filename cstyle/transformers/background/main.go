@@ -3,7 +3,6 @@ package background
 import (
 	"grim/cstyle"
 	"grim/element"
-	"regexp"
 	"strings"
 )
 
@@ -82,11 +81,53 @@ func ParseBackground(background string) map[string]string {
 	return result
 }
 
-// Helper to split background properties while preserving functions like rgb(), rgba(), hsl(), etc.
+// splitBackground splits background properties while preserving functions like rgb(), rgba(), hsl(), etc.
 func splitBackground(background string) []string {
-	// Use a regular expression to match functions like rgb(), rgba(), hsl(), hsla()
-	regex := regexp.MustCompile(`(rgba?\([^\)]+\)|hsla?\([^\)]+\)|\S+)`)
-	return regex.FindAllString(background, -1)
+	var result []string
+	var current strings.Builder
+	parenDepth := 0
+	inWord := false
+
+	for _, char := range background {
+		// Track parentheses depth
+		if char == '(' {
+			parenDepth++
+			current.WriteRune(char)
+			inWord = true
+			continue
+		}
+		if char == ')' {
+			parenDepth--
+			current.WriteRune(char)
+			inWord = true
+			continue
+		}
+
+		// Handle spaces - they're separators only when not inside parentheses
+		if char == ' ' || char == '\t' {
+			if parenDepth > 0 {
+				// Inside parentheses, preserve the space
+				current.WriteRune(char)
+			} else if inWord {
+				// End of a word, add to results
+				result = append(result, current.String())
+				current.Reset()
+				inWord = false
+			}
+			continue
+		}
+
+		// Any other character
+		current.WriteRune(char)
+		inWord = true
+	}
+
+	// Add the last part if there is one
+	if current.Len() > 0 {
+		result = append(result, current.String())
+	}
+
+	return result
 }
 
 // Helper to check if a string is a valid CSS color function (e.g., rgb(), rgba(), hsl(), hsla())

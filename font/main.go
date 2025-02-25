@@ -9,7 +9,6 @@ import (
 	"image"
 	"image/color"
 	"path/filepath"
-	"regexp"
 	"strconv"
 	"strings"
 
@@ -83,7 +82,6 @@ func GetFontPath(fontName string, bold string, italic bool, fs *adapter.FileSyst
 }
 
 func findFont(name string, bold string, italic bool, paths []string) string {
-	namePattern := `(?i)\b` + regexp.QuoteMeta(strings.ToLower(name)) + `\b` // Match 'name' as a word, case-insensitive
 	wns := []string{"thin",
 		"extralight",
 		"light",
@@ -95,7 +93,7 @@ func findFont(name string, bold string, italic bool, paths []string) string {
 	matches := []string{}
 	for _, v := range paths {
 		fileName := filepath.Base(strings.ToLower(v))
-		matched, _ := regexp.MatchString(namePattern, fileName)
+		matched := strings.Contains(strings.ToLower(fileName), strings.ToLower(name))
 		if matched {
 
 			if italic {
