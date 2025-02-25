@@ -21,16 +21,8 @@ func Init() cstyle.Plugin {
 
 			scrollTop, scrollLeft := findScroll(n)
 
-			var mod float32
-			if n.TagName == "html" {
-				for _, v := range n.Children {
-					if v.TagName == "body" {
-						cs := c.State[v.Properties.Id]
-						mod += cs.Margin.Bottom
-					}
-				}
-			}
-			containerHeight := self.Height - mod
+			
+			containerHeight := self.Height 
 			contentHeight := float32(self.ScrollHeight)
 
 			containerWidth := self.Width

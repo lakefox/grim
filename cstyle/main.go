@@ -296,7 +296,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 		v := n.Children[i]
 		v.Parent = n
 		cState := c.ComputeNodeStyle(v)
-
+		
 		if style["height"] == "" && style["max-height"] == "" {
 			if v.Style("position") != "absolute" && cState.Y+cState.Height > childYOffset {
 				childYOffset = cState.Y + cState.Height
@@ -308,7 +308,9 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 		sh := int((cState.Y + cState.Height) - self.Y)
 		if self.ScrollHeight < sh {
 			if n.Children[i].TagName != "grim-track" {
-				self.ScrollHeight = sh
+				self.ScrollHeight = sh 
+				self.ScrollHeight += int(cState.Margin.Top + cState.Margin.Bottom + cState.Padding.Top + cState.Padding.Bottom + cState.Border.Top.Width + cState.Border.Bottom.Width)
+
 			}
 		}
 
@@ -324,12 +326,8 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 		}
 	}
 
-	if style["height"] == "" {
-		self.Height += self.Padding.Bottom
-	}
-	self.ScrollHeight += int(self.Padding.Bottom)
+	self.ScrollHeight += int(self.Padding.Bottom+self.Padding.Top)
 	self.ScrollWidth += int(self.Padding.Right)
-
 	c.State[n.Properties.Id] = self
 
 	border.Draw(&self, shelf)

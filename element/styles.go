@@ -148,10 +148,12 @@ func (s Styles) GetStyles(n *Node) {
 			styles["z-index"] = strconv.Itoa(z)
 		}
 	}
-
+	if n.StyleSheets.Styles == nil {
+		n.StyleSheets.Styles = map[string]string{}
+	}
 	for k, v := range styles {
 		n.Style(k, v)
+		n.StyleSheets.Styles[k] = v
 	}
-	n.StyleSheets.Styles = styles
 	s.PsuedoStyles[n.Properties.Id] = pseudoStyles
 }

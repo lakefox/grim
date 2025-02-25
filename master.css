@@ -2,61 +2,74 @@
  */
 
 * {
-  cursor: default;
+	cursor: default;
 }
 
 html {
-  display: block;
-  width: 100%;
-  height: 100%;
-  position: relative;
-  font-size: 16px;
-  font-family: serif;
-  color: #000000;
-  background-color: #ffffff;
-  overflow-y: auto;
-  scrollbar-color: #6b6b6b #2b2b2b;
-  scrollbar-width: auto;
+	display: block;
+	width: 100%;
+	height: 100%;
+	position: relative;
+	font-size: 16px;
+	font-family: serif;
+	color: #000000;
+	background-color: #ffffff;
+	overflow-y: auto;
+	scrollbar-color: #6b6b6b #2b2b2b;
+	scrollbar-width: auto;
 }
+
 head {
-  display: none;
+	display: none;
 }
+
 meta {
-  display: none;
+	display: none;
 }
+
 title {
-  display: none;
+	display: none;
 }
+
 link {
-  display: none;
+	display: none;
 }
+
 style {
-  display: none;
+	display: none;
 }
+
 script {
-  display: none;
+	display: none;
 }
+
 span {
-  display: inline;
+	display: inline;
 }
+
 text {
-  display: inline;
-  font-size: 1em;
+	display: inline;
+	font-size: 1em;
 }
+
 body {
-  display: block;
-  margin: 8px;
-  min-height: calc(100% - 16px);
+	display: block;
+	margin: 8px;
+	min-height: 100%;
 }
+
 p {
-  display: block;
+	display: block;
 }
+
 div {
-  display: block;
+	display: block;
 }
+
 layer {
-  display: block;
+	display: block;
 }
+
 article,
 aside,
 footer,
@@ -65,335 +78,390 @@ hgroup,
 main,
 nav,
 section {
-  display: block;
+	display: block;
 }
+
 marquee {
-  display: inline-block;
+	display: inline-block;
 }
+
 address {
-  display: block;
+	display: block;
 }
+
 blockquote {
-  display: block;
-  margin-top: 1em;
-  margin-bottom: 1em;
-  margin-left: 40px;
-  margin-right: 40px;
+	display: block;
+	margin-top: 1em;
+	margin-bottom: 1em;
+	margin-left: 40px;
+	margin-right: 40px;
 }
+
 figcaption {
-  display: block;
+	display: block;
 }
+
 figure {
-  display: block;
-  margin-top: 1em;
-  margin-bottom: 1em;
-  margin-left: 40px;
-  margin-right: 40px;
+	display: block;
+	margin-top: 1em;
+	margin-bottom: 1em;
+	margin-left: 40px;
+	margin-right: 40px;
 }
+
 center {
-  display: block;
-  text-align: center;
+	display: block;
+	text-align: center;
 }
+
 hr {
-  display: block;
-  margin-top: 0.5em;
-  margin-bottom: 0.5em;
-  margin-left: auto;
-  margin-right: auto;
-  border-style: inset;
-  border-width: 1px;
+	display: block;
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+	margin-left: auto;
+	margin-right: auto;
+	border-style: inset;
+	border-width: 1px;
 }
+
 map {
-  display: inline;
+	display: inline;
 }
+
 video {
-  object-fit: contain;
+	object-fit: contain;
 }
+
 h1 {
-  display: block;
-  font-size: 2em;
-  margin-block: 0.67em;
-  font-weight: bold;
+	display: block;
+	font-size: 2em;
+	margin-block: 0.67em;
+	font-weight: bold;
 }
+
 article h1,
 aside h1,
 nav h1,
 section h1 {
-  font-size: 1.5em;
-  margin-top: 0.83em;
-  margin-bottom: 0.83em;
+	font-size: 1.5em;
+	margin-top: 0.83em;
+	margin-bottom: 0.83em;
 }
+
 h2 {
-  display: block;
-  font-size: 1.5em;
-  margin-top: 0.83em;
-  margin-bottom: 0.83em;
-  margin-left: 0;
-  margin-right: 0;
-  font-weight: bold;
+	display: block;
+	font-size: 1.5em;
+	margin-top: 0.83em;
+	margin-bottom: 0.83em;
+	margin-left: 0;
+	margin-right: 0;
+	font-weight: bold;
 }
+
 h3 {
-  display: block;
-  font-size: 1.17em;
-  margin-top: 1em;
-  margin-bottom: 1em;
-  margin-left: 0;
-  margin-right: 0;
-  font-weight: bold;
+	display: block;
+	font-size: 1.17em;
+	margin-top: 1em;
+	margin-bottom: 1em;
+	margin-left: 0;
+	margin-right: 0;
+	font-weight: bold;
 }
+
 h4 {
-  display: block;
-  margin-top: 1.33em;
-  margin-bottom: 1.33em;
-  margin-left: 0;
-  margin-right: 0;
-  font-weight: bold;
+	display: block;
+	margin-top: 1.33em;
+	margin-bottom: 1.33em;
+	margin-left: 0;
+	margin-right: 0;
+	font-weight: bold;
 }
+
 h5 {
-  display: block;
-  font-size: 0.83em;
-  margin-top: 1.67em;
-  margin-bottom: 1.67em;
-  margin-left: 0;
-  margin-right: 0;
-  font-weight: bold;
+	display: block;
+	font-size: 0.83em;
+	margin-top: 1.67em;
+	margin-bottom: 1.67em;
+	margin-left: 0;
+	margin-right: 0;
+	font-weight: bold;
 }
+
 h6 {
-  display: block;
-  font-size: 0.67em;
-  margin-top: 2.33em;
-  margin-bottom: 2.33em;
-  margin-left: 0;
-  margin-right: 0;
-  font-weight: bold;
+	display: block;
+	font-size: 0.67em;
+	margin-top: 2.33em;
+	margin-bottom: 2.33em;
+	margin-left: 0;
+	margin-right: 0;
+	font-weight: bold;
 }
+
 table {
-  display: table;
-  border-collapse: separate;
-  border-spacing: 2px;
-  border-color: gray;
+	display: table;
+	border-collapse: separate;
+	border-spacing: 2px;
+	border-color: gray;
 }
+
 thead {
-  display: table-header-group;
-  vertical-align: middle;
-  border-color: inherit;
+	display: table-header-group;
+	vertical-align: middle;
+	border-color: inherit;
 }
+
 tbody {
-  display: table-row-group;
-  vertical-align: middle;
-  border-color: inherit;
+	display: table-row-group;
+	vertical-align: middle;
+	border-color: inherit;
 }
+
 tfoot {
-  display: table-footer-group;
-  vertical-align: middle;
-  border-color: inherit;
+	display: table-footer-group;
+	vertical-align: middle;
+	border-color: inherit;
 }
-table > tr {
-  vertical-align: middle;
+
+table>tr {
+	vertical-align: middle;
 }
+
 col {
-  display: table-column;
+	display: table-column;
 }
+
 colgroup {
-  display: table-column-group;
+	display: table-column-group;
 }
+
 tr {
-  display: table-row;
-  vertical-align: inherit;
-  border-color: inherit;
+	display: table-row;
+	vertical-align: inherit;
+	border-color: inherit;
 }
+
 td,
 th {
-  display: table-cell;
-  vertical-align: inherit;
+	display: table-cell;
+	vertical-align: inherit;
 }
+
 th {
-  font-weight: bold;
+	font-weight: bold;
 }
+
 caption {
-  display: table-caption;
-  text-align: center;
+	display: table-caption;
+	text-align: center;
 }
+
 ul,
 menu,
 dir {
-  display: block;
-  list-style-type: disc;
-  margin-top: 1em;
-  margin-bottom: 1em;
-  margin-left: 0;
-  margin-right: 0;
-  padding-left: 40px;
+	display: block;
+	list-style-type: disc;
+	margin-top: 1em;
+	margin-bottom: 1em;
+	margin-left: 0;
+	margin-right: 0;
+	padding-left: 40px;
 }
+
 ol {
-  display: block;
-  list-style-type: decimal;
-  margin-top: 1em;
-  margin-bottom: 1em;
-  margin-left: 0;
-  margin-right: 0;
-  padding-left: 40px;
+	display: block;
+	list-style-type: decimal;
+	margin-top: 1em;
+	margin-bottom: 1em;
+	margin-left: 0;
+	margin-right: 0;
+	padding-left: 40px;
 }
+
 li {
-  /* display: list-item;
+	/* display: list-item;
     text-align: inline-block; */
-  display: flex;
-  align-items: center;
+	display: flex;
+	align-items: center;
 }
+
 ul ul,
 ol ul {
-  list-style-type: circle;
+	list-style-type: circle;
 }
+
 ol ol ul,
 ol ul ul,
 ul ol ul,
 ul ul ul {
-  list-style-type: square;
+	list-style-type: square;
 }
+
 dd {
-  display: block;
-  margin-left: 40px;
+	display: block;
+	margin-left: 40px;
 }
+
 dl {
-  display: block;
-  margin-top: 1em;
-  margin-bottom: 1em;
-  margin-left: 0;
-  margin-right: 0;
+	display: block;
+	margin-top: 1em;
+	margin-bottom: 1em;
+	margin-left: 0;
+	margin-right: 0;
 }
+
 dt {
-  display: block;
+	display: block;
 }
+
 ol ul,
 ul ol,
 ul ul,
 ol ol {
-  margin-top: 0;
-  margin-bottom: 0;
+	margin-top: 0;
+	margin-bottom: 0;
 }
+
 form {
-  display: block;
-  margin-top: 0em;
+	display: block;
+	margin-top: 0em;
 }
+
 label {
-  cursor: default;
+	cursor: default;
 }
+
 legend {
-  display: block;
-  padding-left: 2px;
-  padding-right: 2px;
-  border: none;
+	display: block;
+	padding-left: 2px;
+	padding-right: 2px;
+	border: none;
 }
+
 fieldset {
-  display: block;
-  margin-left: 2px;
-  margin-right: 2px;
-  padding-top: 0.35em;
-  padding-left: 0.75em;
-  padding-right: 0.75em;
-  padding-bottom: 0.625em;
-  border: 2px groove ThreeDFace;
-  min-width: min-content;
+	display: block;
+	margin-left: 2px;
+	margin-right: 2px;
+	padding-top: 0.35em;
+	padding-left: 0.75em;
+	padding-right: 0.75em;
+	padding-bottom: 0.625em;
+	border: 2px groove ThreeDFace;
+	min-width: min-content;
 }
+
 button {
-  border: 1px solid #eee;
+	border: 1px solid #eee;
 }
+
 input,
 textarea,
 keygen,
 select,
 button {
-  margin: 0em;
-  font: small;
-  text-rendering: auto;
-  color: initial;
-  letter-spacing: normal;
-  word-spacing: normal;
-  line-height: normal;
-  text-transform: none;
-  text-indent: 0;
-  text-shadow: none;
-  display: inline-block;
-  text-align: start;
+	margin: 0em;
+	font: small;
+	text-rendering: auto;
+	color: initial;
+	letter-spacing: normal;
+	word-spacing: normal;
+	line-height: normal;
+	text-transform: none;
+	text-indent: 0;
+	text-shadow: none;
+	display: inline-block;
+	text-align: start;
 }
+
 input[type="hidden" i] {
-  display: none;
+	display: none;
 }
+
 input {
-  padding: 1px;
-  background-color: white;
-  border: 1px inset;
-  user-select: text;
-  cursor: text;
-  height: 1em;
-  width: 153px;
-  font-size: 16px;
+	padding: 1px;
+	background-color: white;
+	border: 1px inset;
+	user-select: text;
+	cursor: text;
+	height: 1em;
+	width: 153px;
+	font-size: 16px;
 }
+
 input[type="search" i] {
-  box-sizing: border-box;
+	box-sizing: border-box;
 }
+
 keygen,
 select {
-  border-radius: 5px;
-  margin: 0px;
+	border-radius: 5px;
+	margin: 0px;
 }
+
 textarea {
-  background-color: white;
-  border: 1px solid;
-  user-select: text;
-  flex-direction: column;
-  resize: auto;
-  cursor: auto;
-  padding: 2px;
-  white-space: pre-wrap;
-  word-wrap: break-word;
+	background-color: white;
+	border: 1px solid;
+	user-select: text;
+	flex-direction: column;
+	resize: auto;
+	cursor: auto;
+	padding: 2px;
+	white-space: pre-wrap;
+	word-wrap: break-word;
 }
+
 input[type="password" i] {
-  text-security: disc !important;
+	text-security: disc !important;
 }
+
 input[type="hidden" i],
 input[type="image" i],
 input[type="file" i] {
-  padding: initial;
-  background-color: initial;
-  border: initial;
+	padding: initial;
+	background-color: initial;
+	border: initial;
 }
+
 input[type="file" i] {
-  align-items: baseline;
-  color: inherit;
-  text-align: start !important;
+	align-items: baseline;
+	color: inherit;
+	text-align: start !important;
 }
+
 input[type="radio" i],
 input[type="checkbox" i] {
-  margin: 3px 0.5ex;
-  padding: initial;
-  background-color: initial;
-  border: initial;
+	margin: 3px 0.5ex;
+	padding: initial;
+	background-color: initial;
+	border: initial;
 }
+
 input[type="button" i],
 input[type="submit" i],
 input[type="reset" i] {
-  user-select: none;
-  white-space: pre;
+	user-select: none;
+	white-space: pre;
 }
+
 input[type="file" i] {
-  white-space: nowrap;
-  margin: 0;
-  font-size: inherit;
+	white-space: nowrap;
+	margin: 0;
+	font-size: inherit;
 }
+
 input[type="button" i],
 input[type="submit" i],
 input[type="reset" i],
 input[type="file" i] button {
-  align-items: flex-start;
-  text-align: center;
-  cursor: default;
-  color: ButtonText;
-  padding: 2px 6px 3px 6px;
-  border: 2px outset ButtonFace;
-  background-color: ButtonFace;
-  box-sizing: border-box;
+	align-items: flex-start;
+	text-align: center;
+	cursor: default;
+	color: ButtonText;
+	padding: 2px 6px 3px 6px;
+	border: 2px outset ButtonFace;
+	background-color: ButtonFace;
+	box-sizing: border-box;
 }
+
 input[type="button" i]:disabled,
 input[type="submit" i]:disabled,
 input[type="reset" i]:disabled,
@@ -403,165 +471,194 @@ select:disabled,
 keygen:disabled,
 optgroup:disabled,
 option:disabled,
-select[disabled] > option {
-  color: GrayText;
+select[disabled]>option {
+	color: GrayText;
 }
+
 input[type="button" i]:active,
 input[type="submit" i]:active,
 input[type="reset" i]:active,
 input[type="file" i]:active,
 button:active {
-  border-style: inset;
+	border-style: inset;
 }
+
 input[type="button" i]:active:disabled,
 input[type="submit" i]:active:disabled,
 input[type="reset" i]:active:disabled,
 input[type="file" i]:active:disabled,
 button:active:disabled {
-  border-style: outset;
+	border-style: outset;
 }
+
 option {
-  outline: black dashed 1px;
-  outline-offset: -1px;
+	outline: black dashed 1px;
+	outline-offset: -1px;
 }
+
 datalist {
-  display: none;
+	display: none;
 }
+
 area {
-  display: inline;
-  cursor: pointer;
+	display: inline;
+	cursor: pointer;
 }
+
 param {
-  display: none;
+	display: none;
 }
+
 input[type="checkbox" i] {
-  appearance: checkbox;
-  box-sizing: border-box;
+	appearance: checkbox;
+	box-sizing: border-box;
 }
+
 input[type="radio" i] {
-  appearance: radio;
-  box-sizing: border-box;
+	appearance: radio;
+	box-sizing: border-box;
 }
+
 select {
-  box-sizing: border-box;
-  align-items: center;
-  border: 1px solid;
-  white-space: pre;
-  color: black;
-  background-color: white;
-  cursor: default;
+	box-sizing: border-box;
+	align-items: center;
+	border: 1px solid;
+	white-space: pre;
+	color: black;
+	background-color: white;
+	cursor: default;
 }
 
 optgroup {
-  font-weight: bolder;
-  display: block;
+	font-weight: bolder;
+	display: block;
 }
+
 option {
-  font-weight: normal;
-  display: block;
-  padding: 0 2px 1px 2px;
-  white-space: pre;
-  min-height: 1.2em;
+	font-weight: normal;
+	display: block;
+	padding: 0 2px 1px 2px;
+	white-space: pre;
+	min-height: 1.2em;
 }
+
 output {
-  display: inline;
+	display: inline;
 }
+
 meter {
-  appearance: meter;
-  box-sizing: border-box;
-  display: inline-block;
-  height: 1em;
-  width: 5em;
-  vertical-align: -0.2em;
+	appearance: meter;
+	box-sizing: border-box;
+	display: inline-block;
+	height: 1em;
+	width: 5em;
+	vertical-align: -0.2em;
 }
+
 u,
 ins {
-  text-decoration: underline;
-  display: inline;
+	text-decoration: underline;
+	display: inline;
 }
+
 strong,
 b {
-  font-weight: bold;
-  display: inline;
+	font-weight: bold;
+	display: inline;
 }
+
 i,
 cite,
 em,
 var,
 address,
 dfn {
-  font-style: italic;
-  display: inline;
+	font-style: italic;
+	display: inline;
 }
+
 tt,
 code,
 kbd,
 samp {
-  font-family: monospace;
+	font-family: monospace;
 }
+
 pre,
 xmp,
 plaintext,
 listing {
-  display: block;
-  font-family: monospace;
-  white-space: pre;
-  margin: 1em 0;
+	display: block;
+	font-family: monospace;
+	white-space: pre;
+	margin: 1em 0;
 }
+
 mark {
-  background-color: yellow;
-  color: black;
+	background-color: yellow;
+	color: black;
 }
+
 big {
-  font-size: larger;
+	font-size: larger;
 }
+
 small {
-  font-size: smaller;
+	font-size: smaller;
 }
+
 s,
 strike,
 del {
-  text-decoration: line-through;
+	text-decoration: line-through;
 }
+
 sub {
-  vertical-align: sub;
-  font-size: smaller;
+	vertical-align: sub;
+	font-size: smaller;
 }
+
 sup {
-  vertical-align: super;
-  font-size: smaller;
+	vertical-align: super;
+	font-size: smaller;
 }
+
 br {
-  display: block;
-  font-size: 0;
-  width: 0;
-  /* height: 1em; */
+	display: block;
+	font-size: 0;
+	width: 0;
+	/* height: 1em; */
 }
+
 nobr {
-  white-space: nowrap;
+	white-space: nowrap;
 }
+
 /* states */
 :focus {
-  outline: auto 5px #00f;
+	outline: auto 5px #00f;
 }
+
 /* Read-only text fields do not show a focus ring but do still receive focus */
 html:focus,
 body:focus,
 input[readonly]:focus {
-  outline: none;
+	outline: none;
 }
+
 embed:focus,
 iframe:focus,
 object:focus {
-  outline: none;
+	outline: none;
 }
 
 input:focus,
 textarea:focus,
 keygen:focus,
 select:focus {
-  outline-offset: -2px;
+	outline-offset: -2px;
 }
+
 input[type="button" i]:focus,
 input[type="checkbox" i]:focus,
 input[type="file" i]:focus,
@@ -572,72 +669,86 @@ input[type="reset" i]:focus,
 input[type="search" i]:focus,
 input[type="submit" i]:focus,
 input[type="file" i]:focus {
-  outline-offset: 0;
+	outline-offset: 0;
 }
 
 input:disabled {
-  cursor: default;
-  background-color: light-dark(rgba(239, 239, 239, 0.3), rgba(59, 59, 59, 0.3));
-  color: light-dark(rgb(84, 84, 84), rgb(170, 170, 170));
-  border-color: rgba(118, 118, 118, 0.3);
+	cursor: default;
+	background-color: light-dark(rgba(239, 239, 239, 0.3), rgba(59, 59, 59, 0.3));
+	color: light-dark(rgb(84, 84, 84), rgb(170, 170, 170));
+	border-color: rgba(118, 118, 118, 0.3);
 }
 
 a {
-  color: #0100ee;
-  text-decoration: underline;
-  cursor: pointer;
-  text-decoration-thickness: 1px;
-  text-decoration-color: #0100ee;
-  display: inline;
+	color: #0100ee;
+	text-decoration: underline;
+	cursor: pointer;
+	text-decoration-thickness: 1px;
+	text-decoration-color: #0100ee;
+	display: inline;
 }
+
 a:focus {
-  border: 10px solid blue;
-  background: red;
+	border: 10px solid blue;
+	background: red;
 }
+
 a:active {
-  color: #551a8b;
+	color: #551a8b;
 }
+
 ruby,
 rt {
-  text-indent: 0;
+	text-indent: 0;
 }
+
 rt {
-  line-height: normal;
-  text-emphasis: none;
+	line-height: normal;
+	text-emphasis: none;
 }
-ruby > rt {
-  display: block;
-  font-size: 50%;
-  text-align: start;
+
+ruby>rt {
+	display: block;
+	font-size: 50%;
+	text-align: start;
 }
-ruby > rp {
-  display: none;
+
+ruby>rp {
+	display: none;
 }
+
 noframes {
-  display: none;
+	display: none;
 }
+
 frameset,
 frame {
-  display: block;
+	display: block;
 }
+
 frameset {
-  border-color: inherit;
+	border-color: inherit;
 }
+
 iframe {
-  border: 2px inset;
+	border: 2px inset;
 }
+
 details {
-  display: block;
+	display: block;
 }
+
 summary {
-  display: block;
+	display: block;
 }
+
 summary {
-  display: inline-block;
-  width: 0.66em;
-  height: 0.66em;
-  margin-right: 0.4em;
+	display: inline-block;
+	width: 0.66em;
+	height: 0.66em;
+	margin-right: 0.4em;
 }
+
 template {
-  display: none;
+	display: none;
 }

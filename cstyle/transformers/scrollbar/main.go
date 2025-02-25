@@ -174,7 +174,6 @@ func Init() cstyle.Transformer {
 				} else {
 					n.Style("padding-right", trackWidth)
 				}
-
 				n.AppendChild(&scrollbar)
 			}
 

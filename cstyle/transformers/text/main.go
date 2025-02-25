@@ -52,7 +52,6 @@ func Init() cstyle.Transformer {
 					if len(strings.TrimSpace(words[i])) > 0 {
 						el := n.CreateElement("text")
 						el.InnerText = DecodeHTMLEscapes(words[i])
-
 						el.Parent = n
 						element.QuickStyles(&el)
 						el.Style("display", "inline")
