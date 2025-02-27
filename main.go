@@ -341,6 +341,7 @@ func open(data *Window) {
 		// Check if the window size has changed
 
 		data.CSS.Adapter.Render(rd)
+
 	}
 }
 
@@ -352,9 +353,9 @@ func getRenderData(data *Window, shelf *library.Shelf, monitor *events.Monitor) 
 	}
 	fmt.Println("_______________________")
 
-	dc := data.document.Children[0]
+	monitor.RunEvents(data.document.Children[0])
 	start := time.Now()
-	newDoc := AddStyles(data.CSS, dc, &data.document)
+	newDoc := AddStyles(data.CSS, data.document.Children[0], &data.document)
 
 	data.CSS.ComputeNodeStyle(newDoc)
 
@@ -371,7 +372,7 @@ func getRenderData(data *Window, shelf *library.Shelf, monitor *events.Monitor) 
 	// !TODO: Should return effected node, then render those specific
 	// + I think have node.ComputeNodeStyle would make this nice
 
-	monitor.RunEvents(data.document.Children[0])
+	
 	fmt.Println(time.Since(start))
 	return rd
 }
@@ -549,46 +550,6 @@ func localizePath(rootPath, filePath string) string {
 
 	return "./" + absPath
 }
-func wrapTextNodes(n *html.Node) {
-	var toWrap []*html.Node
-
-	for c := n.FirstChild; c != nil; c = c.NextSibling {
-		if c.Type == html.TextNode {
-			trimmed := strings.TrimSpace(c.Data)
-			if trimmed != "" {
-				toWrap = append(toWrap, c)
-			}
-		}
-	}
-
-	for _, c := range toWrap {
-		if c.Parent != nil { // Ensure the parent exists before modifying
-			words := strings.Fields(c.Data)
-			var lastNode *html.Node
-			for _, word := range words {
-				newNode := &html.Node{
-					Type: html.ElementNode,
-					Data: "text",
-					FirstChild: &html.Node{
-						Type: html.TextNode,
-						Data: word,
-					},
-				}
-				if lastNode == nil {
-					c.Parent.InsertBefore(newNode, c)
-				} else {
-					c.Parent.InsertBefore(newNode, lastNode.NextSibling)
-				}
-				lastNode = newNode
-			}
-			c.Parent.RemoveChild(c)
-		}
-	}
-
-	for c := n.FirstChild; c != nil; c = c.NextSibling {
-		wrapTextNodes(c)
-	}
-}
 
 // wrapAllTextNodes wraps all non-empty text nodes with <text> elements
 func wrapAllTextNodes(n *html.Node) {
@@ -605,7 +566,15 @@ func wrapAllTextNodes(n *html.Node) {
 
 	for _, child := range children {
 		// Wrap text nodes
-		if child.Type == html.TextNode && strings.TrimSpace(child.Data) != "" {
+		child.Data = strings.TrimSpace(child.Data)
+		child.Data = strings.ReplaceAll(child.Data, "\t", " ")
+
+		// Replace repeating spaces with a single space
+		for strings.Contains(child.Data, "  ") {
+			child.Data = strings.ReplaceAll(child.Data, "  ", " ")
+		}
+
+		if child.Type == html.TextNode && child.Data != "" {
 			textEl := &html.Node{
 				Type: html.ElementNode,
 				Data: "text",

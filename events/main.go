@@ -46,7 +46,7 @@ type Focus struct {
 // + need to find what changed, remove GetStyles might have to do after adding
 // + style precompute
 // + reomve m.EventMap after done if possible
-// + for k,v := range m./EventMap
+// + for k,v := range m.EventMap
 // + prob storing computed styles should be first bc then you can tell if the event matters
 func (m *Monitor) RunEvents(n *element.Node) bool {
 	var scrolled bool
@@ -155,7 +155,6 @@ func (m *Monitor) RunEvents(n *element.Node) bool {
 		}
 		n.Focused = false
 	}
-
 
 	if stateChange {
 		n.StyleSheets.GetStyles(n)
@@ -481,7 +480,6 @@ func (m *Monitor) GetEvents(data *EventData) {
 			if data.Context {
 				evt.ContextMenu = true
 			}
-
 			if (data.ScrollY != 0 && (inside)) || (data.ScrollX != 0 && (inside)) || arrowScrollX != 0 || arrowScrollY != 0 || drag {
 				if drag {
 					if m.Drag.Type == "y" {

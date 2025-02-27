@@ -68,8 +68,6 @@ func Init() cstyle.Transformer {
 			}
 
 			// X scrollbar
-			xScrollbar := false
-
 			if n.Style("overflow-x") == "scroll" || n.Style("overflow-x") == "auto" {
 				scrollbar := n.CreateElement("grim-track")
 
@@ -108,7 +106,6 @@ func Init() cstyle.Transformer {
 
 				scrollbar.Properties.Id = element.GenerateUniqueId(n, scrollbar.TagName)
 				scrollbar.AppendChild(&thumb)
-				xScrollbar = true
 				n.AppendChild(&scrollbar)
 			}
 
@@ -125,10 +122,6 @@ func Init() cstyle.Transformer {
 				scrollbar.Style("background", backgroundColor)
 				scrollbar.Style("z-index", "99999")
 				scrollbar.SetAttribute("direction", "y")
-
-				if xScrollbar {
-					scrollbar.Style("height", "calc(100% - "+trackWidth+")")
-				}
 
 				thumb := n.CreateElement("grim-thumby")
 

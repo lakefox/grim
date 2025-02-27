@@ -315,10 +315,14 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 		}
 
 		sw := int((cState.X + cState.Width) - self.X)
+
 		if self.ScrollWidth < sw {
 			if n.Children[i].TagName != "grim-track" {
 				self.ScrollWidth = sw
 			}
+		}
+		if cState.ScrollWidth > self.ScrollWidth {
+			self.ScrollWidth = cState.ScrollWidth
 		}
 
 		if cState.Width > self.Width && style["width"] == "" {

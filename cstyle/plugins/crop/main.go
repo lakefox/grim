@@ -21,8 +21,7 @@ func Init() cstyle.Plugin {
 
 			scrollTop, scrollLeft := findScroll(n)
 
-			
-			containerHeight := self.Height 
+			containerHeight := self.Height
 			contentHeight := float32(self.ScrollHeight)
 
 			containerWidth := self.Width
@@ -31,7 +30,11 @@ func Init() cstyle.Plugin {
 			for _, v := range n.Children {
 				if v.TagName == "grim-track" && v.GetAttribute("direction") == "y" {
 					if containerHeight < contentHeight {
-						p := c.State[v.Children[0].Properties.Id]
+						p := c.State[v.Properties.Id]
+						p.Hidden = false
+						c.State[v.Properties.Id] = p
+						p = c.State[v.Children[0].Properties.Id]
+						p.Hidden = false
 
 						p.Height = (containerHeight / contentHeight) * containerHeight
 
@@ -45,12 +48,18 @@ func Init() cstyle.Plugin {
 						p = c.State[v.Children[0].Properties.Id]
 						p.Hidden = true
 						c.State[v.Children[0].Properties.Id] = p
+						scrollTop = 0
 					}
 				}
 				if v.TagName == "grim-track" && v.GetAttribute("direction") == "x" {
 					if containerWidth < contentWidth {
+						p := c.State[v.Properties.Id]
+						p.Hidden = false
+						c.State[v.Properties.Id] = p
+						p = c.State[v.Children[0].Properties.Id]
+						p.Hidden = false
+
 						containerHeight -= utils.ConvertToPixels(v.Style("height"), self.EM, self.Width)
-						p := c.State[v.Children[0].Properties.Id]
 
 						p.Width = (containerWidth / contentWidth) * containerWidth
 
@@ -64,6 +73,7 @@ func Init() cstyle.Plugin {
 						p = c.State[v.Children[0].Properties.Id]
 						p.Hidden = true
 						c.State[v.Children[0].Properties.Id] = p
+						scrollLeft = 0
 					}
 				}
 			}

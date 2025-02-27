@@ -11,3 +11,5 @@ comment
 tests
 grimui.pxd
 icon.pxd
+imports.sh
+go_imports.log
