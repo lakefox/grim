@@ -277,11 +277,23 @@ func open(data *Window) {
 	data.CSS.Adapter.AddEventListener("keydown", func(e element.Event) {
 		currentEvent.Key = e.Data.(int)
 		currentEvent.KeyState = true
+		currentEvent.Modifiers = events.Modifiers{
+			CtrlKey: e.CtrlKey,
+			ShiftKey: e.ShiftKey,
+			MetaKey: e.MetaKey,
+			AltKey: e.AltKey,
+		}
 		monitor.GetEvents(&currentEvent)
 	})
 	data.CSS.Adapter.AddEventListener("keyup", func(e element.Event) {
 		currentEvent.Key = 0
 		currentEvent.KeyState = false
+		currentEvent.Modifiers = events.Modifiers{
+			CtrlKey: e.CtrlKey,
+			ShiftKey: e.ShiftKey,
+			MetaKey: e.MetaKey,
+			AltKey: e.AltKey,
+		}
 		monitor.GetEvents(&currentEvent)
 	})
 

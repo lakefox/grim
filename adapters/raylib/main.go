@@ -203,6 +203,32 @@ func (wm *WindowManager) GetEvents() {
 		wm.Height = int32(ch)
 		wm.Adapter.DispatchEvent(e)
 	}
+	CtrlKey := false
+	MetaKey := false
+	ShiftKey := false
+	AltKey := false
+
+	if rl.IsKeyDown(rl.KeyLeftControl) || rl.IsKeyDown(rl.KeyRightControl) {
+		CtrlKey = true
+	} else {
+		CtrlKey = false
+	}
+
+	if rl.IsKeyDown(343) {
+		MetaKey = true
+	} else {
+		MetaKey = false
+	}
+	if rl.IsKeyDown(rl.KeyLeftShift) || rl.IsKeyDown(rl.KeyRightShift) {
+		ShiftKey = true
+	} else {
+		ShiftKey = false
+	}
+	if rl.IsKeyDown(rl.KeyLeftAlt) || rl.IsKeyDown(rl.KeyRightAlt) {
+		AltKey = true
+	} else {
+		AltKey = false
+	}
 
 	// Other keys
 	for i := 0; i <= 350; i++ {
@@ -213,6 +239,10 @@ func (wm *WindowManager) GetEvents() {
 				keydown := element.Event{
 					Name: "keydown",
 					Data: i,
+					CtrlKey: CtrlKey,
+					MetaKey: MetaKey,
+					ShiftKey: ShiftKey,
+					AltKey: AltKey,
 				}
 
 				wm.CurrentEvents[i] = true
@@ -221,6 +251,10 @@ func (wm *WindowManager) GetEvents() {
 				keyup := element.Event{
 					Name: "keyup",
 					Data: i,
+					CtrlKey: CtrlKey,
+					MetaKey: MetaKey,
+					ShiftKey: ShiftKey,
+					AltKey: AltKey,
 				}
 				wm.CurrentEvents[i] = false
 				wm.Adapter.DispatchEvent(keyup)

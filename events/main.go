@@ -1,6 +1,7 @@
 package events
 
 import (
+	"fmt"
 	adapter "grim/adapters"
 	"grim/cstyle"
 	"grim/element"
@@ -18,6 +19,14 @@ type EventData struct {
 	ScrollY  int
 	Key      int
 	KeyState bool
+	Modifiers Modifiers
+}
+
+type Modifiers struct {
+	CtrlKey  bool
+	ShiftKey bool 
+	MetaKey  bool
+	AltKey   bool
 }
 
 type Monitor struct {
@@ -340,11 +349,11 @@ func (m *Monitor) GetEvents(data *EventData) {
 
 			// Get the keycode of the pressed key
 			if data.Key != 0 {
+				fmt.Println(data.Key)
 				if self.ContentEditable {
 					// Sync the innertext and value but idk
 					// !ISSUE: This may not work
-					ProcessKeyEvent(self, int(data.Key))
-
+					ProcessText(self, int(data.Key))
 					evt.Value = self.Value
 				}
 			}
@@ -384,7 +393,8 @@ func (m *Monitor) GetEvents(data *EventData) {
 							t = "y"
 						}
 						m.Drag = Drag{Position: data.Position,
-							Type: t}
+							Type: t,
+						}
 					}
 				}
 			}
@@ -481,18 +491,23 @@ func (m *Monitor) GetEvents(data *EventData) {
 				evt.ContextMenu = true
 			}
 			if (data.ScrollY != 0 && (inside)) || (data.ScrollX != 0 && (inside)) || arrowScrollX != 0 || arrowScrollY != 0 || drag {
-				if drag {
+				if drag  {
 					if m.Drag.Type == "y" {
 						data.ScrollY = (evt.Y - data.Position[1])
 					} else if m.Drag.Type == "x" {
 						data.ScrollX = -(evt.X - data.Position[0])
 					}
+
 				}
-				evt.ScrollX = data.ScrollX + arrowScrollX
-				evt.ScrollY = data.ScrollY + arrowScrollY
+				if data.Modifiers.ShiftKey {
+					evt.ScrollX = -data.ScrollY
+				} else {
+					evt.ScrollX = data.ScrollX + arrowScrollX
+					evt.ScrollY = data.ScrollY + arrowScrollY
+				}
 				arrowScrollX = 0
 				arrowScrollY = 0
-				if strings.Contains(k, "grim-thumb") || drag {
+				if strings.Contains(k, "grim-thumb") {
 					data.ScrollX = 0
 					data.ScrollY = 0
 				}
@@ -543,8 +558,8 @@ func (m *Monitor) GetEvents(data *EventData) {
 	}
 }
 
-// ProcessKeyEvent processes key events for text entry.
-func ProcessKeyEvent(self element.State, key int) {
+// ProcessText processes key events for text entry.
+func ProcessText(self element.State, key int) {
 	// Handle key events for text entry
 	switch key {
 	case 8:
