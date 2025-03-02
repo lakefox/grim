@@ -43,6 +43,7 @@ func (fs *FileSystem) AddFile(path string) {
 	fs.Paths = append(fs.Paths, path)
 }
 
+// !ISSUE: Breaks fs rules
 func (fs *FileSystem) AddDir(path string) error {
 	// Walk through the directory and collect all file paths
 	fs.Sources = append(fs.Sources, path)
@@ -57,4 +58,3 @@ func (fs *FileSystem) AddDir(path string) error {
 	})
 	return err
 }
-

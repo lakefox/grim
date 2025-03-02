@@ -40,6 +40,7 @@ type Monitor struct {
 type Drag struct {
 	Position []int
 	Type     string
+	Id string
 }
 
 type Focus struct {
@@ -300,6 +301,10 @@ func (m *Monitor) GetEvents(data *EventData) {
 		return
 	}
 
+	// if !data.Click {
+	// 	m.Drag.Id = ""
+	// }
+
 	var softFocus string
 
 	for k, self := range s {
@@ -392,8 +397,19 @@ func (m *Monitor) GetEvents(data *EventData) {
 						} else if strings.Contains(k, "grim-thumby") {
 							t = "y"
 						}
+
+						key := k
+						parts := strings.Split(k,":")
+						
+						for i,v := range parts {
+							if strings.Contains(v, "grim-track") {
+								key = strings.Join(parts[0:i],":")
+								break
+							}
+						}
 						m.Drag = Drag{Position: data.Position,
 							Type: t,
+							Id: key,
 						}
 					}
 				}
@@ -403,7 +419,8 @@ func (m *Monitor) GetEvents(data *EventData) {
 				evt.MouseUp = true
 				evt.MouseDown = false
 				evt.Click = false
-				m.Drag = Drag{Position: []int{-1, -1}}
+				m.Drag = Drag{Position: []int{-1, -1}, Id: ""}
+				m.Focus.SoftFocused = ""
 			}
 
 			if data.Click && !evt.Click && !drag {
@@ -491,24 +508,27 @@ func (m *Monitor) GetEvents(data *EventData) {
 				evt.ContextMenu = true
 			}
 			if (data.ScrollY != 0 && (inside)) || (data.ScrollX != 0 && (inside)) || arrowScrollX != 0 || arrowScrollY != 0 || drag {
-				if drag {
+				if drag && m.Drag.Id != "" {
+					e := m.EventMap[m.Drag.Id]
 					if m.Drag.Type == "y" {
-						data.ScrollY = (evt.Y - data.Position[1])
+						e.ScrollY = (evt.Y - data.Position[1])
 					} else if m.Drag.Type == "x" {
-						data.ScrollX = -(evt.X - data.Position[0])
+						e.ScrollX = -(evt.X - data.Position[0])
 					}
-
-				}
-				fmt.Println(arrowScrollY)
-				if data.Modifiers.ShiftKey {
-					evt.ScrollX = -data.ScrollY
+					m.EventMap[m.Drag.Id] = e
+					evt.X = data.Position[0]
+					evt.Y = data.Position[1]
 				} else {
-					evt.ScrollX = data.ScrollX + arrowScrollX
-					evt.ScrollY = data.ScrollY + arrowScrollY
-				}
-				if strings.Contains(k, "grim-thumb") {
-					data.ScrollX = 0
-					data.ScrollY = 0
+					if data.Modifiers.ShiftKey {
+						evt.ScrollX = -data.ScrollY
+					} else {
+						evt.ScrollX = data.ScrollX + arrowScrollX
+						evt.ScrollY = data.ScrollY + arrowScrollY
+					}
+					if strings.Contains(k, "grim-thumb") {
+						data.ScrollX = 0
+						data.ScrollY = 0
+					}
 				}
 			}
 
