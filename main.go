@@ -209,8 +209,6 @@ func flatten(n *element.Node) []*element.Node {
 	return nodes
 }
 
-// !ISSUE: Probally don't need this to be exposed to the outside, if using getter/setter, just render once content is loaded then everytime a event
-// + or content update
 func open(data *Window) {
 	shelf := library.Shelf{
 		Textures:   map[string]image.RGBA{},
@@ -284,6 +282,7 @@ func open(data *Window) {
 			AltKey: e.AltKey,
 		}
 		monitor.GetEvents(&currentEvent)
+		rd = getRenderData(data, &shelf, &monitor)
 	})
 	data.CSS.Adapter.AddEventListener("keyup", func(e element.Event) {
 		currentEvent.Key = 0
@@ -295,6 +294,7 @@ func open(data *Window) {
 			AltKey: e.AltKey,
 		}
 		monitor.GetEvents(&currentEvent)
+		rd = getRenderData(data, &shelf, &monitor)
 	})
 
 	data.CSS.Adapter.AddEventListener("mousemove", func(e element.Event) {
@@ -330,11 +330,13 @@ func open(data *Window) {
 	data.CSS.Adapter.AddEventListener("contextmenudown", func(e element.Event) {
 		currentEvent.Context = true
 		monitor.GetEvents(&currentEvent)
+		rd = getRenderData(data, &shelf, &monitor)
 	})
 
 	data.CSS.Adapter.AddEventListener("contextmenuup", func(e element.Event) {
 		currentEvent.Context = true
 		monitor.GetEvents(&currentEvent)
+		rd = getRenderData(data, &shelf, &monitor)
 	})
 
 	// !ISSUE: the loop should be moved to the adapter and the rerendering should only happen if a eventlistener goes off

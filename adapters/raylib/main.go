@@ -237,24 +237,24 @@ func (wm *WindowManager) GetEvents() {
 		if wm.CurrentEvents[i] != isDown {
 			if isDown {
 				keydown := element.Event{
-					Name: "keydown",
-					Data: i,
-					CtrlKey: CtrlKey,
-					MetaKey: MetaKey,
+					Name:     "keydown",
+					Data:     i,
+					CtrlKey:  CtrlKey,
+					MetaKey:  MetaKey,
 					ShiftKey: ShiftKey,
-					AltKey: AltKey,
+					AltKey:   AltKey,
 				}
 
 				wm.CurrentEvents[i] = true
 				wm.Adapter.DispatchEvent(keydown)
 			} else {
 				keyup := element.Event{
-					Name: "keyup",
-					Data: i,
-					CtrlKey: CtrlKey,
-					MetaKey: MetaKey,
+					Name:     "keyup",
+					Data:     i,
+					CtrlKey:  CtrlKey,
+					MetaKey:  MetaKey,
 					ShiftKey: ShiftKey,
-					AltKey: AltKey,
+					AltKey:   AltKey,
 				}
 				wm.CurrentEvents[i] = false
 				wm.Adapter.DispatchEvent(keyup)

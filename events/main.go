@@ -12,19 +12,19 @@ import (
 )
 
 type EventData struct {
-	Position []int
-	Click    bool
-	Context  bool
-	ScrollX  int
-	ScrollY  int
-	Key      int
-	KeyState bool
+	Position  []int
+	Click     bool
+	Context   bool
+	ScrollX   int
+	ScrollY   int
+	Key       int
+	KeyState  bool
 	Modifiers Modifiers
 }
 
 type Modifiers struct {
 	CtrlKey  bool
-	ShiftKey bool 
+	ShiftKey bool
 	MetaKey  bool
 	AltKey   bool
 }
@@ -291,7 +291,7 @@ func (m *Monitor) GetEvents(data *EventData) {
 	drag := false
 	if m.Drag.Position != nil {
 		if m.Drag.Position[0] > -1 && m.Drag.Position[1] > -1 {
-			// !ISSUE: works Y only also it should only fire on only draggable
+			// !ISSUE: it should only fire on only draggable
 			drag = true
 		}
 	}
@@ -491,7 +491,7 @@ func (m *Monitor) GetEvents(data *EventData) {
 				evt.ContextMenu = true
 			}
 			if (data.ScrollY != 0 && (inside)) || (data.ScrollX != 0 && (inside)) || arrowScrollX != 0 || arrowScrollY != 0 || drag {
-				if drag  {
+				if drag {
 					if m.Drag.Type == "y" {
 						data.ScrollY = (evt.Y - data.Position[1])
 					} else if m.Drag.Type == "x" {
@@ -499,14 +499,13 @@ func (m *Monitor) GetEvents(data *EventData) {
 					}
 
 				}
+				fmt.Println(arrowScrollY)
 				if data.Modifiers.ShiftKey {
 					evt.ScrollX = -data.ScrollY
 				} else {
 					evt.ScrollX = data.ScrollX + arrowScrollX
 					evt.ScrollY = data.ScrollY + arrowScrollY
 				}
-				arrowScrollX = 0
-				arrowScrollY = 0
 				if strings.Contains(k, "grim-thumb") {
 					data.ScrollX = 0
 					data.ScrollY = 0
