@@ -30,7 +30,7 @@ func Init() cstyle.Transformer {
 			}
 			words := strings.Split(strings.TrimSpace(n.InnerText), " ")
 			n.InnerText = ""
-			if n.GetStyle("display") == "inline" {
+			if n.ComputedStyle["display"] == "inline" {
 				n.InnerText = DecodeHTMLEscapes(words[0])
 				for i := 0; i < len(words)-1; i++ {
 					// Add the words backwards because you are inserting adjacent to the parent
@@ -41,8 +41,8 @@ func Init() cstyle.Transformer {
 
 						el.Parent = n.Parent
 						element.QuickStyles(&el)
-						el.SetStyle("display", "inline")
-						el.SetStyle("font-size", "1em")
+						el.ComputedStyle["display"] = "inline"
+						el.ComputedStyle["font-size"] = "1em"
 						InsertAfter(n.Parent, &el, n)
 					}
 				}
@@ -54,8 +54,8 @@ func Init() cstyle.Transformer {
 						el.InnerText = DecodeHTMLEscapes(words[i])
 						el.Parent = n
 						element.QuickStyles(&el)
-						el.SetStyle("display", "inline")
-						el.SetStyle("font-size", "1em")
+						el.ComputedStyle["display"] = "inline"
+						el.ComputedStyle["font-size"] = "1em"
 						AppendChild(n, &el)
 					}
 				}

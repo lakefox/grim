@@ -20,10 +20,10 @@ func Init() cstyle.Transformer {
 			if ps["::before"] != nil {
 				before := n.CreateElement("before")
 				before.Parent = n
-				before.SetStyle("display", "inline")
+				before.ComputedStyle["display"] = "inline"
 
 				for k, v := range ps["::before"] {
-					before.SetStyle(k, v)
+					before.ComputedStyle[k] = v
 				}
 
 				before.InnerText = ps["::before"]["content"][1 : len(ps["::before"]["content"])-1]
@@ -38,10 +38,10 @@ func Init() cstyle.Transformer {
 			if ps["::after"] != nil {
 				after := n.CreateElement("after")
 				after.Parent = n
-				after.SetStyle("display", "inline")
+				after.ComputedStyle["display"] = "inline"
 
 				for k, v := range ps["::after"] {
-					after.SetStyle(k, v)
+					after.ComputedStyle[k] = v
 				}
 
 				after.InnerText = ps["::after"]["content"][1 : len(ps["::after"]["content"])-1]

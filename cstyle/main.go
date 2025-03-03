@@ -74,20 +74,15 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 	plugins := c.Plugins
 	parent := s[n.Parent.Properties.Id]
 	// Cache the style map
-	style := map[string]string{}
-	//
-	// Map added styles to the style object
-	for k, v := range n.Styles() {
-		style[k] = v
-	}
+	style := n.ComputedStyle
 
 	self.Background, _ = color.Parse(style, "background")
 	self.Border, _ = border.Parse(style, self, parent)
 
 	if style["font-size"] == "" {
-		n.SetStyle("font-size", "1em")
+		n.ComputedStyle["font-size"] = "1em"
 	}
-	fs := utils.ConvertToPixels(n.GetStyle("font-size"), parent.EM, parent.Width)
+	fs := utils.ConvertToPixels(n.ComputedStyle["font-size"], parent.EM, parent.Width)
 	self.EM = fs
 
 	if style["display"] == "none" {
@@ -133,7 +128,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 		// Should skip the current element and the ROOT
 		for i := len(ancestors) - 2; i > 0; i-- {
 			offsetNode = offsetNode.Parent
-			pos := offsetNode.GetStyle("position")
+			pos := offsetNode.ComputedStyle["position"]
 			if pos == "relative" || pos == "absolute" {
 				break
 			}
@@ -158,15 +153,15 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 		}
 	} else {
 		for i, v := range n.Parent.Children {
-			if v.GetStyle("position") != "absolute" {
+			if v.ComputedStyle["position"] != "absolute" {
 				if v.Properties.Id == n.Properties.Id {
 					if i > 0 {
 						sib := n.Parent.Children[i-1]
 						sibling := s[sib.Properties.Id]
-						if sib.GetStyle("position") != "absolute" {
+						if sib.ComputedStyle["position"] != "absolute" {
 							if style["display"] == "inline" {
 								y = sibling.Y
-								if sib.GetStyle("display") != "inline" {
+								if sib.ComputedStyle["display"] != "inline" {
 									y += sibling.Height
 								}
 							} else {
@@ -250,12 +245,12 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 
 		if (style["height"] == "" && style["min-height"] == "") || n.TagName == "text" {
 			self.Height = float32(metadata.LineHeight)
-			n.SetStyle("height", strconv.Itoa(int(self.Height))+"px")
+			n.ComputedStyle["height"] = strconv.Itoa(int(self.Height)) + "px"
 		}
 
 		if style["width"] == "" && style["min-width"] == "" {
 			self.Width = float32(width)
-			n.SetStyle("width", strconv.Itoa(int(self.Width))+"px")
+			n.ComputedStyle["width"] = strconv.Itoa(int(self.Width)) + "px"
 		}
 	}
 
@@ -298,7 +293,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 		cState := c.ComputeNodeStyle(v)
 
 		if style["height"] == "" && style["max-height"] == "" {
-			if v.GetStyle("position") != "absolute" && cState.Y+cState.Height > childYOffset {
+			if v.ComputedStyle["position"] != "absolute" && cState.Y+cState.Height > childYOffset {
 				childYOffset = cState.Y + cState.Height
 				self.Height = cState.Y - self.Border.Top.Width - self.Y + cState.Height
 				self.Height += cState.Margin.Top + cState.Margin.Bottom + cState.Padding.Top + cState.Padding.Bottom + cState.Border.Top.Width + cState.Border.Bottom.Width

@@ -9,7 +9,7 @@ import (
 func Init() cstyle.Plugin {
 	return cstyle.Plugin{
 		Selector: func(n *element.Node, c *cstyle.CSS) bool {
-			if n.GetStyle("overflow") != "" || n.GetStyle("overflow-x") != "" || n.GetStyle("overflow-y") != "" {
+			if n.ComputedStyle["overflow"] != "" || n.ComputedStyle["overflow-x"] != "" || n.ComputedStyle["overflow-y"] != "" {
 				return true
 			} else {
 				return false
@@ -59,7 +59,7 @@ func Init() cstyle.Plugin {
 						p = c.State[v.Children[0].Properties.Id]
 						p.Hidden = false
 
-						containerHeight -= utils.ConvertToPixels(v.GetStyle("height"), self.EM, self.Width)
+						containerHeight -= utils.ConvertToPixels(v.ComputedStyle["height"], self.EM, self.Width)
 
 						p.Width = (containerWidth / contentWidth) * containerWidth
 
@@ -81,16 +81,16 @@ func Init() cstyle.Plugin {
 			scrollTop = int((float32(scrollTop) / ((containerHeight / contentHeight) * containerHeight)) * containerHeight)
 			scrollLeft = int((float32(scrollLeft) / ((containerWidth / contentWidth) * containerWidth)) * containerWidth)
 
-			if n.GetStyle("overflow-y") == "hidden" || n.GetStyle("overflow-y") == "clip" {
+			if n.ComputedStyle["overflow-y"] == "hidden" || n.ComputedStyle["overflow-y"] == "clip" {
 				scrollTop = 0
 			}
 
-			if n.GetStyle("overflow-x") == "hidden" || n.GetStyle("overflow-x") == "clip" {
+			if n.ComputedStyle["overflow-x"] == "hidden" || n.ComputedStyle["overflow-x"] == "clip" {
 				scrollLeft = 0
 			}
 
 			for _, v := range n.Children {
-				if v.GetStyle("position") == "fixed" || v.TagName == "grim-track" {
+				if v.ComputedStyle["position"] == "fixed" || v.TagName == "grim-track" {
 					continue
 				}
 				child := c.State[v.Properties.Id]
@@ -157,7 +157,7 @@ func findScroll(n *element.Node) (int, int) {
 		return n.ScrollTop, n.ScrollLeft
 	} else {
 		for _, v := range n.Children {
-			if v.GetStyle("overflow") == "" && v.GetStyle("overflow-x") == "" && v.GetStyle("overflow-y") == "" {
+			if v.ComputedStyle["overflow"] == "" && v.ComputedStyle["overflow-x"] == "" && v.ComputedStyle["overflow-y"] == "" {
 				s, l := findScroll(v)
 				if s != 0 || l != 0 {
 					return s, l

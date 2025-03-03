@@ -9,15 +9,15 @@ import (
 func Init() cstyle.Transformer {
 	return cstyle.Transformer{
 		Selector: func(n *element.Node, c *cstyle.CSS) bool {
-			return n.GetStyle("background") != ""
+			return n.ComputedStyle["background"] != ""
 		},
 		Handler: func(n *element.Node, c *cstyle.CSS) *element.Node {
-			parsed := ParseBackground(n.GetStyle("background"))
+			parsed := ParseBackground(n.ComputedStyle["background"])
 
 			// Print result
 			for key, value := range parsed {
 				if value != "" {
-					n.SetStyle(key, value)
+					n.ComputedStyle[key] = value
 				}
 			}
 

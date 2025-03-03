@@ -141,7 +141,10 @@ func getMP(n element.Node, style map[string]string, wh BoxSizing, state map[stri
 			bottomStyle = bottom
 		}
 	}
-
+	n.ComputedStyle[leftKey] = leftStyle
+	n.ComputedStyle[rightKey] = rightStyle
+	n.ComputedStyle[topKey] = topStyle
+	n.ComputedStyle[bottomKey] = bottomStyle
 	// Convert left and right properties
 	if leftStyle != "" || rightStyle != "" {
 		m.Left = ConvertToPixels(leftStyle, fs, wh.Width)

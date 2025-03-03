@@ -53,7 +53,7 @@ func QuickStyles(n *Node) {
 
 	// Inherit styles from parent
 	if n.Parent != nil {
-		ps := n.Parent.Styles()
+		ps := n.Parent.ComputedStyle
 		for _, prop := range inheritedProps {
 			if value, ok := ps[prop]; ok && value != "" {
 				styles[prop] = value
@@ -63,7 +63,7 @@ func QuickStyles(n *Node) {
 
 	// Add node's own styles
 	for k, v := range styles {
-		n.SetStyle(k, v)
+		n.ComputedStyle[k] = v
 	}
 }
 
@@ -81,17 +81,12 @@ func (s Styles) GetStyles(n *Node) {
 
 	// Inherit styles from parent
 	if n.Parent != nil {
-		ps := n.Parent.Styles()
+		ps := n.Parent.ComputedStyle
 		for _, prop := range inheritedProps {
 			if value, ok := ps[prop]; ok && value != "" {
 				styles[prop] = value
 			}
 		}
-	}
-
-	// Add node's own styles
-	for k, v := range n.Styles() {
-		styles[k] = v
 	}
 
 	baseSelectors := GenBaseElements(n)
@@ -138,10 +133,14 @@ func (s Styles) GetStyles(n *Node) {
 	for k, v := range inlineStyles {
 		styles[k] = v
 	}
+	// Add node's own styles
+	for k, v := range n.Styles() {
+		styles[k] = v
+	}
 
 	// Handle z-index inheritance
 	if n.Parent != nil && styles["z-index"] == "" {
-		parentZIndex := n.Parent.GetStyle("z-index")
+		parentZIndex := n.Parent.ComputedStyle["z-index"]
 		if parentZIndex != "" {
 			z, _ := strconv.Atoi(parentZIndex)
 			z += 1
@@ -151,9 +150,8 @@ func (s Styles) GetStyles(n *Node) {
 	if n.StyleSheets.Styles == nil {
 		n.StyleSheets.Styles = map[string]string{}
 	}
-	for k, v := range styles {
-		n.SetStyle(k, v)
-		n.StyleSheets.Styles[k] = v
-	}
+
+	n.ComputedStyle = styles
+	n.StyleSheets.Styles = styles
 	s.PsuedoStyles[n.Properties.Id] = pseudoStyles
 }

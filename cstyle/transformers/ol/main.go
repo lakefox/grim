@@ -26,21 +26,21 @@ func Init() cstyle.Transformer {
 				dot := li.CreateElement("div")
 				content := li.CreateElement("div")
 
-				for k, v := range v.Styles() {
-					li.SetStyle(k, v)
-					dot.SetStyle(k, v)
-					content.SetStyle(k, v)
+				for k, v := range v.ComputedStyle {
+					li.ComputedStyle[k] = v
+					dot.ComputedStyle[k] = v
+					content.ComputedStyle[k] = v
 				}
 
-				li.SetStyle("display", "flex")
-				li.SetStyle("align-items", "center")
+				li.ComputedStyle["display"] = "flex"
+				li.ComputedStyle["align-items"] = "center"
 
-				dot.SetStyle("margin-right", "6px")
-				dot.SetStyle("display", "block")
+				dot.ComputedStyle["margin-right"] = "6px"
+				dot.ComputedStyle["display"] = "block"
 
 				italic := false
 
-				if n.GetStyle("font-style") == "italic" {
+				if n.ComputedStyle["font-style"] == "italic" {
 					italic = true
 				}
 
@@ -48,12 +48,12 @@ func Init() cstyle.Transformer {
 					c.Fonts = map[string]imgFont.Face{}
 				}
 
-				fs := utils.ConvertToPixels(n.GetStyle("font-size"), 16, c.Width)
+				fs := utils.ConvertToPixels(n.ComputedStyle["font-size"], 16, c.Width)
 				em := fs
 
-				fid := n.GetStyle("font-family") + fmt.Sprint(em, n.GetStyle("font-weight"), italic)
+				fid := n.ComputedStyle["font-family"] + fmt.Sprint(em, n.ComputedStyle["font-weight"], italic)
 				if c.Fonts[fid] == nil {
-					f, err := font.LoadFont(n.GetStyle("font-family"), int(em), n.GetStyle("font-weight"), italic, &c.Adapter.FileSystem)
+					f, err := font.LoadFont(n.ComputedStyle["font-family"], int(em), n.ComputedStyle["font-weight"], italic, &c.Adapter.FileSystem)
 
 					if err != nil {
 						panic(err)
@@ -70,7 +70,7 @@ func Init() cstyle.Transformer {
 				dot.InnerText = strconv.Itoa(i+1) + "."
 
 				content.InnerText = v.InnerText
-				content.SetStyle("display", "block")
+				content.ComputedStyle["display"] = "block"
 
 				li.AppendChild(&dot)
 				li.AppendChild(&content)
@@ -80,7 +80,7 @@ func Init() cstyle.Transformer {
 			}
 
 			for i := range tN.Children {
-				tN.Children[i].Children[0].SetStyle("margin-left", strconv.Itoa((maxOS-widths[i]))+"px")
+				tN.Children[i].Children[0].ComputedStyle["margin-left"] = strconv.Itoa((maxOS - widths[i])) + "px"
 			}
 			n.Children = tN.Children
 			return n

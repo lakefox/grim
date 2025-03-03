@@ -12,24 +12,24 @@ import (
 func Init() cstyle.Transformer {
 	return cstyle.Transformer{
 		Selector: func(n *element.Node, c *cstyle.CSS) bool {
-			return n.GetStyle("flex") != ""
+			return n.ComputedStyle["flex"] != ""
 		},
 		Handler: func(n *element.Node, c *cstyle.CSS) *element.Node {
-			flex, err := parseFlex(n.GetStyle("flex"))
+			flex, err := parseFlex(n.ComputedStyle["flex"])
 
 			if err != nil {
 				panic(lgc.Error(
 					lgc.Desc(
 						lgc.Red("Error Parsing flex values"),
-						lgc.CrossMark("Input: "+lgc.String(n.GetStyle("flex"))),
+						lgc.CrossMark("Input: "+lgc.String(n.ComputedStyle["flex"])),
 						err,
 					),
 				))
 			}
 
-			n.SetStyle("flex-basis", flex.FlexBasis)
-			n.SetStyle("flex-grow", flex.FlexGrow)
-			n.SetStyle("flex-shrink", flex.FlexShrink)
+			n.ComputedStyle["flex-basis"] = flex.FlexBasis
+			n.ComputedStyle["flex-grow"] = flex.FlexGrow
+			n.ComputedStyle["flex-shrink"] = flex.FlexShrink
 
 			return n
 		},

@@ -9,36 +9,36 @@ import (
 func Init() cstyle.Transformer {
 	return cstyle.Transformer{
 		Selector: func(n *element.Node, c *cstyle.CSS) bool {
-			return n.GetStyle("margin-block") != "" || n.GetStyle("margin-block-start") != "" || n.GetStyle("margin-block-end") != ""
+			return n.ComputedStyle["margin-block"] != "" || n.ComputedStyle["margin-block-start"] != "" || n.ComputedStyle["margin-block-end"] != ""
 		},
 		Handler: func(n *element.Node, c *cstyle.CSS) *element.Node {
 
-			writingMode := n.GetStyle("writing-mode")
-			mb := parseMarginBlock(n.GetStyle("margin-block"))
+			writingMode := n.ComputedStyle["writing-mode"]
+			mb := parseMarginBlock(n.ComputedStyle["margin-block"])
 
-			if n.GetStyle("margin-block-start") != "" {
-				mb[0] = n.GetStyle("margin-block-start")
+			if n.ComputedStyle["margin-block-start"] != "" {
+				mb[0] = n.ComputedStyle["margin-block-start"]
 			}
-			if n.GetStyle("margin-block-end") != "" {
-				mb[1] = n.GetStyle("margin-block-end")
+			if n.ComputedStyle["margin-block-end"] != "" {
+				mb[1] = n.ComputedStyle["margin-block-end"]
 			}
 
 			// !ISSUE: Not working line36 broke margin
 
 			if writingMode == "vertical-lr" {
-				n.SetStyle("margin-left", mb[0])
-				n.SetStyle("margin-right", mb[1])
+				n.ComputedStyle["margin-left"] = mb[0]
+				n.ComputedStyle["margin-right"] = mb[1]
 			} else if writingMode == "vertical-rl" {
 				// !ISSUE: This will not move everything over
 				// + link: https://developer.mozilla.org/en-US/docs/Web/CSS/margin-block
-				n.SetStyle("margin-left", mb[1])
-				n.SetStyle("margin-right", mb[0])
-			} else if n.GetStyle("margin") == "" {
-				if n.GetStyle("margin-top") == "" {
-					n.SetStyle("margin-top", mb[0])
+				n.ComputedStyle["margin-left"] = mb[1]
+				n.ComputedStyle["margin-right"] = mb[0]
+			} else if n.ComputedStyle["margin"] == "" {
+				if n.ComputedStyle["margin-top"] == "" {
+					n.ComputedStyle["margin-top"] = mb[0]
 				}
-				if n.GetStyle("margin-bottom") == "" {
-					n.SetStyle("margin-bottom", mb[0])
+				if n.ComputedStyle["margin-bottom"] == "" {
+					n.ComputedStyle["margin-bottom"] = mb[0]
 				}
 			}
 

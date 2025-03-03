@@ -21,6 +21,7 @@ type Node struct {
 	Parent          *Node
 	Children        []*Node
 	style           map[string]string
+	ComputedStyle   map[string]string
 	Id              string
 	ClassList       ClassList
 	Href            string
@@ -105,26 +106,33 @@ type BoxSpacing struct {
 
 // !MAN: Node Style getter/setter
 // + [!DEVMAN]Note: Contains all user inputed styles, all inline styles over ride stylesheet styles
-
-// !ISSUE: This should force a rerender, but it is used internally
-func (n *Node) SetStyle(key, value string) string {
-	if n.style == nil {
-		n.style = map[string]string{}
-	}
+func (n *Node) SetStyle(key, value string) {
 	n.style[key] = value
-	return ""
 }
 
 func (n *Node) GetStyle(key string) string {
-	if n.style == nil {
-		n.style = map[string]string{}
-	}
-
 	return n.style[key]
 }
 
 func (n *Node) Styles() map[string]string {
 	return n.style
+}
+
+// !ISSUE: This should force a rerender, but it is used internally
+func (n *Node) SetComputedStyle(key, value string) string {
+	if n.ComputedStyle == nil {
+		n.ComputedStyle = map[string]string{}
+	}
+	n.ComputedStyle[key] = value
+	return ""
+}
+
+func (n *Node) GetComputedStyle(key string) string {
+	if n.ComputedStyle == nil {
+		n.ComputedStyle = map[string]string{}
+	}
+
+	return n.ComputedStyle[key]
 }
 
 // !MAN: Generates the InnerHTML of an element
@@ -237,6 +245,8 @@ func (n *Node) CreateElement(name string) Node {
 		Src:             "",
 		Title:           "",
 		attribute:       make(map[string]string),
+		ComputedStyle:   make(map[string]string),
+		style:           make(map[string]string),
 		Value:           "",
 		TabIndex:        ti,
 		ContentEditable: false,
@@ -335,8 +345,8 @@ func (n *Node) Blur() {
 }
 
 func (n *Node) GetContext(width, height int) *canvas.Canvas {
-	n.SetStyle("width", strconv.Itoa(width)+"px")
-	n.SetStyle("height", strconv.Itoa(height)+"px")
+	n.ComputedStyle["width"] = strconv.Itoa(width) + "px"
+	n.ComputedStyle["height"] = strconv.Itoa(height) + "px"
 	ctx := canvas.NewCanvas(width, height)
 	n.Canvas = ctx
 	return ctx
@@ -372,7 +382,7 @@ type Event struct {
 	Input       bool
 	Target      *Node
 	Name        string
-	Data        interface{}
+	Data        any
 	Value       string
 	Hover       bool
 }

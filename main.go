@@ -217,8 +217,8 @@ func open(data *Window) {
 
 	debug := false
 
-	data.document.SetStyle("width", strconv.Itoa(int(data.CSS.Width))+"px")
-	data.document.SetStyle("height", strconv.Itoa(int(data.CSS.Height))+"px")
+	data.document.ComputedStyle["width"] = strconv.Itoa(int(data.CSS.Width)) + "px"
+	data.document.ComputedStyle["height"] = strconv.Itoa(int(data.CSS.Height)) + "px"
 
 	data.CSS.Adapter.Library = &shelf
 	data.CSS.Adapter.Init(int(data.CSS.Width), int(data.CSS.Height))
@@ -261,8 +261,8 @@ func open(data *Window) {
 		data.CSS.Width = float32(wh["width"])
 		data.CSS.Height = float32(wh["height"])
 
-		data.document.SetStyle("width", strconv.Itoa(wh["width"])+"px")
-		data.document.SetStyle("height", strconv.Itoa(wh["height"])+"px")
+		data.document.ComputedStyle["width"] = strconv.Itoa(wh["width"]) + "px"
+		data.document.ComputedStyle["height"] = strconv.Itoa(wh["height"]) + "px"
 		rd = getRenderData(data, &shelf, &monitor)
 	})
 

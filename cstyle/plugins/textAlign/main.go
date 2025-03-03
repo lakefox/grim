@@ -8,7 +8,7 @@ import (
 func Init() cstyle.Plugin {
 	return cstyle.Plugin{
 		Selector: func(n *element.Node, c *cstyle.CSS) bool {
-			return n.GetStyle("text-align") != ""
+			return n.ComputedStyle["text-align"] != ""
 		},
 		Handler: func(n *element.Node, c *cstyle.CSS) {
 			self := c.State[n.Properties.Id]
@@ -19,12 +19,12 @@ func Init() cstyle.Plugin {
 			for _, v := range n.Children {
 				// This prevents using absolutely positionioned elements in the alignment of text
 				// + Will need to add the other styles
-				if v.GetStyle("position") != "absolute" {
+				if v.ComputedStyle["position"] != "absolute" {
 					nChildren = append(nChildren, v)
 				}
 			}
 
-			align := n.GetStyle("text-align")
+			align := n.ComputedStyle["text-align"]
 
 			if align == "center" {
 				if len(nChildren) > 0 {

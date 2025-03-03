@@ -168,7 +168,6 @@ func (m *Monitor) RunEvents(n *element.Node) bool {
 
 	if stateChange {
 		n.StyleSheets.GetStyles(n)
-
 		if n.Focused {
 			n.Focus()
 		} else {
@@ -177,9 +176,10 @@ func (m *Monitor) RunEvents(n *element.Node) bool {
 	}
 
 	var styledEl map[string]string
-
+	// !TODO: Change this to a hard look up not a function
+	// + want to not allocate the entire map everytime
 	if evt.ScrollX != 0 || evt.ScrollY != 0 {
-		styledEl = n.Styles()
+		styledEl = n.ComputedStyle
 	}
 
 	if evt.ScrollX != 0 {
