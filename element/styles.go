@@ -63,7 +63,7 @@ func QuickStyles(n *Node) {
 
 	// Add node's own styles
 	for k, v := range styles {
-		n.Style(k, v)
+		n.SetStyle(k, v)
 	}
 }
 
@@ -141,7 +141,7 @@ func (s Styles) GetStyles(n *Node) {
 
 	// Handle z-index inheritance
 	if n.Parent != nil && styles["z-index"] == "" {
-		parentZIndex := n.Parent.Style("z-index")
+		parentZIndex := n.Parent.GetStyle("z-index")
 		if parentZIndex != "" {
 			z, _ := strconv.Atoi(parentZIndex)
 			z += 1
@@ -152,7 +152,7 @@ func (s Styles) GetStyles(n *Node) {
 		n.StyleSheets.Styles = map[string]string{}
 	}
 	for k, v := range styles {
-		n.Style(k, v)
+		n.SetStyle(k, v)
 		n.StyleSheets.Styles[k] = v
 	}
 	s.PsuedoStyles[n.Properties.Id] = pseudoStyles

@@ -27,20 +27,20 @@ func Init() cstyle.Transformer {
 				content := li.CreateElement("div")
 
 				for k, v := range v.Styles() {
-					li.Style(k, v)
-					dot.Style(k, v)
-					content.Style(k, v)
+					li.SetStyle(k, v)
+					dot.SetStyle(k, v)
+					content.SetStyle(k, v)
 				}
 
-				li.Style("display", "flex")
-				li.Style("align-items", "center")
+				li.SetStyle("display", "flex")
+				li.SetStyle("align-items", "center")
 
-				dot.Style("margin-right", "6px")
-				dot.Style("display", "block")
+				dot.SetStyle("margin-right", "6px")
+				dot.SetStyle("display", "block")
 
 				italic := false
 
-				if n.Style("font-style") == "italic" {
+				if n.GetStyle("font-style") == "italic" {
 					italic = true
 				}
 
@@ -48,12 +48,12 @@ func Init() cstyle.Transformer {
 					c.Fonts = map[string]imgFont.Face{}
 				}
 
-				fs := utils.ConvertToPixels(n.Style("font-size"), 16, c.Width)
+				fs := utils.ConvertToPixels(n.GetStyle("font-size"), 16, c.Width)
 				em := fs
 
-				fid := n.Style("font-family") + fmt.Sprint(em, n.Style("font-weight"), italic)
+				fid := n.GetStyle("font-family") + fmt.Sprint(em, n.GetStyle("font-weight"), italic)
 				if c.Fonts[fid] == nil {
-					f, err := font.LoadFont(n.Style("font-family"), int(em), n.Style("font-weight"), italic, &c.Adapter.FileSystem)
+					f, err := font.LoadFont(n.GetStyle("font-family"), int(em), n.GetStyle("font-weight"), italic, &c.Adapter.FileSystem)
 
 					if err != nil {
 						panic(err)
@@ -70,7 +70,7 @@ func Init() cstyle.Transformer {
 				dot.InnerText = strconv.Itoa(i+1) + "."
 
 				content.InnerText = v.InnerText
-				content.Style("display", "block")
+				content.SetStyle("display", "block")
 
 				li.AppendChild(&dot)
 				li.AppendChild(&content)
@@ -80,7 +80,7 @@ func Init() cstyle.Transformer {
 			}
 
 			for i := range tN.Children {
-				tN.Children[i].Children[0].Style("margin-left", strconv.Itoa((maxOS-widths[i]))+"px")
+				tN.Children[i].Children[0].SetStyle("margin-left", strconv.Itoa((maxOS-widths[i]))+"px")
 			}
 			n.Children = tN.Children
 			return n

@@ -85,9 +85,9 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 	self.Border, _ = border.Parse(style, self, parent)
 
 	if style["font-size"] == "" {
-		n.Style("font-size", "1em")
+		n.SetStyle("font-size", "1em")
 	}
-	fs := utils.ConvertToPixels(n.Style("font-size"), parent.EM, parent.Width)
+	fs := utils.ConvertToPixels(n.GetStyle("font-size"), parent.EM, parent.Width)
 	self.EM = fs
 
 	if style["display"] == "none" {
@@ -116,7 +116,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 	self.Height = wh.Height
 	self.Cursor = style["cursor"]
 	c.State[n.Properties.Id] = self
-	
+
 	x, y := parent.X, parent.Y
 	offsetX, offsetY := utils.GetXY(*n, c.State)
 	x += offsetX
@@ -133,7 +133,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 		// Should skip the current element and the ROOT
 		for i := len(ancestors) - 2; i > 0; i-- {
 			offsetNode = offsetNode.Parent
-			pos := offsetNode.Style("position")
+			pos := offsetNode.GetStyle("position")
 			if pos == "relative" || pos == "absolute" {
 				break
 			}
@@ -158,15 +158,15 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 		}
 	} else {
 		for i, v := range n.Parent.Children {
-			if v.Style("position") != "absolute" {
+			if v.GetStyle("position") != "absolute" {
 				if v.Properties.Id == n.Properties.Id {
 					if i > 0 {
 						sib := n.Parent.Children[i-1]
 						sibling := s[sib.Properties.Id]
-						if sib.Style("position") != "absolute" {
+						if sib.GetStyle("position") != "absolute" {
 							if style["display"] == "inline" {
 								y = sibling.Y
-								if sib.Style("display") != "inline" {
+								if sib.GetStyle("display") != "inline" {
 									y += sibling.Height
 								}
 							} else {
@@ -250,12 +250,12 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 
 		if (style["height"] == "" && style["min-height"] == "") || n.TagName == "text" {
 			self.Height = float32(metadata.LineHeight)
-			n.Style("height", strconv.Itoa(int(self.Height))+"px")
+			n.SetStyle("height", strconv.Itoa(int(self.Height))+"px")
 		}
 
 		if style["width"] == "" && style["min-width"] == "" {
 			self.Width = float32(width)
-			n.Style("width", strconv.Itoa(int(self.Width))+"px")
+			n.SetStyle("width", strconv.Itoa(int(self.Width))+"px")
 		}
 	}
 
@@ -296,9 +296,9 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 		v := n.Children[i]
 		v.Parent = n
 		cState := c.ComputeNodeStyle(v)
-		
+
 		if style["height"] == "" && style["max-height"] == "" {
-			if v.Style("position") != "absolute" && cState.Y+cState.Height > childYOffset {
+			if v.GetStyle("position") != "absolute" && cState.Y+cState.Height > childYOffset {
 				childYOffset = cState.Y + cState.Height
 				self.Height = cState.Y - self.Border.Top.Width - self.Y + cState.Height
 				self.Height += cState.Margin.Top + cState.Margin.Bottom + cState.Padding.Top + cState.Padding.Bottom + cState.Border.Top.Width + cState.Border.Bottom.Width
@@ -308,7 +308,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 		sh := int((cState.Y + cState.Height) - self.Y)
 		if self.ScrollHeight < sh {
 			if n.Children[i].TagName != "grim-track" {
-				self.ScrollHeight = sh 
+				self.ScrollHeight = sh
 				self.ScrollHeight += int(cState.Margin.Top + cState.Margin.Bottom + cState.Padding.Top + cState.Padding.Bottom + cState.Border.Top.Width + cState.Border.Bottom.Width)
 
 			}
@@ -330,13 +330,13 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 		}
 	}
 
-	self.ScrollHeight += int(self.Padding.Bottom+self.Padding.Top)
+	self.ScrollHeight += int(self.Padding.Bottom + self.Padding.Top)
 	self.ScrollWidth += int(self.Padding.Right)
 	c.State[n.Properties.Id] = self
 
 	border.Draw(&self, shelf)
 	c.State[n.Properties.Id] = self
-	
+
 	for _, v := range plugins {
 		if v.Selector(n, c) {
 			v.Handler(n, c)

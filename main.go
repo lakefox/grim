@@ -217,8 +217,8 @@ func open(data *Window) {
 
 	debug := false
 
-	data.document.Style("width", strconv.Itoa(int(data.CSS.Width))+"px")
-	data.document.Style("height", strconv.Itoa(int(data.CSS.Height))+"px")
+	data.document.SetStyle("width", strconv.Itoa(int(data.CSS.Width))+"px")
+	data.document.SetStyle("height", strconv.Itoa(int(data.CSS.Height))+"px")
 
 	data.CSS.Adapter.Library = &shelf
 	data.CSS.Adapter.Init(int(data.CSS.Width), int(data.CSS.Height))
@@ -261,8 +261,8 @@ func open(data *Window) {
 		data.CSS.Width = float32(wh["width"])
 		data.CSS.Height = float32(wh["height"])
 
-		data.document.Style("width", strconv.Itoa(wh["width"])+"px")
-		data.document.Style("height", strconv.Itoa(wh["height"])+"px")
+		data.document.SetStyle("width", strconv.Itoa(wh["width"])+"px")
+		data.document.SetStyle("height", strconv.Itoa(wh["height"])+"px")
 		rd = getRenderData(data, &shelf, &monitor)
 	})
 
@@ -276,10 +276,10 @@ func open(data *Window) {
 		currentEvent.Key = e.Data.(int)
 		currentEvent.KeyState = true
 		currentEvent.Modifiers = events.Modifiers{
-			CtrlKey: e.CtrlKey,
+			CtrlKey:  e.CtrlKey,
 			ShiftKey: e.ShiftKey,
-			MetaKey: e.MetaKey,
-			AltKey: e.AltKey,
+			MetaKey:  e.MetaKey,
+			AltKey:   e.AltKey,
 		}
 		monitor.GetEvents(&currentEvent)
 		rd = getRenderData(data, &shelf, &monitor)
@@ -288,10 +288,10 @@ func open(data *Window) {
 		currentEvent.Key = 0
 		currentEvent.KeyState = false
 		currentEvent.Modifiers = events.Modifiers{
-			CtrlKey: e.CtrlKey,
+			CtrlKey:  e.CtrlKey,
 			ShiftKey: e.ShiftKey,
-			MetaKey: e.MetaKey,
-			AltKey: e.AltKey,
+			MetaKey:  e.MetaKey,
+			AltKey:   e.AltKey,
 		}
 		monitor.GetEvents(&currentEvent)
 		rd = getRenderData(data, &shelf, &monitor)
@@ -386,7 +386,6 @@ func getRenderData(data *Window, shelf *library.Shelf, monitor *events.Monitor) 
 	// !TODO: Should return effected node, then render those specific
 	// + I think have node.ComputeNodeStyle would make this nice
 
-	
 	fmt.Println(time.Since(start))
 	return rd
 }

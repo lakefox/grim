@@ -19,11 +19,11 @@ func Init() cstyle.Transformer {
 				dot := v.CreateElement("div")
 				dot.Parent = n
 				element.QuickStyles(&dot)
-				dot.Style("background-color", "#000")
-				dot.Style("border-radius", "100px")
-				dot.Style("width", "5px")
-				dot.Style("height", "5px")
-				dot.Style("margin-right", "10px")
+				dot.SetStyle("background-color", "#000")
+				dot.SetStyle("border-radius", "100px")
+				dot.SetStyle("width", "5px")
+				dot.SetStyle("height", "5px")
+				dot.SetStyle("margin-right", "10px")
 
 				// content := v.CreateElement("div")
 				// element.QuickStyles(&content)
@@ -37,8 +37,8 @@ func Init() cstyle.Transformer {
 				v.Children = append(v.Children, &dot)
 				// v.Children = append(v.Children, &content)
 				// element.QuickStyles(v)
-				v.Style("display", "flex")
-				v.Style("align-items", "center")
+				v.SetStyle("display", "flex")
+				v.SetStyle("align-items", "center")
 
 				dot.Properties.Id = element.GenerateUniqueId(v, dot.TagName)
 				// fmt.Println(dot.Properties.Id )

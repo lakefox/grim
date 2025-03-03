@@ -40,7 +40,7 @@ type Monitor struct {
 type Drag struct {
 	Position []int
 	Type     string
-	Id string
+	Id       string
 }
 
 type Focus struct {
@@ -168,6 +168,12 @@ func (m *Monitor) RunEvents(n *element.Node) bool {
 
 	if stateChange {
 		n.StyleSheets.GetStyles(n)
+
+		if n.Focused {
+			n.Focus()
+		} else {
+			n.Blur()
+		}
 	}
 
 	var styledEl map[string]string
@@ -399,17 +405,17 @@ func (m *Monitor) GetEvents(data *EventData) {
 						}
 
 						key := k
-						parts := strings.Split(k,":")
-						
-						for i,v := range parts {
+						parts := strings.Split(k, ":")
+
+						for i, v := range parts {
 							if strings.Contains(v, "grim-track") {
-								key = strings.Join(parts[0:i],":")
+								key = strings.Join(parts[0:i], ":")
 								break
 							}
 						}
 						m.Drag = Drag{Position: data.Position,
 							Type: t,
-							Id: key,
+							Id:   key,
 						}
 					}
 				}

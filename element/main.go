@@ -104,40 +104,28 @@ type BoxSpacing struct {
 }
 
 // !MAN: Node Style getter/setter
-// + Option 1: (2 args) .Style("background","yellow") -> "" -- Sets the inline value of background
-// + Option 2: (1 args) .Style("background") -> "" -- Gets the inline value of background
-// + Option 3: (0 args) .Style("background") -> "" -- Returns all inline styles as a string
 // + [!DEVMAN]Note: Contains all user inputed styles, all inline styles over ride stylesheet styles
 
 // !ISSUE: This should force a rerender, but it is used internally
-func (n *Node) Style(value ...string) string {
+func (n *Node) SetStyle(key, value string) string {
 	if n.style == nil {
 		n.style = map[string]string{}
 	}
-	if len(value) == 2 {
-		n.style[value[0]] = value[1] // Setter
-	} else if len(value) == 1 {
-		return n.style[value[0]]
-	} else {
-		styleString := ""
-		for k, v := range n.style {
-			styleString += k + ": " + v + ";"
-		}
-		return styleString
-	}
+	n.style[key] = value
 	return ""
+}
+
+func (n *Node) GetStyle(key string) string {
+	if n.style == nil {
+		n.style = map[string]string{}
+	}
+
+	return n.style[key]
 }
 
 func (n *Node) Styles() map[string]string {
 	return n.style
 }
-
-// func (n *Node) InnerText(value ...string) string {
-// 	if len(value) > 0 {
-// 		n.innerText = value[0] // Setter
-// 	}
-// 	return n.innerText // Getter
-// }
 
 // !MAN: Generates the InnerHTML of an element
 // !TODO: Add a setter
@@ -347,8 +335,8 @@ func (n *Node) Blur() {
 }
 
 func (n *Node) GetContext(width, height int) *canvas.Canvas {
-	n.Style("width", strconv.Itoa(width)+"px")
-	n.Style("height", strconv.Itoa(height)+"px")
+	n.SetStyle("width", strconv.Itoa(width)+"px")
+	n.SetStyle("height", strconv.Itoa(height)+"px")
 	ctx := canvas.NewCanvas(width, height)
 	n.Canvas = ctx
 	return ctx

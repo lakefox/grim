@@ -8,7 +8,7 @@ import (
 func Init() cstyle.Plugin {
 	return cstyle.Plugin{
 		Selector: func(n *element.Node, c *cstyle.CSS) bool {
-			return n.Style("text-align") != ""
+			return n.GetStyle("text-align") != ""
 		},
 		Handler: func(n *element.Node, c *cstyle.CSS) {
 			self := c.State[n.Properties.Id]
@@ -19,12 +19,12 @@ func Init() cstyle.Plugin {
 			for _, v := range n.Children {
 				// This prevents using absolutely positionioned elements in the alignment of text
 				// + Will need to add the other styles
-				if v.Style("position") != "absolute" {
+				if v.GetStyle("position") != "absolute" {
 					nChildren = append(nChildren, v)
 				}
 			}
 
-			align := n.Style("text-align")
+			align := n.GetStyle("text-align")
 
 			if align == "center" {
 				if len(nChildren) > 0 {
@@ -49,7 +49,7 @@ func Init() cstyle.Plugin {
 								cState.X += self.Padding.Left + ((((self.Width - (self.Padding.Left + self.Padding.Right)) + (self.Border.Left.Width + self.Border.Right.Width)) - (maxXW - minX)) / 2) - (minX - self.X)
 
 								if cState.X < self.X+self.Padding.Left {
-									cState.X = self.X+self.Padding.Left
+									cState.X = self.X + self.Padding.Left
 								}
 								c.State[nChildren[a].Properties.Id] = cState
 							}
@@ -57,7 +57,6 @@ func Init() cstyle.Plugin {
 							maxXW = 0
 							last = i + 1
 						}
-						
 
 					}
 					minX = c.State[nChildren[last].Properties.Id].X
@@ -65,9 +64,9 @@ func Init() cstyle.Plugin {
 					for a := last; a < len(nChildren); a++ {
 						cState := c.State[nChildren[a].Properties.Id]
 						cState.X += self.Padding.Left + ((((self.Width - (self.Padding.Left + self.Padding.Right)) + (self.Border.Left.Width + self.Border.Right.Width)) - (maxXW - minX)) / 2) - (minX - self.X)
-						
+
 						if cState.X < self.X+self.Padding.Left {
-							cState.X = self.X+self.Padding.Left
+							cState.X = self.X + self.Padding.Left
 						}
 						c.State[nChildren[a].Properties.Id] = cState
 					}

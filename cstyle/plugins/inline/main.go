@@ -9,7 +9,7 @@ import (
 func Init() cstyle.Plugin {
 	return cstyle.Plugin{
 		Selector: func(n *element.Node, c *cstyle.CSS) bool {
-			return n.Style("display") == "inline"
+			return n.GetStyle("display") == "inline"
 		},
 		Handler: func(n *element.Node, c *cstyle.CSS) {
 			self := c.State[n.Properties.Id]
@@ -22,10 +22,10 @@ func Init() cstyle.Plugin {
 
 			for i, v := range n.Parent.Children {
 				if i > 0 {
-					if v.Style("position") != "absolute" {
+					if v.GetStyle("position") != "absolute" {
 						if v.Properties.Id == n.Properties.Id {
 							sib := n.Parent.Children[i-1]
-							if sib.Style("position") == "absolute" {
+							if sib.GetStyle("position") == "absolute" {
 								if i-2 >= 0 {
 									sib = n.Parent.Children[i-2]
 								} else {
@@ -39,7 +39,7 @@ func Init() cstyle.Plugin {
 								self.X = copyOfX
 							} else {
 								// Node did not break
-								if sib.Style("display") != "inline" {
+								if sib.GetStyle("display") != "inline" {
 									self.Y = sibling.Y + sibling.Height + sibling.Border.Top.Width + sibling.Border.Bottom.Width + sibling.Margin.Top + sibling.Margin.Bottom
 								} else {
 									self.Y = sibling.Y
