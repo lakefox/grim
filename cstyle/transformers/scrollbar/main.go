@@ -135,7 +135,7 @@ func Init() cstyle.Transformer {
 				thumb.ComputedStyle["margin-left"] = thumbMargin
 				thumb.ComputedStyle["border-radius"] = "10px"
 				thumb.ComputedStyle["z-index"] = "99999"
-				
+
 				for k, v := range ps["::-webkit-scrollbar"] {
 					scrollbar.ComputedStyle[k] = v
 					thumb.ComputedStyle[k] = v

@@ -1,6 +1,7 @@
 package font
 
 import (
+	"fmt"
 	adapter "grim/adapters"
 	"grim/canvas"
 	"grim/element"
@@ -160,7 +161,7 @@ func GetWeightName(weight string) string {
 func LoadFont(fontName string, fontSize int, bold string, italic bool, fs *adapter.FileSystem) (font.Face, error) {
 	// Use a TrueType font file for the specified font name
 	fontFile := GetFontPath(fontName, bold, italic, fs)
-
+fmt.Println("read")
 	// Read the font file
 	fontData, err := fs.ReadFile(fontFile)
 
@@ -218,18 +219,21 @@ func LoadFont(fontName string, fontSize int, bold string, italic bool, fs *adapt
 	return truetype.NewFace(fnt, &options), nil
 }
 
-func MeasureText(t *MetaData, text string) (int, int) {
-	ctx := canvas.NewCanvas(0, 0)
-	ctx.Context.SetFontFace(*t.Font)
-	w, h := ctx.MeasureText(text)
-	return int(w), int(h)
+func MeasureText(t *MetaData, text string) int {
+	f := *t.Font
+	sum := 0
+	for _, v := range text {
+		adv, _ := f.GlyphAdvance(rune(v))
+		sum += int(adv.Ceil())
+	}
+
+	return sum
 }
 
-func MeasureSpace(t *MetaData) (int, int) {
-	ctx := canvas.NewCanvas(0, 0)
-	ctx.Context.SetFontFace(*t.Font)
-	w, h := ctx.MeasureText(" ")
-	return int(w), int(h)
+func MeasureSpace(t *MetaData) int {
+	f := *t.Font
+	adv, _ := f.GlyphAdvance(rune(' '))
+	return int(adv.Ceil())
 }
 
 func Key(text *MetaData) string {
@@ -325,7 +329,7 @@ func GetMetaData(n *element.Node, style map[string]string, state *map[string]ele
 
 	if style["word-spacing"] == "" {
 		// !ISSUE: is word spacing actually impleamented
-		text.WordSpacing, _ = MeasureSpace(&text)
+		text.WordSpacing = MeasureSpace(&text)
 	}
 	return &text
 }
@@ -335,7 +339,7 @@ func Render(text *MetaData) (*image.RGBA, int) {
 		text.LineHeight = text.EM + 3
 	}
 
-	width, _ := MeasureText(text, text.Text+" ")
+	width := MeasureText(text, text.Text+" ")
 
 	ctx := canvas.NewCanvas(width, text.LineHeight)
 	r, g, b, a := text.Color.RGBA()

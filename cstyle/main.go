@@ -236,7 +236,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 			if _, found := lookup[key]; !found {
 				self.Textures = append(self.Textures, key)
 			}
-			width, _ = font.MeasureText(metadata, metadata.Text+" ")
+			width = font.MeasureText(metadata, metadata.Text+" ")
 		} else {
 			var data *image.RGBA
 			data, width = font.Render(metadata)

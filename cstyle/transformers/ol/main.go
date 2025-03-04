@@ -61,7 +61,7 @@ func Init() cstyle.Transformer {
 					c.Fonts[fid] = f
 				}
 				fnt := c.Fonts[fid]
-				w, _ := font.MeasureText(&font.MetaData{Font: &fnt}, strconv.Itoa(i+1)+".")
+				w := font.MeasureText(&font.MetaData{Font: &fnt}, strconv.Itoa(i+1)+".")
 				widths = append(widths, w)
 				if w > maxOS {
 					maxOS = w
