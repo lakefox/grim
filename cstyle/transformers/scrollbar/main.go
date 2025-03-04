@@ -70,13 +70,13 @@ func Init() cstyle.Transformer {
 			if n.ComputedStyle["overflow-x"] == "scroll" || n.ComputedStyle["overflow-x"] == "auto" {
 				scrollbar := n.CreateElement("grim-track")
 
-				scrollbar.ComputedStyle["position"] = "absolute"
-				scrollbar.ComputedStyle["bottom"] = "0px"
-				scrollbar.ComputedStyle["left"] = "0"
-				scrollbar.ComputedStyle["width"] = "100%"
-				scrollbar.ComputedStyle["height"] = trackWidth
-				scrollbar.ComputedStyle["background"] = backgroundColor
-				scrollbar.ComputedStyle["z-index"] = "99999"
+				scrollbar.SetStyle("position", "absolute")
+				scrollbar.SetStyle("bottom", "0px")
+				scrollbar.SetStyle("left", "0")
+				scrollbar.SetStyle("width", "100%")
+				scrollbar.SetStyle("height", trackWidth)
+				scrollbar.SetStyle("background", backgroundColor)
+				scrollbar.SetStyle("z-index", "99999")
 				scrollbar.SetAttribute("direction", "x")
 
 				thumb := n.CreateElement("grim-thumbx")
@@ -113,13 +113,13 @@ func Init() cstyle.Transformer {
 			if n.ComputedStyle["overflow-y"] == "scroll" || n.ComputedStyle["overflow-y"] == "auto" {
 				scrollbar := n.CreateElement("grim-track")
 
-				scrollbar.ComputedStyle["position"] = "absolute"
-				scrollbar.ComputedStyle["top"] = "0"
-				scrollbar.ComputedStyle["right"] = "0"
-				scrollbar.ComputedStyle["width"] = trackWidth
-				scrollbar.ComputedStyle["height"] = "100%"
-				scrollbar.ComputedStyle["background"] = backgroundColor
-				scrollbar.ComputedStyle["z-index"] = "99999"
+				scrollbar.SetStyle("position", "absolute")
+				scrollbar.SetStyle("top", "0")
+				scrollbar.SetStyle("right", "0")
+				scrollbar.SetStyle("width", trackWidth)
+				scrollbar.SetStyle("height", "100%")
+				scrollbar.SetStyle("background", backgroundColor)
+				scrollbar.SetStyle("z-index", "99999")
 				scrollbar.SetAttribute("direction", "y")
 
 				thumb := n.CreateElement("grim-thumby")
@@ -135,7 +135,7 @@ func Init() cstyle.Transformer {
 				thumb.ComputedStyle["margin-left"] = thumbMargin
 				thumb.ComputedStyle["border-radius"] = "10px"
 				thumb.ComputedStyle["z-index"] = "99999"
-
+				
 				for k, v := range ps["::-webkit-scrollbar"] {
 					scrollbar.ComputedStyle[k] = v
 					thumb.ComputedStyle[k] = v
@@ -149,7 +149,7 @@ func Init() cstyle.Transformer {
 					thumb.ComputedStyle[k] = v
 				}
 				scrollbar.Properties.Id = element.GenerateUniqueId(n, scrollbar.TagName)
-				// scrollbar.AppendChild(&thumb)
+				scrollbar.AppendChild(&thumb)
 
 				// !DEVMAN,NOTE: This prevents recursion
 				if !strings.Contains(style["width"], "calc") {
@@ -165,7 +165,7 @@ func Init() cstyle.Transformer {
 				} else {
 					n.ComputedStyle["padding-right"] = trackWidth
 				}
-				// n.AppendChild(&scrollbar)
+				n.AppendChild(&scrollbar)
 			}
 
 			return n
