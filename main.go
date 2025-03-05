@@ -35,8 +35,7 @@ import (
 	"strconv"
 	"strings"
 
-	imgFont "golang.org/x/image/font"
-
+	"github.com/golang/freetype/truetype"
 	"golang.org/x/net/html"
 )
 
@@ -235,7 +234,7 @@ func open(data *Window) {
 
 	// Load init font
 	if data.CSS.Fonts == nil {
-		data.CSS.Fonts = map[string]imgFont.Face{}
+		data.CSS.Fonts = map[string]*truetype.Font{}
 	}
 	fid := "Georgia 16px false false"
 	if data.CSS.Fonts[fid] == nil {
@@ -353,7 +352,6 @@ func open(data *Window) {
 			shouldStop = true
 		}
 		// Check if the window size has changed
-
 		data.CSS.Adapter.Render(rd)
 
 	}
@@ -400,10 +398,10 @@ func AddStyles(c cstyle.CSS, node *element.Node, parent *element.Node) *element.
 		n.Children = make([]*element.Node, 0, len(node.Children))
 		// n.Children = append(n.Children, node.Children...)
 		// for _, v := range node.Children {
-		for i := 0; i < len(node.Children); i++ {
+		for i := range node.Children {
 			n.Children = append(n.Children, node.Children[i])
 		}
-		for i := 0; i < len(node.Children); i++ {
+		for i := range node.Children {
 			n.Children[i] = AddStyles(c, node.Children[i], &n)
 		}
 

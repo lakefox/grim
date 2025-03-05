@@ -2,6 +2,7 @@ package cstyle
 
 import (
 	"fmt"
+	"github.com/golang/freetype/truetype"
 	adapter "grim/adapters"
 	"grim/border"
 	"grim/color"
@@ -13,8 +14,6 @@ import (
 	"strings"
 
 	"golang.org/x/image/draw"
-
-	imgFont "golang.org/x/image/font"
 )
 
 type Plugin struct {
@@ -32,7 +31,7 @@ type CSS struct {
 	Height       float32
 	Plugins      []Plugin
 	Transformers []Transformer
-	Fonts        map[string]imgFont.Face
+	Fonts        map[string]*truetype.Font
 	Adapter      *adapter.Adapter
 	Path         string
 	StyleSheets  int
@@ -208,22 +207,21 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 		}
 
 		if c.Fonts == nil {
-			c.Fonts = map[string]imgFont.Face{}
+			c.Fonts = map[string]*truetype.Font{}
 		}
-		fid := style["font-family"] + fmt.Sprint(self.EM, style["font-weight"], italic)
+		fid := style["font-family"] + fmt.Sprint(style["font-weight"], italic)
+		fnt, ok := c.Fonts[fid]
 
-		if c.Fonts[fid] == nil {
+		if !ok {
 			f, err := font.LoadFont(style["font-family"], int(self.EM), style["font-weight"], italic, &c.Adapter.FileSystem)
-
 			if err != nil {
 				panic(err)
 			}
 			c.Fonts[fid] = f
+			fnt = f
 		}
 
-		fnt := c.Fonts[fid]
-
-		metadata := font.GetMetaData(n, style, &c.State, &fnt)
+		metadata := font.GetMetaData(n, style, &c.State, fnt)
 		key := font.Key(metadata)
 		exists := c.Adapter.Library.Check(key)
 		var width int

@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"slices"
-	"sort"
 
 	rl "github.com/gen2brain/raylib-go/raylib"
 )
@@ -180,9 +179,7 @@ func (wm *WindowManager) Draw(nodes []element.State) {
 			} else {
 				if !slices.Contains(indexes, node.Z) {
 					indexes = append(indexes, node.Z)
-					sort.Slice(indexes, func(i, j int) bool {
-						return indexes[i] < indexes[j]
-					})
+					slices.Sort(indexes)
 				}
 			}
 		}

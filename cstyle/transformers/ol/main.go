@@ -8,7 +8,7 @@ import (
 	"grim/utils"
 	"strconv"
 
-	imgFont "golang.org/x/image/font"
+	"github.com/golang/freetype/truetype"
 )
 
 func Init() cstyle.Transformer {
@@ -45,14 +45,16 @@ func Init() cstyle.Transformer {
 				}
 
 				if c.Fonts == nil {
-					c.Fonts = map[string]imgFont.Face{}
+					c.Fonts = map[string]*truetype.Font{}
 				}
 
 				fs := utils.ConvertToPixels(n.ComputedStyle["font-size"], 16, c.Width)
 				em := fs
 
 				fid := n.ComputedStyle["font-family"] + fmt.Sprint(em, n.ComputedStyle["font-weight"], italic)
-				if c.Fonts[fid] == nil {
+				fnt, ok := c.Fonts[fid]
+
+				if !ok {
 					f, err := font.LoadFont(n.ComputedStyle["font-family"], int(em), n.ComputedStyle["font-weight"], italic, &c.Adapter.FileSystem)
 
 					if err != nil {
@@ -60,8 +62,8 @@ func Init() cstyle.Transformer {
 					}
 					c.Fonts[fid] = f
 				}
-				fnt := c.Fonts[fid]
-				w := font.MeasureText(&font.MetaData{Font: &fnt}, strconv.Itoa(i+1)+".")
+
+				w := font.MeasureText(&font.MetaData{Font: fnt}, strconv.Itoa(i+1)+".")
 				widths = append(widths, w)
 				if w > maxOS {
 					maxOS = w

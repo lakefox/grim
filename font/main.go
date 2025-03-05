@@ -1,7 +1,7 @@
 package font
 
 import (
-	"fmt"
+	"golang.org/x/image/math/fixed"
 	adapter "grim/adapters"
 	"grim/canvas"
 	"grim/element"
@@ -20,7 +20,7 @@ import (
 )
 
 type MetaData struct {
-	Font                *font.Face
+	Font                *truetype.Font
 	Color               color.RGBA
 	Text                string
 	Underlined          bool
@@ -158,13 +158,11 @@ func GetWeightName(weight string) string {
 	}
 }
 
-func LoadFont(fontName string, fontSize int, bold string, italic bool, fs *adapter.FileSystem) (font.Face, error) {
+func LoadFont(fontName string, fontSize int, bold string, italic bool, fs *adapter.FileSystem) (*truetype.Font, error) {
 	// Use a TrueType font file for the specified font name
 	fontFile := GetFontPath(fontName, bold, italic, fs)
-fmt.Println("read")
 	// Read the font file
 	fontData, err := fs.ReadFile(fontFile)
-
 	if err != nil {
 		return nil, lgc.Error(lgc.Caller(
 			"Font: "+lgc.String(fontName),
@@ -208,32 +206,31 @@ fmt.Println("read")
 				),
 			)
 	}
+	return fnt, nil
+}
 
+func MeasureText(t *MetaData, text string) int {
+	// Create font options
 	options := truetype.Options{
-		Size:    (float64(fontSize) * 72) / 96,
+		Size:    (float64(t.EM) * 72) / 96,
 		DPI:     96,
 		Hinting: font.HintingNone,
 	}
 
-	// Create a new font face with the specified size
-	return truetype.NewFace(fnt, &options), nil
-}
+	// Calculate scale factor
+	scale := (options.Size * options.DPI) / (72.0 * float64(t.Font.FUnitsPerEm()))
 
-func MeasureText(t *MetaData, text string) int {
-	f := *t.Font
-	sum := 0
-	for _, v := range text {
-		adv, _ := f.GlyphAdvance(rune(v))
-		sum += int(adv.Ceil())
+	var width float64
+	for _, r := range text {
+		idx := t.Font.Index(r)
+		hMetric := t.Font.HMetric(fixed.Int26_6(t.Font.FUnitsPerEm()), idx)
+		width += float64(hMetric.AdvanceWidth) * scale
 	}
-
-	return sum
+	return int(width)
 }
 
 func MeasureSpace(t *MetaData) int {
-	f := *t.Font
-	adv, _ := f.GlyphAdvance(rune(' '))
-	return int(adv.Ceil())
+	return MeasureText(t, " ")
 }
 
 func Key(text *MetaData) string {
@@ -242,7 +239,7 @@ func Key(text *MetaData) string {
 	return key
 }
 
-func GetMetaData(n *element.Node, style map[string]string, state *map[string]element.State, font *font.Face) *MetaData {
+func GetMetaData(n *element.Node, style map[string]string, state *map[string]element.State, font *truetype.Font) *MetaData {
 	s := *state
 	self := s[n.Properties.Id]
 	parent := s[n.Parent.Properties.Id]
@@ -327,10 +324,10 @@ func GetMetaData(n *element.Node, style map[string]string, state *map[string]ele
 		text.UnderlineOffset = 2
 	}
 
-	if style["word-spacing"] == "" {
-		// !ISSUE: is word spacing actually impleamented
-		text.WordSpacing = MeasureSpace(&text)
-	}
+	// if style["word-spacing"] == "" {
+	// 	// !ISSUE: is word spacing actually impleamented
+	// 	text.WordSpacing = MeasureSpace(&text)
+	// }
 	return &text
 }
 
@@ -339,13 +336,22 @@ func Render(text *MetaData) (*image.RGBA, int) {
 		text.LineHeight = text.EM + 3
 	}
 
+	options := truetype.Options{
+		Size:    (float64(text.EM) * 72) / 96,
+		DPI:     96,
+		Hinting: font.HintingNone,
+	}
+
+	// Create a new font face with the specified size
+	font := truetype.NewFace(text.Font, &options)
+
 	width := MeasureText(text, text.Text+" ")
 
 	ctx := canvas.NewCanvas(width, text.LineHeight)
 	r, g, b, a := text.Color.RGBA()
 
 	ctx.SetFillStyle(uint8(r), uint8(g), uint8(b), uint8(a))
-	ctx.Context.SetFontFace(*text.Font)
+	ctx.Context.SetFontFace(font)
 	ctx.Context.DrawStringAnchored(text.Text, 0, float64(text.LineHeight)/2, 0, 0.3)
 
 	if text.Underlined || text.Overlined || text.LineThrough {

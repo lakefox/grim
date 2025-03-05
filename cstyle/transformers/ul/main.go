@@ -25,24 +25,11 @@ func Init() cstyle.Transformer {
 				dot.ComputedStyle["height"] = "5px"
 				dot.ComputedStyle["margin-right"] = "10px"
 
-				// content := v.CreateElement("div")
-				// element.QuickStyles(&content)
-				// content.InnerText = v.InnerText
-				//
-				// for k, v := range v.Styles() {
-				// 	content.Style(k, v)
-				// }
-				//
-				// content.Style("display", "block")
 				v.Children = append(v.Children, &dot)
-				// v.Children = append(v.Children, &content)
-				// element.QuickStyles(v)
 				v.ComputedStyle["display"] = "flex"
 				v.ComputedStyle["align-items"] = "center"
 
 				dot.Properties.Id = element.GenerateUniqueId(v, dot.TagName)
-				// fmt.Println(dot.Properties.Id )
-				// content.Properties.Id = element.GenerateUniqueId(v, content.TagName)
 				n.Children[i] = v
 
 			}
