@@ -39,7 +39,7 @@ func Init() cstyle.Transformer {
 						el := n.CreateElement("text")
 						el.InnerText = DecodeHTMLEscapes(words[a])
 
-						el.Parent = n.Parent
+						el.Parent = n
 						element.QuickStyles(&el)
 						el.ComputedStyle["display"] = "inline"
 						el.ComputedStyle["font-size"] = "1em"

@@ -45,6 +45,8 @@ type Window struct {
 	document element.Node
 	Styles   element.Styles
 	Scripts  scripts.Scripts
+	RenderData []element.State
+	Rerender bool
 }
 
 func (w *Window) Document() *element.Node {

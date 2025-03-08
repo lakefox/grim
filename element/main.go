@@ -9,11 +9,6 @@ import (
 	"strings"
 )
 
-// !NOTE: With the current rendering scheme, all transform/plugin modifications are perserved in the document copy, then thrown away
-// + but after a node is rendered. Is any of that data needed? Could you make a reflection of the changed element and
-// + then compute the styles locally? Is there a need to modify the element at all? If computestyle just made a copy of the props
-// + and computed off of that, passing them to the children.
-
 type Node struct {
 	TagName           string
 	InnerText         string
@@ -119,12 +114,6 @@ func (n *Node) Styles() map[string]string {
 	return n.style
 }
 
-// !ISSUE: This should force a rerender, but it is used internally
-func (n *Node) SetComputedStyle(key, value string) string {
-	n.ComputedStyle[key] = value
-	return ""
-}
-
 func (n *Node) GetComputedStyle(key string) string {
 	return n.ComputedStyle[key]
 }
@@ -148,6 +137,7 @@ type ClassList struct {
 }
 
 // !ISSUE: Need to getstyles here
+// + try to use conditional styles
 func (c *ClassList) Add(class string) {
 	if !slices.Contains(c.classes, class) {
 		c.classes = append(c.classes, class)

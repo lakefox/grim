@@ -54,7 +54,6 @@ type Focus struct {
 
 // !TODO: Should return modified elements, take nothing as a input bc m.CSS.Document
 // + need to find what changed, remove GetStyles might have to do after adding
-// + style precompute
 // + reomve m.EventMap after done if possible
 // + for k,v := range m.EventMap
 // + prob storing computed styles should be first bc then you can tell if the event matters

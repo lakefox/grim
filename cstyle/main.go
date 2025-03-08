@@ -328,6 +328,9 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 
 	self.ScrollHeight += int(self.Padding.Bottom + self.Padding.Top)
 	self.ScrollWidth += int(self.Padding.Right)
+	if style["height"] == "" {
+		self.Height += self.Padding.Bottom
+	}
 	c.State[n.Properties.Id] = self
 
 	border.Draw(&self, shelf)
