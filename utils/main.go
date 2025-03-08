@@ -32,8 +32,8 @@ type BoxSizing struct {
 	Height float32
 }
 
-func FindBounds(n element.Node, style map[string]string, state map[string]element.State) (BoxSizing, element.BoxSpacing, element.BoxSpacing) {
-	s := state
+func FindBounds(n element.Node, style map[string]string, state *map[string]element.State) (BoxSizing, element.BoxSpacing, element.BoxSpacing) {
+	s := *state
 	self := s[n.Properties.Id]
 	var parent element.State
 
@@ -111,8 +111,8 @@ func FindBounds(n element.Node, style map[string]string, state map[string]elemen
 	return wh, m, p
 }
 
-func getMP(n element.Node, style map[string]string, wh BoxSizing, state map[string]element.State, t string) element.BoxSpacing {
-	s := state
+func getMP(n element.Node, style map[string]string, wh BoxSizing, state *map[string]element.State, t string) element.BoxSpacing {
+	s := *state
 	self := s[n.Properties.Id]
 	fs := self.EM
 	m := element.BoxSpacing{}
@@ -125,26 +125,6 @@ func getMP(n element.Node, style map[string]string, wh BoxSizing, state map[stri
 	topStyle := style[topKey]
 	bottomStyle := style[bottomKey]
 
-	if style[t] != "" {
-		left, right, top, bottom := ConvertMarginToIndividualProperties(style[t])
-
-		if leftStyle == "" {
-			leftStyle = left
-		}
-		if rightStyle == "" {
-			rightStyle = right
-		}
-		if topStyle == "" {
-			topStyle = top
-		}
-		if bottomStyle == "" {
-			bottomStyle = bottom
-		}
-	}
-	n.ComputedStyle[leftKey] = leftStyle
-	n.ComputedStyle[rightKey] = rightStyle
-	n.ComputedStyle[topKey] = topStyle
-	n.ComputedStyle[bottomKey] = bottomStyle
 	// Convert left and right properties
 	if leftStyle != "" || rightStyle != "" {
 		m.Left = ConvertToPixels(leftStyle, fs, wh.Width)
@@ -191,7 +171,7 @@ func getMP(n element.Node, style map[string]string, wh BoxSizing, state map[stri
 			parent := s[n.Parent.Properties.Id]
 			if parent.Margin.Top < m.Top {
 				parent.Margin.Top = m.Top
-				(state)[n.Parent.Properties.Id] = parent
+				(*state)[n.Parent.Properties.Id] = parent
 			}
 			m.Top = 0
 		} else {
@@ -205,7 +185,7 @@ func getMP(n element.Node, style map[string]string, wh BoxSizing, state map[stri
 		}
 
 		// Handle auto margins
-		if style["margin"] == "auto" && leftStyle == "" && rightStyle == "" {
+		if leftStyle == "auto" && rightStyle == "auto" {
 			// pwh := GetWH(*n.Parent, state)
 			parent := s[n.Parent.Properties.Id]
 			pwh := BoxSizing{
@@ -217,21 +197,6 @@ func getMP(n element.Node, style map[string]string, wh BoxSizing, state map[stri
 	}
 
 	return m
-}
-
-func ConvertMarginToIndividualProperties(margin string) (string, string, string, string) {
-	parts := strings.Fields(margin)
-	switch len(parts) {
-	case 1:
-		return parts[0], parts[0], parts[0], parts[0]
-	case 2:
-		return parts[0], parts[1], parts[0], parts[1]
-	case 3:
-		return parts[0], parts[1], parts[2], parts[1]
-	case 4:
-		return parts[0], parts[1], parts[2], parts[3]
-	}
-	return "0px", "0px", "0px", "0px"
 }
 
 var unitFactors = map[string]float64{

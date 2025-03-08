@@ -34,7 +34,7 @@ func ParseCSS(css string) map[string][]*StyleMap {
 		// Parse selectors and styles
 		selectors := parseSelectors(selectorBlock)
 		styles := parseStylesSimple(styleBlock)
-
+		styles = Expander(styles)
 		// Add to style maps
 		for _, s := range selectors {
 			sel := ExtractBaseElements(s)
@@ -200,7 +200,7 @@ func ParseStyleAttribute(styleValue string) map[string]string {
 			styleMap[key] = value
 		}
 	}
-
+	styleMap = Expander(styleMap)
 	return styleMap
 }
 

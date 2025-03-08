@@ -127,63 +127,63 @@ func (m *Monitor) RunEvents(n *element.Node) bool {
 	}
 
 	if evt.MouseMove {
-		if n.OnMouseLeave != nil {
-			n.OnMouseLeave(evt)
+		if n.OnMouseMove != nil {
+			n.OnMouseMove(evt)
 		}
-		eventListeners = append(eventListeners, "mouseleave")
+		eventListeners = append(eventListeners, "mousemove")
 	}
 	// !NOTE: I think the issue is when these change to a different state no update is happening
 
-	stateChange := false
-	if evt.Hover {
-		if n.Hovered == false {
-			stateChange = true
+	if evt.Hover != n.Hovered {
+		if evt.Hover {
+			n.Hovered = true
+			h := n.ConditionalStyles[":hover"]
+			if h != nil {
+				for k, v := range h {
+					n.ComputedStyle[k] = v
+				}
+			}
+		} else {
+			n.Hovered = false
+			h := n.ConditionalStyles[":hover"]
+			f := n.ConditionalStyles[":focus"]
+			if h != nil {
+				// !ISSUE: Need to only remove the focus styles bc it could be hovered
+				// + Just reapply hover if hovered
+				for k := range h {
+					if n.Focused {
+						if f[k] != "" {
+							n.ComputedStyle[k] = f[k]
+						} else {
+							n.ComputedStyle[k] = n.InitalStyles[k]
+						}
+					} else {
+						n.ComputedStyle[k] = n.InitalStyles[k]
+					}
+				}
+			}
 		}
-		n.Hovered = true
-	} else {
-		if n.Hovered == true {
-			stateChange = true
-		}
-		n.Hovered = false
 	}
 
 	if len(m.Focus.Nodes) > 0 && m.Focus.Selected > -1 {
 		if m.Focus.Nodes[m.Focus.Selected] == n.Properties.Id {
 			if n.Focused == false {
-				stateChange = true
+				n.Focus()
 			}
-			n.Focused = true
 		} else {
 			if n.Focused == true {
-				stateChange = true
+				n.Blur()
 			}
-			n.Focused = false
 		}
 	} else {
 		if n.Focused == true {
-			stateChange = true
-		}
-		n.Focused = false
-	}
-
-	if stateChange {
-		n.StyleSheets.GetStyles(n)
-		if n.Focused {
-			n.Focus()
-		} else {
 			n.Blur()
 		}
 	}
 
-	var styledEl map[string]string
-	// !TODO: Change this to a hard look up not a function
-	// + want to not allocate the entire map everytime
-	if evt.ScrollX != 0 || evt.ScrollY != 0 {
-		styledEl = n.ComputedStyle
-	}
-
 	if evt.ScrollX != 0 {
-		if hasAutoOrScroll(styledEl) {
+		if n.ComputedStyle["overflow"] == "auto" || n.ComputedStyle["overflow"] == "scroll" ||
+			n.ComputedStyle["overflow-x"] == "auto" || n.ComputedStyle["overflow-x"] == "scroll" {
 			s := m.CSS.State
 			self := s[n.Properties.Id]
 			containerWidth := self.Width
@@ -208,7 +208,8 @@ func (m *Monitor) RunEvents(n *element.Node) bool {
 	}
 
 	if evt.ScrollY != 0 {
-		if hasAutoOrScroll(styledEl) {
+		if n.ComputedStyle["overflow"] == "auto" || n.ComputedStyle["overflow"] == "scroll" ||
+			n.ComputedStyle["overflow-y"] == "auto" || n.ComputedStyle["overflow-y"] == "scroll" {
 			s := m.CSS.State
 			self := s[n.Properties.Id]
 			containerHeight := self.Height
@@ -627,21 +628,6 @@ func ProcessText(self element.State, key int) {
 	}
 }
 
-// !ISSUE: Optiomise this to just take the element
-func hasAutoOrScroll(styledEl map[string]string) bool {
-	overflowKeys := []string{"overflow", "overflow-x", "overflow-y"}
-	for _, key := range overflowKeys {
-		if value, exists := styledEl[key]; exists {
-			values := strings.Fields(value) // Splits the value by spaces
-			for _, v := range values {
-				if v == "auto" || v == "scroll" {
-					return true
-				}
-			}
-		}
-	}
-	return false
-}
 func extractNumber(input string) int {
 	var numStr string
 	for _, char := range input {

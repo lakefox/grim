@@ -1,33 +1,83 @@
-package background
+package element
 
 import (
-	"grim/cstyle"
-	"grim/element"
+	"strconv"
 	"strings"
 )
 
-func Init() cstyle.Transformer {
-	return cstyle.Transformer{
-		Selector: func(n *element.Node, c *cstyle.CSS) bool {
-			return n.ComputedStyle["background"] != ""
-		},
-		Handler: func(n *element.Node, c *cstyle.CSS) *element.Node {
-			parsed := ParseBackground(n.ComputedStyle["background"])
-
-			// Print result
-			for key, value := range parsed {
-				if value != "" {
-					n.ComputedStyle[key] = value
-				}
-			}
-
-			return n
-		},
+func Expander(styles map[string]string) map[string]string {
+	parsed := parseBackground(styles["background"])
+	delete(styles, "background")
+	// Print result
+	for key, value := range parsed {
+		if value != "" {
+			styles[key] = value
+		}
 	}
+
+	if styles["margin"] != "" {
+		left, right, top, bottom := convertMarginToIndividualProperties(styles["margin"])
+
+		if styles["margin-left"] == "" {
+			styles["margin-left"] = left
+		}
+		if styles["margin-right"] == "" {
+			styles["margin-right"] = right
+		}
+		if styles["margin-top"] == "" {
+			styles["margin-top"] = top
+		}
+		if styles["margin-bottom"] == "" {
+			styles["margin-bottom"] = bottom
+		}
+	}
+	delete(styles, "margin")
+
+	if styles["padding"] != "" {
+		left, right, top, bottom := convertMarginToIndividualProperties(styles["padding"])
+
+		if styles["padding-left"] == "" {
+			styles["padding-left"] = left
+		}
+		if styles["padding-right"] == "" {
+			styles["padding-right"] = right
+		}
+		if styles["padding-top"] == "" {
+			styles["padding-top"] = top
+		}
+		if styles["padding-bottom"] == "" {
+			styles["padding-bottom"] = bottom
+		}
+	}
+	delete(styles, "padding")
+
+	flex := parseFlex(styles["flex"])
+
+	delete(styles, "flex")
+
+	styles["flex-basis"] = flex.FlexBasis
+	styles["flex-grow"] = flex.FlexGrow
+	styles["flex-shrink"] = flex.FlexShrink
+	return styles
+}
+
+func convertMarginToIndividualProperties(margin string) (string, string, string, string) {
+	parts := strings.Fields(margin)
+	switch len(parts) {
+	case 1:
+		return parts[0], parts[0], parts[0], parts[0]
+	case 2:
+		return parts[0], parts[1], parts[0], parts[1]
+	case 3:
+		return parts[0], parts[1], parts[2], parts[1]
+	case 4:
+		return parts[0], parts[1], parts[2], parts[3]
+	}
+	return "0px", "0px", "0px", "0px"
 }
 
 // ParseBackground takes a CSS background shorthand and returns a map of its component parts.
-func ParseBackground(background string) map[string]string {
+func parseBackground(background string) map[string]string {
 	parts := splitBackground(background)
 	result := make(map[string]string)
 
@@ -148,4 +198,44 @@ func isPosition(value string) bool {
 		}
 	}
 	return false
+}
+
+type FlexProperties struct {
+	FlexGrow   string
+	FlexShrink string
+	FlexBasis  string
+}
+
+func parseFlex(flex string) FlexProperties {
+	parts := strings.Fields(flex)
+	prop := FlexProperties{
+		FlexGrow:   "1",  // default value
+		FlexShrink: "1",  // default value
+		FlexBasis:  "0%", // default value
+	}
+
+	switch len(parts) {
+	case 1:
+		if strings.HasSuffix(parts[0], "%") || strings.HasSuffix(parts[0], "px") || strings.HasSuffix(parts[0], "em") {
+			prop.FlexBasis = parts[0]
+		} else if _, err := strconv.ParseFloat(parts[0], 64); err == nil {
+			prop.FlexGrow = parts[0]
+			prop.FlexShrink = "1"
+			prop.FlexBasis = "0%"
+		} else {
+			return prop
+		}
+	case 2:
+		prop.FlexGrow = parts[0]
+		prop.FlexShrink = parts[1]
+		prop.FlexBasis = "0%"
+	case 3:
+		prop.FlexGrow = parts[0]
+		prop.FlexShrink = parts[1]
+		prop.FlexBasis = parts[2]
+	default:
+		return prop
+	}
+
+	return prop
 }

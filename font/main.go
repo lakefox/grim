@@ -294,7 +294,7 @@ func GetMetaData(n *element.Node, style map[string]string, state *map[string]ele
 		dt = utils.ConvertToPixels(style["text-decoration-thickness"], self.EM, parent.Width)
 	}
 
-	col, err := cc.Parse(style, "font")
+	col, err := cc.ParseRGBA(style["color"])
 
 	if err != nil {
 		col = color.RGBA{0, 0, 0, 255}
@@ -305,7 +305,7 @@ func GetMetaData(n *element.Node, style map[string]string, state *map[string]ele
 	}
 
 	text.Color = col
-	text.DecorationColor, _ = cc.Parse(style, "decoration")
+	text.DecorationColor, _ = cc.ParseRGBA(style["text-decoration-color"])
 	text.Align = style["text-align"]
 	text.WordBreak = wb
 	text.WordSpacing = int(wordSpacing)

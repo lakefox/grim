@@ -34,7 +34,6 @@ type CSS struct {
 	Fonts        map[string]*truetype.Font
 	Adapter      *adapter.Adapter
 	Path         string
-	StyleSheets  int
 	State        map[string]element.State
 }
 
@@ -75,7 +74,11 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 	// Cache the style map
 	style := n.ComputedStyle
 
-	self.Background, _ = color.Parse(style, "background")
+	for k, v := range n.Styles() {
+		style[k] = v
+	}
+
+	self.Background, _ = color.ParseRGBA(style["background-color"])
 	self.Border, _ = border.Parse(style, self, parent)
 
 	if style["font-size"] == "" {
@@ -102,7 +105,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 	c.State[n.Properties.Id] = self
 
 	c.State[n.Properties.Id] = self
-	wh, m, p := utils.FindBounds(*n, style, c.State)
+	wh, m, p := utils.FindBounds(*n, style, &c.State)
 
 	self.Margin = m
 	self.Padding = p

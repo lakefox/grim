@@ -10,9 +10,7 @@ import (
 	"grim/cstyle/plugins/flex"
 	"grim/cstyle/plugins/inline"
 	"grim/cstyle/plugins/textAlign"
-	"grim/cstyle/transformers/background"
 	"grim/cstyle/transformers/banda"
-	flexprep "grim/cstyle/transformers/flex"
 	img "grim/cstyle/transformers/image"
 	"time"
 
@@ -69,7 +67,6 @@ func (window *Window) Path(path string) {
 	}
 
 	window.CSS.Path = filepath.Dir(path)
-
 	CreateNode(htmlNodes, &window.document, &window.Styles)
 	open(window)
 }
@@ -96,11 +93,9 @@ func New(adapterFunction *adapter.Adapter, width, height int) Window {
 	css.AddTransformer(text.Init())
 	css.AddTransformer(banda.Init())
 	css.AddTransformer(scrollbar.Init())
-	css.AddTransformer(flexprep.Init())
 	css.AddTransformer(marginblock.Init())
 	css.AddTransformer(ul.Init())
 	css.AddTransformer(ol.Init())
-	css.AddTransformer(background.Init())
 	css.AddTransformer(img.Init())
 
 	el := element.Node{}
@@ -423,7 +418,6 @@ func CreateNode(node *html.Node, parent *element.Node, stylesheets *element.Styl
 	if node.Type == html.ElementNode {
 		newNode := parent.CreateElement(node.Data)
 		newNode.Parent = parent
-		newNode.StyleSheets = stylesheets
 		newNode.Properties.Id = element.GenerateUniqueId(parent, node.Data)
 		for _, attr := range node.Attr {
 			switch attr.Key {

@@ -75,7 +75,7 @@ func Init() cstyle.Transformer {
 				scrollbar.SetStyle("left", "0")
 				scrollbar.SetStyle("width", "100%")
 				scrollbar.SetStyle("height", trackWidth)
-				scrollbar.SetStyle("background", backgroundColor)
+				scrollbar.SetStyle("background-color", backgroundColor)
 				scrollbar.SetStyle("z-index", "99999")
 				scrollbar.SetAttribute("direction", "x")
 
@@ -85,7 +85,7 @@ func Init() cstyle.Transformer {
 				thumb.ComputedStyle["top"] = thumbMargin
 				thumb.ComputedStyle["height"] = thumbWidth
 				thumb.ComputedStyle["width"] = "20px"
-				thumb.ComputedStyle["background"] = thumbColor
+				thumb.ComputedStyle["background-color"] = thumbColor
 				thumb.ComputedStyle["cursor"] = "pointer"
 				thumb.ComputedStyle["border-radius"] = "10px"
 				thumb.ComputedStyle["z-index"] = "99999"
@@ -104,8 +104,8 @@ func Init() cstyle.Transformer {
 				}
 
 				scrollbar.Properties.Id = element.GenerateUniqueId(n, scrollbar.TagName)
-				scrollbar.AppendChild(&thumb)
-				n.AppendChild(&scrollbar)
+				AppendChild(&scrollbar, &thumb)
+				AppendChild(n, &scrollbar)
 			}
 
 			// Y scrollbar
@@ -118,7 +118,7 @@ func Init() cstyle.Transformer {
 				scrollbar.SetStyle("right", "0")
 				scrollbar.SetStyle("width", trackWidth)
 				scrollbar.SetStyle("height", "100%")
-				scrollbar.SetStyle("background", backgroundColor)
+				scrollbar.SetStyle("background-color", backgroundColor)
 				scrollbar.SetStyle("z-index", "99999")
 				scrollbar.SetAttribute("direction", "y")
 
@@ -130,7 +130,7 @@ func Init() cstyle.Transformer {
 				thumb.ComputedStyle["right"] = "3px"
 				thumb.ComputedStyle["width"] = thumbWidth
 				thumb.ComputedStyle["height"] = "20px"
-				thumb.ComputedStyle["background"] = thumbColor
+				thumb.ComputedStyle["background-color"] = thumbColor
 				thumb.ComputedStyle["cursor"] = "pointer"
 				thumb.ComputedStyle["margin-left"] = thumbMargin
 				thumb.ComputedStyle["border-radius"] = "10px"
@@ -149,7 +149,7 @@ func Init() cstyle.Transformer {
 					thumb.ComputedStyle[k] = v
 				}
 				scrollbar.Properties.Id = element.GenerateUniqueId(n, scrollbar.TagName)
-				scrollbar.AppendChild(&thumb)
+				AppendChild(&scrollbar, &thumb)
 
 				// !DEVMAN,NOTE: This prevents recursion
 				if !strings.Contains(style["width"], "calc") {
@@ -159,16 +159,21 @@ func Init() cstyle.Transformer {
 				pr := n.ComputedStyle["padding-right"]
 				// !ISSUE: remove appendchild
 				if pr == "" && n.ComputedStyle["padding"] != "" {
-					n.ComputedStyle["padding-right"] = "calc(" + n.StyleSheets.Styles["padding"] + " + " + trackWidth + ")"
+					n.ComputedStyle["padding-right"] = "calc(" + n.InitalStyles["padding"] + " + " + trackWidth + ")"
 				} else if pr != "" {
-					n.ComputedStyle["padding-right"] = "calc(" + n.StyleSheets.Styles["padding-right"] + " + " + trackWidth + ")"
+					n.ComputedStyle["padding-right"] = "calc(" + n.InitalStyles["padding-right"] + " + " + trackWidth + ")"
 				} else {
 					n.ComputedStyle["padding-right"] = trackWidth
 				}
-				n.AppendChild(&scrollbar)
+				AppendChild(n, &scrollbar)
 			}
 
 			return n
 		},
 	}
+}
+
+func AppendChild(n, c *element.Node) {
+	c.Properties.Id = element.GenerateUniqueId(n, c.TagName)
+	n.Children = append(n.Children, c)
 }

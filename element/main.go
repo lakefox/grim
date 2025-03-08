@@ -6,7 +6,6 @@ import (
 	"grim/canvas"
 	ic "image/color"
 	"slices"
-	"strconv"
 	"strings"
 )
 
@@ -16,28 +15,30 @@ import (
 // + and computed off of that, passing them to the children.
 
 type Node struct {
-	TagName         string
-	InnerText       string
-	Parent          *Node
-	Children        []*Node
-	style           map[string]string
-	ComputedStyle   map[string]string
-	Id              string
-	ClassList       ClassList
-	Href            string
-	Src             string
-	Title           string
-	attribute       map[string]string
-	ScrollLeft      int
-	ScrollTop       int
-	TabIndex        int
-	ContentEditable bool
-	Required        bool
-	Disabled        bool
-	Checked         bool
-	Focused         bool
-	Hovered         bool
-	StyleSheets     *Styles
+	TagName           string
+	InnerText         string
+	Parent            *Node
+	Children          []*Node
+	style             map[string]string
+	ComputedStyle     map[string]string
+	Id                string
+	ClassList         ClassList
+	Href              string
+	Src               string
+	Title             string
+	attribute         map[string]string
+	ScrollLeft        int
+	ScrollTop         int
+	TabIndex          int
+	ContentEditable   bool
+	Required          bool
+	Disabled          bool
+	Checked           bool
+	Focused           bool
+	Hovered           bool
+	InitalStyles      map[string]string
+	StyleSheets       *Styles
+	ConditionalStyles map[string]map[string]string
 
 	// !NOTE: ScrollHeight is the amount of scroll left, not the total amount of scroll
 	// + if you  want the same scrollHeight like js the add the height of the element to it
@@ -120,18 +121,11 @@ func (n *Node) Styles() map[string]string {
 
 // !ISSUE: This should force a rerender, but it is used internally
 func (n *Node) SetComputedStyle(key, value string) string {
-	if n.ComputedStyle == nil {
-		n.ComputedStyle = map[string]string{}
-	}
 	n.ComputedStyle[key] = value
 	return ""
 }
 
 func (n *Node) GetComputedStyle(key string) string {
-	if n.ComputedStyle == nil {
-		n.ComputedStyle = map[string]string{}
-	}
-
 	return n.ComputedStyle[key]
 }
 
@@ -241,16 +235,17 @@ func (n *Node) CreateElement(name string) Node {
 		ClassList: ClassList{
 			classes: []string{},
 		},
-		Href:            "",
-		Src:             "",
-		Title:           "",
-		attribute:       make(map[string]string),
-		ComputedStyle:   make(map[string]string),
-		style:           make(map[string]string),
-		Value:           "",
-		TabIndex:        ti,
-		ContentEditable: false,
-		StyleSheets:     n.StyleSheets,
+		Href:              "",
+		Src:               "",
+		Title:             "",
+		attribute:         make(map[string]string),
+		ComputedStyle:     make(map[string]string),
+		ConditionalStyles: make(map[string]map[string]string),
+		style:             make(map[string]string),
+		Value:             "",
+		TabIndex:          ti,
+		ContentEditable:   false,
+		StyleSheets:       n.StyleSheets,
 		Properties: Properties{
 			Id:             "",
 			EventListeners: make(map[string][]func(Event)),
@@ -259,8 +254,38 @@ func (n *Node) CreateElement(name string) Node {
 	}
 }
 
+func Itoa(num int) string {
+	if num == 0 {
+		return "0"
+	}
+
+	isNegative := num < 0
+	if isNegative {
+		num = -num
+	}
+
+	dic := [10]byte{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'}
+	result := make([]byte, 0, 10) // Preallocate a slice for better performance
+
+	for num > 0 {
+		rv := num % 10
+		result = append(result, dic[rv])
+		num /= 10
+	}
+
+	// Reverse the result slice since digits are appended in reverse order
+	for i, j := 0, len(result)-1; i < j; i, j = i+1, j-1 {
+		result[i], result[j] = result[j], result[i]
+	}
+
+	if isNegative {
+		return "-" + string(result)
+	}
+	return string(result)
+}
+
 func GenerateUniqueId(parent *Node, tagName string) string {
-	return parent.Properties.Id + ":" + tagName + strconv.Itoa(len(parent.Children))
+	return parent.Properties.Id + ":" + tagName + Itoa(len(parent.Children))
 }
 
 func (n *Node) AppendChild(c *Node) {
@@ -327,26 +352,41 @@ func (n *Node) Remove() {
 	if nodeIndex > 0 {
 		n.Parent.Children = append(n.Parent.Children[:nodeIndex], n.Parent.Children[nodeIndex+1:]...)
 	}
-	n.StyleSheets.GetStyles(n.Parent)
+	n.Parent.StyleSheets.GetStyles(n.Parent)
 }
 
 func (n *Node) Focus() {
 	n.Focused = true
-	if n.Parent != nil {
-		n.StyleSheets.GetStyles(n)
+	f := n.ConditionalStyles[":focus"]
+	if f != nil {
+		for k, v := range f {
+			n.ComputedStyle[k] = v
+		}
 	}
 }
 
 func (n *Node) Blur() {
 	n.Focused = false
-	if n.Parent != nil {
-		n.StyleSheets.GetStyles(n)
+	h := n.ConditionalStyles[":hover"]
+	f := n.ConditionalStyles[":focus"]
+	if f != nil {
+		for k := range f {
+			if n.Hovered {
+				if h[k] != "" {
+					n.ComputedStyle[k] = h[k]
+				} else {
+					n.ComputedStyle[k] = n.InitalStyles[k]
+				}
+			} else {
+				n.ComputedStyle[k] = n.InitalStyles[k]
+			}
+		}
 	}
 }
 
 func (n *Node) GetContext(width, height int) *canvas.Canvas {
-	n.ComputedStyle["width"] = strconv.Itoa(width) + "px"
-	n.ComputedStyle["height"] = strconv.Itoa(height) + "px"
+	n.ComputedStyle["width"] = Itoa(width) + "px"
+	n.ComputedStyle["height"] = Itoa(height) + "px"
 	ctx := canvas.NewCanvas(width, height)
 	n.Canvas = ctx
 	return ctx

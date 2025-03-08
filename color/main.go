@@ -375,27 +375,6 @@ var namedColors = map[string]ic.RGBA{
 	"yellowgreen":          {154, 205, 50, 255},
 }
 
-func Parse(styles map[string]string, t string) (ic.RGBA, error) {
-	if t == "font" {
-		return ParseRGBA(styles["color"])
-	} else if t == "decoration" {
-		return ParseRGBA(styles["text-decoration-color"])
-	} else if t == "background" {
-		backgroundColor, ok := styles["background-color"]
-		if !ok {
-			backgroundColor, ok = styles["background"]
-			if !ok {
-				return ic.RGBA{}, fmt.Errorf("Color not found")
-			}
-		}
-
-		// Parse the background color and return the result
-		return ParseRGBA(backgroundColor)
-	} else {
-		return ic.RGBA{255, 255, 255, 0}, fmt.Errorf("Color not found")
-	}
-}
-
 func Color(color string) (ic.RGBA, error) {
 	if color == "" {
 		color = "rgba(0,0,0,1)"

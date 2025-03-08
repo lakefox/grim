@@ -9,7 +9,6 @@ import (
 type Styles struct {
 	StyleMap     map[string][]*StyleMap
 	PsuedoStyles map[string]map[string]map[string]string
-	Styles       map[string]string
 }
 
 func (s Styles) StyleTag(css string) {
@@ -75,9 +74,9 @@ func (s Styles) GetStyles(n *Node) {
 	if strings.Contains(n.Properties.Id, "head") {
 		return
 	}
-	// fmt.Println(n.Properties.Id)
 	styles := make(map[string]string)
 	pseudoStyles := make(map[string]map[string]string)
+	conditionalStyles := make(map[string]map[string]string)
 
 	// Inherit styles from parent
 	if n.Parent != nil {
@@ -114,6 +113,9 @@ func (s Styles) GetStyles(n *Node) {
 						pseudoStyles[pseudoSelector] = map[string]string{}
 					}
 					for k, v := range *m.Styles {
+						if v == "" {
+							continue
+						}
 						if pseudoStyles[pseudoSelector] == nil {
 							pseudoStyles[pseudoSelector] = map[string]string{}
 						}
@@ -121,7 +123,49 @@ func (s Styles) GetStyles(n *Node) {
 					}
 				} else {
 					for k, v := range *m.Styles {
+						if v == "" {
+							continue
+						}
 						styles[k] = v
+					}
+				}
+			} else {
+				if !n.Hovered && !isPseudo {
+					if strings.Contains(m.Selector, ":hover") {
+						n.Hovered = true
+
+						match, _ = TestSelector(n, m.Selector)
+
+						if match {
+							conditionalStyles[":hover"] = map[string]string{}
+							for k, v := range *m.Styles {
+								if v == "" {
+									continue
+								}
+								conditionalStyles[":hover"][k] = v
+							}
+						}
+
+						n.Hovered = false
+					}
+				}
+				if !n.Focused && !isPseudo {
+					if strings.Contains(m.Selector, ":focus") {
+						n.Focused = true
+
+						match, _ = TestSelector(n, m.Selector)
+
+						if match {
+							conditionalStyles[":focus"] = map[string]string{}
+							for k, v := range *m.Styles {
+								if v == "" {
+									continue
+								}
+								conditionalStyles[":focus"][k] = v
+							}
+						}
+
+						n.Focused = false
 					}
 				}
 			}
@@ -131,12 +175,15 @@ func (s Styles) GetStyles(n *Node) {
 	// Parse inline styles
 	inlineStyles := ParseStyleAttribute(n.GetAttribute("style"))
 	for k, v := range inlineStyles {
+		if v == "" {
+			continue
+		}
 		styles[k] = v
 	}
 	// Add node's own styles
-	for k, v := range n.Styles() {
-		styles[k] = v
-	}
+	// for k, v := range n.Styles() {
+	// 	styles[k] = v
+	// }
 
 	// Handle z-index inheritance
 	if n.Parent != nil && styles["z-index"] == "" {
@@ -147,11 +194,14 @@ func (s Styles) GetStyles(n *Node) {
 			styles["z-index"] = strconv.Itoa(z)
 		}
 	}
-	if n.StyleSheets.Styles == nil {
-		n.StyleSheets.Styles = map[string]string{}
-	}
 
 	n.ComputedStyle = styles
-	n.StyleSheets.Styles = styles
+
+	n.InitalStyles = map[string]string{}
+	for k, v := range styles {
+		n.InitalStyles[k] = v
+	}
+	n.ConditionalStyles = conditionalStyles
+
 	s.PsuedoStyles[n.Properties.Id] = pseudoStyles
 }

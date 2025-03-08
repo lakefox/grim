@@ -79,7 +79,9 @@ func InsertAfter(n, c, tgt *element.Node) {
 		}
 	}
 	if nodeIndex > -1 {
-		n.Children = append(n.Children[:nodeIndex+1], append([]*element.Node{c}, n.Children[nodeIndex+1:]...)...)
+		n.Children = append(n.Children, nil)                     // Extend the slice by one
+		copy(n.Children[nodeIndex+2:], n.Children[nodeIndex+1:]) // Shift elements to the right
+		n.Children[nodeIndex+1] = c                              // Insert the new node
 	} else {
 		AppendChild(n, c)
 	}
