@@ -330,8 +330,13 @@ func (m *Monitor) GetEvents(data *EventData) {
 			evt = element.Event{}
 		}
 
-		insideX := (self.X < float32(data.Position[0]) && self.X+self.Width > float32(data.Position[0]))
-		insideY := (self.Y < float32(data.Position[1]) && self.Y+self.Height > float32(data.Position[1]))
+		boxLeft := self.X-self.Border.Left.Width
+		boxRight := self.X+self.Width+self.Border.Left.Width+self.Border.Right.Width
+		boxTop := self.Y-self.Border.Top.Width
+		boxBottom := self.Y+self.Height+self.Border.Top.Width+self.Border.Bottom.Width
+
+		insideX := (boxLeft < float32(data.Position[0]) && boxRight > float32(data.Position[0]))
+		insideY := (boxTop < float32(data.Position[1]) && boxBottom > float32(data.Position[1]))
 		inside := (insideX && insideY)
 
 		arrowScrollX := 0
