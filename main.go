@@ -41,12 +41,13 @@ import (
 var mastercss string
 
 type Window struct {
-	CSS      cstyle.CSS
-	document element.Node
-	Styles   element.Styles
-	Scripts  scripts.Scripts
+	CSS        cstyle.CSS
+	document   element.Node
+	Styles     element.Styles
+	Scripts    scripts.Scripts
 	RenderData []element.State
-	Rerender bool
+	Rerender   bool
+	shouldStop bool
 }
 
 func (w *Window) Document() *element.Node {
@@ -69,7 +70,7 @@ func (window *Window) Path(path string) {
 	}
 
 	window.CSS.Path = filepath.Dir(path)
-	CreateNode(htmlNodes, &window.document, &window.Styles)
+	createNode(htmlNodes, &window.document, &window.Styles)
 	open(window)
 }
 
@@ -114,7 +115,14 @@ func New(adapterFunction *adapter.Adapter, width, height int) Window {
 	return w
 }
 
-func (w *Window) Render(doc *element.Node, shelf *library.Shelf) []element.State {
+func (w *Window) Open() {
+	for !w.shouldStop {
+		w.CSS.Adapter.Render(w.RenderData)
+
+	}
+}
+
+func (w *Window) render(doc *element.Node, shelf *library.Shelf) []element.State {
 	s := w.CSS.State
 
 	flatDoc := flatten(doc)
@@ -211,8 +219,6 @@ func open(data *Window) {
 		References: map[string]bool{},
 	}
 
-	debug := false
-
 	data.document.ComputedStyle["width"] = strconv.Itoa(int(data.CSS.Width)) + "px"
 	data.document.ComputedStyle["height"] = strconv.Itoa(int(data.CSS.Height)) + "px"
 
@@ -224,10 +230,6 @@ func open(data *Window) {
 		Width:  float32(data.CSS.Width),
 		Height: float32(data.CSS.Height),
 	}
-
-	shouldStop := false
-
-	var rd []element.State
 
 	// Load init font
 	if data.CSS.Fonts == nil {
@@ -259,11 +261,11 @@ func open(data *Window) {
 
 		data.document.ComputedStyle["width"] = strconv.Itoa(wh["width"]) + "px"
 		data.document.ComputedStyle["height"] = strconv.Itoa(wh["height"]) + "px"
-		rd = getRenderData(data, &shelf, &monitor)
+		getRenderData(data, &shelf, &monitor)
 	})
 
 	data.CSS.Adapter.AddEventListener("close", func(e element.Event) {
-		shouldStop = true
+		data.shouldStop = true
 	})
 
 	currentEvent := events.EventData{}
@@ -278,7 +280,7 @@ func open(data *Window) {
 			AltKey:   e.AltKey,
 		}
 		monitor.GetEvents(&currentEvent)
-		rd = getRenderData(data, &shelf, &monitor)
+		getRenderData(data, &shelf, &monitor)
 	})
 	data.CSS.Adapter.AddEventListener("keyup", func(e element.Event) {
 		currentEvent.Key = 0
@@ -290,7 +292,7 @@ func open(data *Window) {
 			AltKey:   e.AltKey,
 		}
 		monitor.GetEvents(&currentEvent)
-		rd = getRenderData(data, &shelf, &monitor)
+		getRenderData(data, &shelf, &monitor)
 	})
 
 	data.CSS.Adapter.AddEventListener("mousemove", func(e element.Event) {
@@ -299,7 +301,7 @@ func open(data *Window) {
 			if pos[0] < int(data.CSS.Width) && pos[1] < int(data.CSS.Height) {
 				currentEvent.Position = pos
 				monitor.GetEvents(&currentEvent)
-				rd = getRenderData(data, &shelf, &monitor)
+				getRenderData(data, &shelf, &monitor)
 			}
 		}
 	})
@@ -308,54 +310,39 @@ func open(data *Window) {
 		currentEvent.ScrollY = e.Data.(int)
 		monitor.GetEvents(&currentEvent)
 		currentEvent.ScrollY = 0
-		rd = getRenderData(data, &shelf, &monitor)
+		getRenderData(data, &shelf, &monitor)
 	})
 
 	data.CSS.Adapter.AddEventListener("mousedown", func(e element.Event) {
 		currentEvent.Click = true
 		monitor.GetEvents(&currentEvent)
-		rd = getRenderData(data, &shelf, &monitor)
+		getRenderData(data, &shelf, &monitor)
 	})
 
 	data.CSS.Adapter.AddEventListener("mouseup", func(e element.Event) {
 		currentEvent.Click = false
 		monitor.GetEvents(&currentEvent)
-		rd = getRenderData(data, &shelf, &monitor)
+		getRenderData(data, &shelf, &monitor)
 	})
 
 	data.CSS.Adapter.AddEventListener("contextmenudown", func(e element.Event) {
 		currentEvent.Context = true
 		monitor.GetEvents(&currentEvent)
-		rd = getRenderData(data, &shelf, &monitor)
+		getRenderData(data, &shelf, &monitor)
 	})
 
 	data.CSS.Adapter.AddEventListener("contextmenuup", func(e element.Event) {
 		currentEvent.Context = true
 		monitor.GetEvents(&currentEvent)
-		rd = getRenderData(data, &shelf, &monitor)
+		getRenderData(data, &shelf, &monitor)
 	})
 
-	// !ISSUE: the loop should be moved to the adapter and the rerendering should only happen if a eventlistener goes off
-	// + also have a animation loop seperate but thats later
-	// + really should run runevents after get events and if there is any changes then rerender
-	// + ahh what about dom changes in the js api...
-	// + could swap to getters and setters but i don't like them
-	// Main game loop
-	rd = getRenderData(data, &shelf, &monitor)
-	// !TODO: Move to adapter
+	getRenderData(data, &shelf, &monitor)
 
-	for !shouldStop {
-		if !shouldStop && debug {
-			shouldStop = true
-		}
-		// Check if the window size has changed
-		data.CSS.Adapter.Render(rd)
-
-	}
 }
 
 // !TODO: This need to be better implemented but rn just testing
-func getRenderData(data *Window, shelf *library.Shelf, monitor *events.Monitor) []element.State {
+func getRenderData(data *Window, shelf *library.Shelf, monitor *events.Monitor) {
 	data.CSS.State["ROOT"] = element.State{
 		Width:  float32(data.CSS.Width),
 		Height: float32(data.CSS.Height),
@@ -364,15 +351,15 @@ func getRenderData(data *Window, shelf *library.Shelf, monitor *events.Monitor) 
 
 	monitor.RunEvents(data.document.Children[0])
 	start := time.Now()
-	newDoc := AddStyles(data.CSS, data.document.Children[0], &data.document)
+	newDoc := copyDocument(data.CSS, data.document.Children[0], &data.document)
 
 	data.CSS.ComputeNodeStyle(newDoc)
 
-	rd := data.Render(newDoc, shelf)
+	rd := data.render(newDoc, shelf)
 
 	data.CSS.Adapter.Load(rd)
 
-	AddScroll(&data.document, data.CSS.State)
+	addScroll(&data.document, data.CSS.State)
 
 	data.Scripts.Run(&data.document)
 	shelf.Clean()
@@ -382,10 +369,10 @@ func getRenderData(data *Window, shelf *library.Shelf, monitor *events.Monitor) 
 	// + I think have node.ComputeNodeStyle would make this nice
 
 	fmt.Println(time.Since(start))
-	return rd
+	data.RenderData = rd
 }
 
-func AddStyles(c cstyle.CSS, node *element.Node, parent *element.Node) *element.Node {
+func copyDocument(c cstyle.CSS, node *element.Node, parent *element.Node) *element.Node {
 	n := *node
 	n.Parent = parent
 	// !DEVMAN: Copying is done here, would like to remove this and add it to ComputeNodeStyle, so I can save a tree climb
@@ -399,7 +386,7 @@ func AddStyles(c cstyle.CSS, node *element.Node, parent *element.Node) *element.
 			n.Children = append(n.Children, node.Children[i])
 		}
 		for i := range node.Children {
-			n.Children[i] = AddStyles(c, node.Children[i], &n)
+			n.Children[i] = copyDocument(c, node.Children[i], &n)
 		}
 
 	}
@@ -407,16 +394,16 @@ func AddStyles(c cstyle.CSS, node *element.Node, parent *element.Node) *element.
 	return &n
 }
 
-func AddScroll(n *element.Node, s map[string]element.State) {
+func addScroll(n *element.Node, s map[string]element.State) {
 	// !NOTE: This is the only spot you can pierce the vale
 	n.ScrollHeight = s[n.Properties.Id].ScrollHeight
 	n.ScrollWidth = s[n.Properties.Id].ScrollWidth
 	for i := range n.Children {
-		AddScroll(n.Children[i], s)
+		addScroll(n.Children[i], s)
 	}
 }
 
-func CreateNode(node *html.Node, parent *element.Node, stylesheets *element.Styles) {
+func createNode(node *html.Node, parent *element.Node, stylesheets *element.Styles) {
 	if node.Type == html.ElementNode {
 		newNode := parent.CreateElement(node.Data)
 		newNode.Parent = parent
@@ -457,14 +444,14 @@ func CreateNode(node *html.Node, parent *element.Node, stylesheets *element.Styl
 		// Recursively traverse child nodes
 		for child := node.FirstChild; child != nil; child = child.NextSibling {
 			if child.Type == html.ElementNode {
-				CreateNode(child, &newNode, stylesheets)
+				createNode(child, &newNode, stylesheets)
 			}
 		}
 		parent.AppendChild(&newNode)
 	} else {
 		for child := node.FirstChild; child != nil; child = child.NextSibling {
 			if child.Type == html.ElementNode {
-				CreateNode(child, parent, stylesheets)
+				createNode(child, parent, stylesheets)
 			}
 		}
 	}

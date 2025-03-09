@@ -28,7 +28,7 @@ func Init() cstyle.Transformer {
 			if nonRenderTags[n.TagName] {
 				return n
 			}
-			words := strings.Split(strings.TrimSpace(n.InnerText), " ")
+			words := strings.Split(strings.TrimSpace(DecodeHTMLEscapes(n.InnerText)), " ")
 			n.InnerText = ""
 			if n.ComputedStyle["display"] == "inline" {
 				n.InnerText = DecodeHTMLEscapes(words[0])
@@ -37,7 +37,7 @@ func Init() cstyle.Transformer {
 					a := (len(words) - 1) - i
 					if len(strings.TrimSpace(words[a])) > 0 {
 						el := n.CreateElement("text")
-						el.InnerText = DecodeHTMLEscapes(words[a])
+						el.InnerText = words[a]
 
 						el.Parent = n
 						element.QuickStyles(&el)
@@ -51,7 +51,7 @@ func Init() cstyle.Transformer {
 				for i := 0; i < len(words); i++ {
 					if len(strings.TrimSpace(words[i])) > 0 {
 						el := n.CreateElement("text")
-						el.InnerText = DecodeHTMLEscapes(words[i])
+						el.InnerText = words[i]
 						el.Parent = n
 						element.QuickStyles(&el)
 						el.ComputedStyle["display"] = "inline"
