@@ -159,10 +159,9 @@ func (w *Window) render(doc *element.Node, shelf *library.Shelf) []element.State
 
 		key := strconv.Itoa(wbw) + strconv.Itoa(hbw) + utils.RGBAtoString(self.Background)
 
-		exists := shelf.Check(key)
-		bounds := shelf.Bounds(key)
+		bounds, exists := shelf.GetBounds(key)
 
-		if exists && bounds[0] == int(wbw) && bounds[1] == int(hbw) {
+		if exists && bounds.Width == int(wbw) && bounds.Height == int(hbw) {
 			lookup := make(map[string]struct{}, len(self.Textures))
 			for _, v := range self.Textures {
 				lookup[v] = struct{}{}
@@ -189,7 +188,7 @@ func (w *Window) render(doc *element.Node, shelf *library.Shelf) []element.State
 				can.Fill()
 				can.ClosePath()
 
-				shelf.Set(key, *can.RGBA)
+				shelf.Set(key, can.Context.Image())
 				self.Textures = append([]string{key}, self.Textures...)
 				store[k] = self
 			}
@@ -215,7 +214,7 @@ func flatten(n *element.Node) []*element.Node {
 
 func open(data *Window) {
 	shelf := library.Shelf{
-		Textures:   map[string]image.RGBA{},
+		Textures:   map[string]image.Image{},
 		References: map[string]bool{},
 	}
 

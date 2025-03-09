@@ -2,7 +2,6 @@ package img
 
 import (
 	"bytes"
-	"grim/canvas"
 	"grim/cstyle"
 	"grim/element"
 	"image"
@@ -42,17 +41,18 @@ func Init() cstyle.Transformer {
 			} else {
 				img, _ := c.Adapter.Library.Get(n.Properties.Id + "canvas")
 				width, height := n.ComputedStyle["width"], n.ComputedStyle["height"]
-				if n.ComputedStyle["width"] == "" {
+				if width == "" {
 					width = strconv.Itoa(img.Bounds().Dx()) + "px"
 				}
-				if n.ComputedStyle["height"] == "" {
+				if height == "" {
 					height = strconv.Itoa(img.Bounds().Dy()) + "px"
 				}
+				// !ISSUE: Doesn't resize and uses a lot of memory (nah its the top)
+				// + here resize the image then store it, then just add the key to the state.Textures
+				ctx := n.GetContext(img.Bounds().Dx(), img.Bounds().Dy())
 				n.ComputedStyle["width"] = width
 				n.ComputedStyle["height"] = height
-				n.Canvas = &canvas.Canvas{
-					RGBA: img,
-				}
+				ctx.DrawImage(img, 0, 0)
 			}
 
 			return n

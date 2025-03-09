@@ -189,9 +189,10 @@ func Draw(n *element.State, shelf *library.Shelf) {
 				n.Textures = append(n.Textures, key)
 			}
 		} else {
-			ctx := canvas.NewCanvas(int(n.X+
-				n.Width+n.Border.Left.Width+n.Border.Right.Width),
-				int(n.Y+n.Height+n.Border.Top.Width+n.Border.Bottom.Width))
+			w := int(n.X + n.Width + n.Border.Left.Width + n.Border.Right.Width)
+			h := int(n.Y + n.Height + n.Border.Top.Width + n.Border.Bottom.Width)
+
+			ctx := canvas.NewCanvas(w, h)
 			ctx.SetStrokeStyle(0, 0, 0, 255)
 			if n.Border.Top.Width > 0 {
 				drawBorderSide(ctx, "top", n.Border.Top, n, n.Border.Top.Style)
@@ -205,7 +206,7 @@ func Draw(n *element.State, shelf *library.Shelf) {
 			if n.Border.Left.Width > 0 {
 				drawBorderSide(ctx, "left", n.Border.Left, n, n.Border.Left.Style)
 			}
-			n.Textures = append(n.Textures, shelf.Set(key, *ctx.RGBA))
+			n.Textures = append(n.Textures, shelf.Set(key, ctx.Context.Image()))
 		}
 
 	}
@@ -603,6 +604,34 @@ func genTopLine(ctx *canvas.Canvas, s1w, s2w, borderWidth, v1, v2, width, o1, o2
 	ctx.Arc(width-v2, v2, v2-o2, -math.Pi/2, startAngleRight[0]-math.Pi)
 	sprX, sprY := PointAtAngle(width-v2, v2, v2-o2, startAngleRight[0]-math.Pi)
 	return splX, splY, sprX, sprY
+}
+
+func getHeight(s1w, s2w, borderWidth, v1, v2, width, o1, o2 float64) float64 {
+	// Top-left corner arc
+	startAngleLeft := FindBorderStopAngle(
+		image.Point{X: 0, Y: 0},
+		image.Point{X: int(s1w), Y: int(borderWidth)},
+		image.Point{X: int(v1), Y: int(v1)},
+		v1-o1,
+	)
+	// Reversed to get startpoint
+	_, splY := PointAtAngle(v1, v1, v1-o1, startAngleLeft[0]-math.Pi)
+	// top line
+
+	// Top-right corner arc
+	startAngleRight := FindBorderStopAngle(
+		image.Point{X: int(width), Y: 0},
+		image.Point{X: int(width - s2w), Y: int(borderWidth)},
+		image.Point{X: int(width - v2), Y: int(v2)},
+		v2-o2,
+	)
+	_, sprY := PointAtAngle(width-v2, v2, v2-o2, startAngleRight[0]-math.Pi)
+
+	if splY > sprY {
+		return splY
+	} else {
+		return sprY
+	}
 }
 
 func FindBorderStopAngle(origin, crossPoint, circleCenter image.Point, radius float64) []float64 {

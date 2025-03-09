@@ -239,9 +239,9 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 			}
 			width = font.MeasureText(metadata, metadata.Text+" ")
 		} else {
-			var data *image.RGBA
+			var data image.Image
 			data, width = font.Render(metadata)
-			self.Textures = append(self.Textures, c.Adapter.Library.Set(key, *data))
+			self.Textures = append(self.Textures, c.Adapter.Library.Set(key, data))
 		}
 
 		if (style["height"] == "" && style["min-height"] == "") || n.TagName == "text" {
@@ -266,13 +266,15 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 				}
 			}
 
-			if n.Canvas.RGBA.Bounds().Dx() != int(self.Width) || n.Canvas.RGBA.Bounds().Dy() != int(self.Height) {
+			img := n.Canvas.Context.Image()
+			b := img.Bounds()
+			if b.Dx() != int(self.Width) || b.Dy() != int(self.Height) {
 				resized := image.NewRGBA(image.Rect(0, 0, int(self.Width), int(self.Height)))
-				draw.CatmullRom.Scale(resized, resized.Bounds(), n.Canvas.RGBA, n.Canvas.RGBA.Bounds(), draw.Over, &draw.Options{})
-				n.Canvas.RGBA = resized
+				draw.CatmullRom.Scale(resized, resized.Bounds(), img, img.Bounds(), draw.Over, &draw.Options{})
+				// n.Canvas.RGBA = resized
 			}
 
-			can := shelf.Set(key, *n.Canvas.RGBA)
+			can := shelf.Set(key, img)
 			if !found {
 				self.Textures = append(self.Textures, can)
 			}

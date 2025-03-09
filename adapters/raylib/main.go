@@ -1,14 +1,13 @@
 package raylib
 
 import (
+	rl "github.com/gen2brain/raylib-go/raylib"
 	adapter "grim/adapters"
 	"grim/element"
 	"os"
 	"path/filepath"
 	"runtime"
 	"slices"
-
-	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
 func Init() *adapter.Adapter {
@@ -114,20 +113,24 @@ func (wm *WindowManager) LoadTextures(nodes []element.State) {
 		if len(node.Textures) > 0 {
 			for _, key := range node.Textures {
 				rt, exists := wm.Textures[key]
-				texture, inLibrary := wm.Adapter.Library.Get(key)
+				bounds, inLibrary := wm.Adapter.Library.GetBounds(key)
 				matches := true
 				if inLibrary && exists {
-					tb := texture.Bounds()
-					matches = (rt.Width == int32(tb.Dx()) && rt.Height == int32(tb.Dy()))
+					matches = (rt.Width == int32(bounds.Width) && rt.Height == int32(bounds.Height))
+					if matches {
+						wm.Adapter.Library.Check(key)
+					}
 				}
 				// Unload existing texture if there is a mismatch
-				if exists && (!matches || !inLibrary) {
+				if exists && (!matches && !inLibrary) {
 					rl.UnloadTexture(*rt)
 					delete(wm.Textures, key)
 				}
 				if (!exists && inLibrary) || !matches {
-					textureLoaded := rl.LoadTextureFromImage(rl.NewImageFromImage(texture))
-					// rl.SetTextureFilter(textureLoaded, rl.FilterBilinear)
+					texture, _ := wm.Adapter.Library.Get(key)
+					img := rl.NewImageFromImage(texture)
+					textureLoaded := rl.LoadTextureFromImage(img)
+					rl.UnloadImage(img)
 					wm.Textures[key] = &textureLoaded
 				}
 			}

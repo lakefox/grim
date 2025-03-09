@@ -16,10 +16,8 @@ type Canvas struct {
 
 // NewCanvas creates a new canvas with the specified dimensions
 func NewCanvas(width, height int) *Canvas {
-	i := image.NewRGBA(image.Rect(0, 0, width, height))
 	return &Canvas{
-		Context: gg.NewContextForRGBA(i),
-		RGBA:    i,
+		Context: gg.NewContext(width, height),
 	}
 }
 
@@ -279,15 +277,19 @@ func (c *Canvas) DrawImage(img image.Image, x, y float64) {
 //		c.Context.Identity()
 //		c.Context.Transform(a, b, c1, d, e, f)
 //	}
-func (c *Canvas) GetImageData(x, y, width, height int) *image.RGBA {
-	subImage := c.RGBA.SubImage(image.Rect(x, y, x+width, y+height))
-	return subImage.(*image.RGBA)
-}
-func (c *Canvas) PutImageData(imgData *image.RGBA, x, y int) {
+//
+//	func (c *Canvas) GetImageData(x, y, width, height int) *image.Image {
+//		img := c.Context.Image()
+//		subImage := img.SubImage(image.Rect(x, y, x+width, y+height))
+//		return subImage.(*image.Image)
+//	}
+func (c *Canvas) PutImageData(imgData image.Image, x, y int) {
 	bounds := imgData.Bounds()
 	for i := bounds.Min.X; i < bounds.Max.X; i++ {
 		for j := bounds.Min.Y; j < bounds.Max.Y; j++ {
-			c.RGBA.Set(x+i, y+j, imgData.At(i, j))
+			r, g, b, a := imgData.At(i, j).RGBA()
+			c.SetFillStyle(uint8(r), uint8(g), uint8(b), uint8(a))
+			c.Context.SetPixel(x+i, y+j)
 		}
 	}
 }
