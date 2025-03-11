@@ -4,6 +4,7 @@ import (
 	rl "github.com/gen2brain/raylib-go/raylib"
 	adapter "grim/adapters"
 	"grim/element"
+	"image"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -18,15 +19,20 @@ func Init() *adapter.Adapter {
 	wm := NewWindowManager(&a)
 	a.Init = func(width, height int) {
 		wm.OpenWindow(int32(width), int32(height))
-		a.Library.UnloadCallback = func(key string) {
-			t, exists := wm.Textures[key]
-			if exists {
-				rl.UnloadTexture(*t)
-				delete(wm.Textures, key)
-			}
+	}
+	a.Load = func(key string, texture image.Image) {
+		img := rl.NewImageFromImage(texture)
+		textureLoaded := rl.LoadTextureFromImage(img)
+		rl.UnloadImage(img)
+		wm.Textures[key] = &textureLoaded
+
+	}
+	a.Unload = func(key string) {
+		if texture, exists := wm.Textures[key]; exists {
+			rl.UnloadTexture(*texture)
+			delete(wm.Textures, key)
 		}
 	}
-	a.Load = wm.LoadTextures
 	a.Render = func(state []element.State) {
 		if rl.WindowShouldClose() {
 			a.DispatchEvent(element.Event{Name: "close"})
@@ -90,6 +96,7 @@ func NewWindowManager(a *adapter.Adapter) *WindowManager {
 		CurrentEvents: make(map[int]bool, 256),
 		MousePosition: []int{int(mp.X), int(mp.Y)},
 		Adapter:       a,
+		Textures:      map[string]*rl.Texture2D{},
 	}
 }
 
@@ -104,41 +111,41 @@ func (wm *WindowManager) OpenWindow(width, height int32) {
 	rl.SetWindowState(rl.FlagWindowResizable)
 }
 
-func (wm *WindowManager) LoadTextures(nodes []element.State) {
-	if wm.Textures == nil {
-		wm.Textures = make(map[string]*rl.Texture2D)
-	}
-
-	for _, node := range nodes {
-		if len(node.Textures) > 0 {
-			for _, key := range node.Textures {
-				rt, exists := wm.Textures[key]
-				bounds, inLibrary := wm.Adapter.Library.GetBounds(key)
-				matches := true
-				if inLibrary && exists {
-					matches = (rt.Width == int32(bounds.Width) && rt.Height == int32(bounds.Height))
-					if matches {
-						wm.Adapter.Library.Check(key)
-					}
-				}
-				// Unload existing texture if there is a mismatch
-				if exists && (!matches && !inLibrary) {
-					rl.UnloadTexture(*rt)
-					delete(wm.Textures, key)
-				}
-				if (!exists && inLibrary) || !matches {
-					texture, _ := wm.Adapter.Library.Get(key)
-					img := rl.NewImageFromImage(texture)
-					textureLoaded := rl.LoadTextureFromImage(img)
-					rl.UnloadImage(img)
-					wm.Textures[key] = &textureLoaded
-				}
-			}
-
-		}
-	}
-}
-
+//	func (wm *WindowManager) LoadTextures(nodes []element.State) {
+//		if wm.Textures == nil {
+//			wm.Textures = make(map[string]*rl.Texture2D)
+//		}
+//
+//		for _, node := range nodes {
+//			if len(node.Textures) > 0 {
+//				for _, key := range node.Textures {
+//					rt, exists := wm.Textures[key]
+//					bounds, inLibrary := wm.Adapter.Library.GetBounds(key)
+//					matches := true
+//					if inLibrary && exists {
+//						matches = (rt.Width == int32(bounds.Width) && rt.Height == int32(bounds.Height))
+//						if matches {
+//							wm.Adapter.Library.Check(key)
+//						}
+//					}
+//					// Unload existing texture if there is a mismatch
+//					if exists && (!matches && !inLibrary) {
+//						rl.UnloadTexture(*rt)
+//						delete(wm.Textures, key)
+//					}
+//					if (!exists && inLibrary) || !matches {
+//						texture, _ := wm.Adapter.Library.Get(key)
+//						img := rl.NewImageFromImage(texture)
+//						textureLoaded := rl.LoadTextureFromImage(img)
+//						rl.UnloadImage(img)
+//						wm.Textures[key] = &textureLoaded
+//					}
+//				}
+//
+//			}
+//		}
+//	}
+//
 // Draw draws all nodes on the window
 func (wm *WindowManager) Draw(nodes []element.State) {
 	indexes := []float32{0}

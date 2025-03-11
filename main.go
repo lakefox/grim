@@ -4,7 +4,6 @@ import (
 	_ "embed"
 	"fmt"
 	adapter "grim/adapters"
-	"grim/canvas"
 	"grim/cstyle"
 	"grim/cstyle/plugins/crop"
 	"grim/cstyle/plugins/flex"
@@ -19,14 +18,11 @@ import (
 	"grim/cstyle/transformers/scrollbar"
 	"grim/cstyle/transformers/text"
 	"grim/cstyle/transformers/ul"
-	"grim/font"
-	"grim/library"
-	"grim/scripts"
-	"grim/scripts/a"
-	"image"
-
 	"grim/element"
 	"grim/events"
+	"grim/font"
+	"grim/scripts"
+	"grim/scripts/a"
 	"grim/utils"
 	"net/url"
 	"path/filepath"
@@ -122,82 +118,6 @@ func (w *Window) Open() {
 	}
 }
 
-func (w *Window) render(doc *element.Node, shelf *library.Shelf) []element.State {
-	s := w.CSS.State
-
-	flatDoc := flatten(doc)
-
-	store := []element.State{}
-
-	keys := []string{}
-
-	for _, v := range flatDoc {
-		store = append(store, s[v.Properties.Id])
-		keys = append(keys, v.Properties.Id)
-	}
-
-	// Create a set of keys to keep
-	keysSet := make(map[string]struct{}, len(keys))
-	for _, key := range keys {
-		keysSet[key] = struct{}{}
-	}
-
-	// Iterate over the map and delete keys not in the set
-	for k := range s {
-		if _, found := keysSet[k]; !found {
-			textures := s[k].Textures
-			for _, t := range textures {
-				shelf.Delete(t)
-			}
-			delete(s, k)
-		}
-	}
-	for k, self := range store {
-		// Option: Have Grim render all elements
-		wbw := int(self.Width + self.Border.Left.Width + self.Border.Right.Width)
-		hbw := int(self.Height + self.Border.Top.Width + self.Border.Bottom.Width)
-
-		key := strconv.Itoa(wbw) + strconv.Itoa(hbw) + utils.RGBAtoString(self.Background)
-
-		bounds, exists := shelf.GetBounds(key)
-
-		if exists && bounds.Width == int(wbw) && bounds.Height == int(hbw) {
-			lookup := make(map[string]struct{}, len(self.Textures))
-			for _, v := range self.Textures {
-				lookup[v] = struct{}{}
-			}
-
-			if _, found := lookup[key]; !found {
-				self.Textures = append([]string{key}, self.Textures...)
-				store[k] = self
-			}
-		} else if self.Background.A > 0 {
-			lookup := make(map[string]struct{}, len(self.Textures))
-			for _, v := range self.Textures {
-				lookup[v] = struct{}{}
-			}
-
-			if _, found := lookup[key]; !found {
-				// Only make the drawing if it's not found
-				can := canvas.NewCanvas(wbw, hbw)
-				can.BeginPath()
-				can.SetFillStyle(self.Background.R, self.Background.G, self.Background.B, self.Background.A)
-				can.SetLineWidth(10)
-				can.RoundedRect(0, 0, float64(wbw), float64(hbw),
-					[]float64{float64(self.Border.Radius.TopLeft), float64(self.Border.Radius.TopRight), float64(self.Border.Radius.BottomRight), float64(self.Border.Radius.BottomLeft)})
-				can.Fill()
-				can.ClosePath()
-
-				shelf.Set(key, can.Context.Image())
-				self.Textures = append([]string{key}, self.Textures...)
-				store[k] = self
-			}
-		}
-	}
-
-	return store
-}
-
 func flatten(n *element.Node) []*element.Node {
 	var nodes []*element.Node
 	nodes = append(nodes, n)
@@ -213,15 +133,9 @@ func flatten(n *element.Node) []*element.Node {
 }
 
 func open(data *Window) {
-	shelf := library.Shelf{
-		Textures:   map[string]image.Image{},
-		References: map[string]bool{},
-	}
-
 	data.document.ComputedStyle["width"] = strconv.Itoa(int(data.CSS.Width)) + "px"
 	data.document.ComputedStyle["height"] = strconv.Itoa(int(data.CSS.Height)) + "px"
 
-	data.CSS.Adapter.Library = &shelf
 	data.CSS.Adapter.Init(int(data.CSS.Width), int(data.CSS.Height))
 
 	data.CSS.State = map[string]element.State{}
@@ -260,7 +174,7 @@ func open(data *Window) {
 
 		data.document.ComputedStyle["width"] = strconv.Itoa(wh["width"]) + "px"
 		data.document.ComputedStyle["height"] = strconv.Itoa(wh["height"]) + "px"
-		getRenderData(data, &shelf, &monitor)
+		getRenderData(data, &monitor)
 	})
 
 	data.CSS.Adapter.AddEventListener("close", func(e element.Event) {
@@ -279,7 +193,7 @@ func open(data *Window) {
 			AltKey:   e.AltKey,
 		}
 		monitor.GetEvents(&currentEvent)
-		getRenderData(data, &shelf, &monitor)
+		getRenderData(data, &monitor)
 	})
 	data.CSS.Adapter.AddEventListener("keyup", func(e element.Event) {
 		currentEvent.Key = 0
@@ -291,7 +205,7 @@ func open(data *Window) {
 			AltKey:   e.AltKey,
 		}
 		monitor.GetEvents(&currentEvent)
-		getRenderData(data, &shelf, &monitor)
+		getRenderData(data, &monitor)
 	})
 
 	data.CSS.Adapter.AddEventListener("mousemove", func(e element.Event) {
@@ -300,7 +214,7 @@ func open(data *Window) {
 			if pos[0] < int(data.CSS.Width) && pos[1] < int(data.CSS.Height) {
 				currentEvent.Position = pos
 				monitor.GetEvents(&currentEvent)
-				getRenderData(data, &shelf, &monitor)
+				getRenderData(data, &monitor)
 			}
 		}
 	})
@@ -309,39 +223,39 @@ func open(data *Window) {
 		currentEvent.ScrollY = e.Data.(int)
 		monitor.GetEvents(&currentEvent)
 		currentEvent.ScrollY = 0
-		getRenderData(data, &shelf, &monitor)
+		getRenderData(data, &monitor)
 	})
 
 	data.CSS.Adapter.AddEventListener("mousedown", func(e element.Event) {
 		currentEvent.Click = true
 		monitor.GetEvents(&currentEvent)
-		getRenderData(data, &shelf, &monitor)
+		getRenderData(data, &monitor)
 	})
 
 	data.CSS.Adapter.AddEventListener("mouseup", func(e element.Event) {
 		currentEvent.Click = false
 		monitor.GetEvents(&currentEvent)
-		getRenderData(data, &shelf, &monitor)
+		getRenderData(data, &monitor)
 	})
 
 	data.CSS.Adapter.AddEventListener("contextmenudown", func(e element.Event) {
 		currentEvent.Context = true
 		monitor.GetEvents(&currentEvent)
-		getRenderData(data, &shelf, &monitor)
+		getRenderData(data, &monitor)
 	})
 
 	data.CSS.Adapter.AddEventListener("contextmenuup", func(e element.Event) {
 		currentEvent.Context = true
 		monitor.GetEvents(&currentEvent)
-		getRenderData(data, &shelf, &monitor)
+		getRenderData(data, &monitor)
 	})
 
-	getRenderData(data, &shelf, &monitor)
+	getRenderData(data, &monitor)
 
 }
 
 // !TODO: This need to be better implemented but rn just testing
-func getRenderData(data *Window, shelf *library.Shelf, monitor *events.Monitor) {
+func getRenderData(data *Window, monitor *events.Monitor) {
 	data.CSS.State["ROOT"] = element.State{
 		Width:  float32(data.CSS.Width),
 		Height: float32(data.CSS.Height),
@@ -354,14 +268,37 @@ func getRenderData(data *Window, shelf *library.Shelf, monitor *events.Monitor) 
 
 	data.CSS.ComputeNodeStyle(newDoc)
 
-	rd := data.render(newDoc, shelf)
+	// !ISSUE: Clean state of removed elements
+	flatDoc := flatten(newDoc)
 
-	data.CSS.Adapter.Load(rd)
+	rd := []element.State{}
+
+	keys := []string{}
+	s := data.CSS.State
+	for _, v := range flatDoc {
+		rd = append(rd, s[v.Properties.Id])
+		keys = append(keys, v.Properties.Id)
+	}
+
+	// Create a set of keys to keep
+	keysSet := make(map[string]struct{}, len(keys))
+	for _, key := range keys {
+		keysSet[key] = struct{}{}
+	}
+
+	// Iterate over the map and delete keys not in the set
+	for k := range s {
+		if _, found := keysSet[k]; !found {
+			for t := range data.CSS.Adapter.Textures[k] {
+				data.CSS.Adapter.UnloadTexture(k, t)
+			}
+			delete(s, k)
+		}
+	}
 
 	addScroll(&data.document, data.CSS.State)
 
 	data.Scripts.Run(&data.document)
-	shelf.Clean()
 
 	// fmt.Println(newDoc.OuterHTML())
 	// !TODO: Should return effected node, then render those specific
@@ -369,6 +306,7 @@ func getRenderData(data *Window, shelf *library.Shelf, monitor *events.Monitor) 
 
 	fmt.Println(time.Since(start))
 	data.RenderData = rd
+	(data.CSS.State) = s
 }
 
 func copyDocument(c cstyle.CSS, node *element.Node, parent *element.Node) *element.Node {

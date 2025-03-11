@@ -1,8 +1,9 @@
 package adapter
 
 import (
+	"fmt"
 	"grim/element"
-	"grim/library"
+	"image"
 	"os"
 	"path/filepath"
 )
@@ -10,10 +11,12 @@ import (
 type Adapter struct {
 	Init       func(width int, height int)
 	Render     func(state []element.State)
-	Load       func(state []element.State)
+	Load       func(key string, texture image.Image)
+	Unload     func(key string)
 	events     map[string][]func(element.Event)
-	Library    *library.Shelf
 	FileSystem FileSystem
+	// id -> type -> key
+	Textures map[string]map[string]string
 }
 
 func (a *Adapter) AddEventListener(name string, callback func(element.Event)) {
@@ -30,6 +33,25 @@ func (a *Adapter) DispatchEvent(event element.Event) {
 			v(event)
 		}
 	}
+}
+
+// !ISSUE: Make a init function
+func (a *Adapter) LoadTexture(id, t, key string, texture image.Image) {
+	a.Load(key, texture)
+	fmt.Println(id, t)
+	if a.Textures == nil {
+		a.Textures = map[string]map[string]string{}
+	}
+	if a.Textures[id] == nil {
+		a.Textures[id] = map[string]string{}
+	}
+	a.Textures[id][t] = key
+}
+
+func (a *Adapter) UnloadTexture(id, t string) {
+	fmt.Println(id, t)
+	a.Unload(a.Textures[id][t])
+	delete(a.Textures[id], t)
 }
 
 type FileSystem struct {

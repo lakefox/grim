@@ -1,10 +1,10 @@
 package border
 
 import (
+	adapter "grim/adapters"
 	"grim/canvas"
 	"grim/color"
 	"grim/element"
-	"grim/library"
 	"grim/utils"
 	"image"
 	"math"
@@ -165,7 +165,7 @@ func Parse(cssProperties map[string]string, self, parent element.State) (element
 	}, nil
 }
 
-func Draw(n *element.State, shelf *library.Shelf) {
+func Draw(n *element.State, a *adapter.Adapter, id string) {
 	// lastChange := time.Now()
 	if n.Border.Top.Width > 0 ||
 		n.Border.Right.Width > 0 ||
@@ -176,9 +176,10 @@ func Draw(n *element.State, shelf *library.Shelf) {
 		// borderdata: widthstylecolorradius
 		// 50020020solid#fff520solid#fff520solid#fff520solid#fff520solid#fff
 		key := strconv.Itoa(int(n.Width)) + strconv.Itoa(int(n.Height)) + (strconv.Itoa(int(n.Border.Top.Width)) + n.Border.Top.Style + utils.RGBAtoString(n.Border.Top.Color) + strconv.Itoa(int(n.Border.Radius.TopLeft))) + (strconv.Itoa(int(n.Border.Left.Width)) + n.Border.Left.Style + utils.RGBAtoString(n.Border.Left.Color) + strconv.Itoa(int(n.Border.Radius.BottomLeft))) + (strconv.Itoa(int(n.Border.Bottom.Width)) + n.Border.Bottom.Style + utils.RGBAtoString(n.Border.Bottom.Color) + strconv.Itoa(int(n.Border.Radius.BottomRight))) + (strconv.Itoa(int(n.Border.Right.Width)) + n.Border.Right.Style + utils.RGBAtoString(n.Border.Right.Color) + strconv.Itoa(int(n.Border.Radius.TopRight)))
-		exists := shelf.Check(key)
 
-		if exists {
+		m, exists := a.Textures[id]["border"]
+
+		if exists && m == key {
 			// Convert slice to a map for faster lookup
 			lookup := make(map[string]struct{}, len(n.Textures))
 			for _, v := range n.Textures {
@@ -189,6 +190,9 @@ func Draw(n *element.State, shelf *library.Shelf) {
 				n.Textures = append(n.Textures, key)
 			}
 		} else {
+			if exists {
+				a.UnloadTexture(id, "border")
+			}
 			w := int(n.X + n.Width + n.Border.Left.Width + n.Border.Right.Width)
 			h := int(n.Y + n.Height + n.Border.Top.Width + n.Border.Bottom.Width)
 
@@ -206,7 +210,8 @@ func Draw(n *element.State, shelf *library.Shelf) {
 			if n.Border.Left.Width > 0 {
 				drawBorderSide(ctx, "left", n.Border.Left, n, n.Border.Left.Style)
 			}
-			n.Textures = append(n.Textures, shelf.Set(key, ctx.Context.Image()))
+			a.LoadTexture(id, "border", key, ctx.Context.Image())
+			n.Textures = append(n.Textures, key)
 		}
 
 	}
