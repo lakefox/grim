@@ -71,7 +71,7 @@ type State struct {
 	Width           float32
 	Height          float32
 	Border          Border
-	Textures        []string
+	Textures        map[string]string
 	EM              float32
 	Background      ic.RGBA
 	Margin          BoxSpacing

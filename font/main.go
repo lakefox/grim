@@ -353,7 +353,7 @@ func Render(text *MetaData) (image.Image, int) {
 	ctx.SetFillStyle(uint8(r), uint8(g), uint8(b), uint8(a))
 	ctx.Context.SetFontFace(font)
 	ctx.Context.DrawStringAnchored(text.Text, 0, float64(text.LineHeight)/2, 0, 0.3)
-
+	font.Close()
 	if text.Underlined || text.Overlined || text.LineThrough {
 		ctx.SetLineWidth(float64(text.DecorationThickness))
 		r, g, b, a = text.DecorationColor.RGBA()

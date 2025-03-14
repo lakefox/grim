@@ -5,7 +5,6 @@ import (
 	"github.com/golang/freetype/truetype"
 	adapter "grim/adapters"
 	"grim/border"
-	"grim/canvas"
 	"grim/color"
 	"grim/element"
 	"grim/font"
@@ -58,6 +57,9 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 	// Head is not renderable
 	s := c.State
 	self := s[n.Properties.Id]
+	if self.Textures == nil {
+		self.Textures = map[string]string{}
+	}
 
 	if nonRenderTags[n.TagName] {
 		return self
@@ -80,6 +82,10 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 
 	self.Background, _ = color.ParseRGBA(style["background-color"])
 	self.Border, _ = border.Parse(style, self, parent)
+	// Remove border if its 0
+	if self.Border.Top.Width+self.Border.Right.Width+self.Border.Left.Width+self.Border.Bottom.Width == 0 {
+		self.Textures["border"] = ""
+	}
 
 	if style["font-size"] == "" {
 		n.ComputedStyle["font-size"] = "1em"
@@ -229,14 +235,6 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 		m, exists := c.Adapter.Textures[n.Properties.Id]["text"]
 		var width int
 		if exists && m == key {
-			lookup := make(map[string]struct{}, len(self.Textures))
-			for _, v := range self.Textures {
-				lookup[v] = struct{}{}
-			}
-
-			if _, found := lookup[key]; !found {
-				self.Textures = append(self.Textures, key)
-			}
 			width = font.MeasureText(metadata, metadata.Text+" ")
 		} else {
 			if exists {
@@ -246,8 +244,8 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 			var data image.Image
 			data, width = font.Render(metadata)
 			c.Adapter.LoadTexture(n.Properties.Id, "text", key, data)
-			self.Textures = append(self.Textures, key)
 		}
+		self.Textures["text"] = key
 
 		if (style["height"] == "" && style["min-height"] == "") || n.TagName == "text" {
 			self.Height = float32(metadata.LineHeight)
@@ -263,13 +261,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 	// Load canvas into textures
 	if n.TagName == "canvas" {
 		if n.Canvas != nil {
-			found := false
 			key := n.Properties.Id + "canvas"
-			for _, v := range self.Textures {
-				if v == key {
-					found = true
-				}
-			}
 
 			img := n.Canvas.Context.Image()
 			b := img.Bounds()
@@ -280,9 +272,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 			}
 
 			c.Adapter.LoadTexture(n.Properties.Id, "canvas", key, img)
-			if !found {
-				self.Textures = append(self.Textures, key)
-			}
+			self.Textures["canvas"] = key
 		}
 	}
 
@@ -341,43 +331,6 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 	c.State[n.Properties.Id] = self
 
 	border.Draw(&self, c.Adapter, n.Properties.Id)
-	// Render bg
-	wbw := int(self.Width + self.Border.Left.Width + self.Border.Right.Width)
-	hbw := int(self.Height + self.Border.Top.Width + self.Border.Bottom.Width)
-
-	key := strconv.Itoa(wbw) + strconv.Itoa(hbw) + utils.RGBAtoString(self.Background)
-
-	match, exists := c.Adapter.Textures[n.Properties.Id]["background"]
-
-	if exists && match == key {
-		lookup := make(map[string]struct{}, len(self.Textures))
-		for _, v := range self.Textures {
-			lookup[v] = struct{}{}
-		}
-
-		if _, found := lookup[key]; !found {
-			self.Textures = append([]string{key}, self.Textures...)
-		}
-	} else {
-		if exists {
-			c.Adapter.UnloadTexture(n.Properties.Id, "background")
-		}
-		if self.Background.A > 0 {
-			fmt.Println("miss", n.Properties.Id, wh.Width, m, p, match, key, exists)
-			// Only make the drawing if it's not found
-			can := canvas.NewCanvas(wbw, hbw)
-			can.BeginPath()
-			can.SetFillStyle(self.Background.R, self.Background.G, self.Background.B, self.Background.A)
-			can.SetLineWidth(10)
-			can.RoundedRect(0, 0, float64(wbw), float64(hbw),
-				[]float64{float64(self.Border.Radius.TopLeft), float64(self.Border.Radius.TopRight), float64(self.Border.Radius.BottomRight), float64(self.Border.Radius.BottomLeft)})
-			can.Fill()
-			can.ClosePath()
-
-			c.Adapter.LoadTexture(n.Properties.Id, "background", key, can.Context.Image())
-			self.Textures = append([]string{key}, self.Textures...)
-		}
-	}
 	c.State[n.Properties.Id] = self
 
 	for _, v := range plugins {
@@ -385,6 +338,36 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 			v.Handler(n, c)
 		}
 	}
+	self = c.State[n.Properties.Id]
 
+	// // Render bg
+	// wbw := int(self.Width + self.Border.Left.Width + self.Border.Right.Width)
+	// hbw := int(self.Height + self.Border.Top.Width + self.Border.Bottom.Width)
+	//
+	// key := strconv.Itoa(wbw) + strconv.Itoa(hbw) + utils.RGBAtoString(self.Background)
+	// match, exists := c.Adapter.Textures[n.Properties.Id]["background"]
+	//
+	// if !exists || match != key {
+	// 	if exists {
+	// 		c.Adapter.UnloadTexture(n.Properties.Id, "background")
+	// 	}
+	// 	if self.Background.A > 0 {
+	// 		// Only make the drawing if it's not found
+	// 		can := canvas.NewCanvas(wbw, hbw)
+	// 		can.BeginPath()
+	// 		can.SetFillStyle(self.Background.R, self.Background.G, self.Background.B, self.Background.A)
+	// 		can.SetLineWidth(10)
+	// 		can.RoundedRect(0, 0, float64(wbw), float64(hbw),
+	// 			[]float64{float64(self.Border.Radius.TopLeft), float64(self.Border.Radius.TopRight), float64(self.Border.Radius.BottomRight), float64(self.Border.Radius.BottomLeft)})
+	// 		can.Fill()
+	// 		can.ClosePath()
+	//
+	// 		c.Adapter.LoadTexture(n.Properties.Id, "background", key, can.Context.Image())
+	// 	}
+	// }
+	// if self.Textures["background"] != key {
+	// 	self.Textures["background"] = key
+	// }
+	// c.State[n.Properties.Id] = self
 	return self
 }

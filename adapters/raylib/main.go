@@ -161,7 +161,29 @@ func (wm *WindowManager) Draw(nodes []element.State) {
 				// Draw the border based on the style for each side
 
 				if node.Textures != nil {
-					for _, v := range node.Textures {
+					textures := []string{}
+
+					t := node.Textures["background"]
+					if t != "" {
+						textures = append(textures, t)
+					}
+
+					t = node.Textures["border"]
+					if t != "" {
+						textures = append(textures, t)
+					}
+
+					t = node.Textures["canvas"]
+					if t != "" {
+						textures = append(textures, t)
+					}
+
+					t = node.Textures["text"]
+					if t != "" {
+						textures = append(textures, t)
+					}
+
+					for _, v := range textures {
 						texture, exists := wm.Textures[v]
 						if exists {
 							sourceRec := rl.Rectangle{

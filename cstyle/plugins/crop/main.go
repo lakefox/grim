@@ -16,7 +16,6 @@ func Init() cstyle.Plugin {
 			}
 		},
 		Handler: func(n *element.Node, c *cstyle.CSS) {
-			// !TODO: Needs to find crop bounds for X
 			self := c.State[n.Properties.Id]
 
 			scrollTop, scrollLeft := findScroll(n)
@@ -77,7 +76,6 @@ func Init() cstyle.Plugin {
 					}
 				}
 			}
-
 			scrollTop = int((float32(scrollTop) / ((containerHeight / contentHeight) * containerHeight)) * containerHeight)
 			scrollLeft = int((float32(scrollLeft) / ((containerWidth / contentWidth) * containerWidth)) * containerWidth)
 

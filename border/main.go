@@ -165,55 +165,46 @@ func Parse(cssProperties map[string]string, self, parent element.State) (element
 	}, nil
 }
 
-func Draw(n *element.State, a *adapter.Adapter, id string) {
+func Draw(self *element.State, a *adapter.Adapter, id string) {
 	// lastChange := time.Now()
-	if n.Border.Top.Width > 0 ||
-		n.Border.Right.Width > 0 ||
-		n.Border.Bottom.Width > 0 ||
-		n.Border.Left.Width > 0 {
+	if self.Border.Top.Width > 0 ||
+		self.Border.Right.Width > 0 ||
+		self.Border.Bottom.Width > 0 ||
+		self.Border.Left.Width > 0 {
 
 		// Format: widthheightborderdatatopleftbottomright
 		// borderdata: widthstylecolorradius
 		// 50020020solid#fff520solid#fff520solid#fff520solid#fff520solid#fff
-		key := strconv.Itoa(int(n.Width)) + strconv.Itoa(int(n.Height)) + (strconv.Itoa(int(n.Border.Top.Width)) + n.Border.Top.Style + utils.RGBAtoString(n.Border.Top.Color) + strconv.Itoa(int(n.Border.Radius.TopLeft))) + (strconv.Itoa(int(n.Border.Left.Width)) + n.Border.Left.Style + utils.RGBAtoString(n.Border.Left.Color) + strconv.Itoa(int(n.Border.Radius.BottomLeft))) + (strconv.Itoa(int(n.Border.Bottom.Width)) + n.Border.Bottom.Style + utils.RGBAtoString(n.Border.Bottom.Color) + strconv.Itoa(int(n.Border.Radius.BottomRight))) + (strconv.Itoa(int(n.Border.Right.Width)) + n.Border.Right.Style + utils.RGBAtoString(n.Border.Right.Color) + strconv.Itoa(int(n.Border.Radius.TopRight)))
+		key := strconv.Itoa(int(self.Width)) + strconv.Itoa(int(self.Height)) + (strconv.Itoa(int(self.Border.Top.Width)) + self.Border.Top.Style + utils.RGBAtoString(self.Border.Top.Color) + strconv.Itoa(int(self.Border.Radius.TopLeft))) + (strconv.Itoa(int(self.Border.Left.Width)) + self.Border.Left.Style + utils.RGBAtoString(self.Border.Left.Color) + strconv.Itoa(int(self.Border.Radius.BottomLeft))) + (strconv.Itoa(int(self.Border.Bottom.Width)) + self.Border.Bottom.Style + utils.RGBAtoString(self.Border.Bottom.Color) + strconv.Itoa(int(self.Border.Radius.BottomRight))) + (strconv.Itoa(int(self.Border.Right.Width)) + self.Border.Right.Style + utils.RGBAtoString(self.Border.Right.Color) + strconv.Itoa(int(self.Border.Radius.TopRight)))
 
 		m, exists := a.Textures[id]["border"]
 
-		if exists && m == key {
-			// Convert slice to a map for faster lookup
-			lookup := make(map[string]struct{}, len(n.Textures))
-			for _, v := range n.Textures {
-				lookup[v] = struct{}{}
-			}
-
-			if _, found := lookup[key]; !found {
-				n.Textures = append(n.Textures, key)
-			}
-		} else {
+		if !exists || m != key {
 			if exists {
 				a.UnloadTexture(id, "border")
 			}
-			w := int(n.X + n.Width + n.Border.Left.Width + n.Border.Right.Width)
-			h := int(n.Y + n.Height + n.Border.Top.Width + n.Border.Bottom.Width)
+			w := int(self.X + self.Width + self.Border.Left.Width + self.Border.Right.Width)
+			h := int(self.Y + self.Height + self.Border.Top.Width + self.Border.Bottom.Width)
 
 			ctx := canvas.NewCanvas(w, h)
 			ctx.SetStrokeStyle(0, 0, 0, 255)
-			if n.Border.Top.Width > 0 {
-				drawBorderSide(ctx, "top", n.Border.Top, n, n.Border.Top.Style)
+			if self.Border.Top.Width > 0 {
+				drawBorderSide(ctx, "top", self.Border.Top, self, self.Border.Top.Style)
 			}
-			if n.Border.Right.Width > 0 {
-				drawBorderSide(ctx, "right", n.Border.Right, n, n.Border.Right.Style)
+			if self.Border.Right.Width > 0 {
+				drawBorderSide(ctx, "right", self.Border.Right, self, self.Border.Right.Style)
 			}
-			if n.Border.Bottom.Width > 0 {
-				drawBorderSide(ctx, "bottom", n.Border.Bottom, n, n.Border.Bottom.Style)
+			if self.Border.Bottom.Width > 0 {
+				drawBorderSide(ctx, "bottom", self.Border.Bottom, self, self.Border.Bottom.Style)
 			}
-			if n.Border.Left.Width > 0 {
-				drawBorderSide(ctx, "left", n.Border.Left, n, n.Border.Left.Style)
+			if self.Border.Left.Width > 0 {
+				drawBorderSide(ctx, "left", self.Border.Left, self, self.Border.Left.Style)
 			}
 			a.LoadTexture(id, "border", key, ctx.Context.Image())
-			n.Textures = append(n.Textures, key)
 		}
-
+		if self.Textures["border"] != key {
+			self.Textures["border"] = key
+		}
 	}
 
 }
