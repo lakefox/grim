@@ -100,6 +100,18 @@ type BoxSpacing struct {
 	Bottom float32
 }
 
+type Background struct {
+	Color      ic.RGBA
+	Image      string
+	PositionX  string
+	PositionY  string
+	Size       string
+	Repeat     string
+	Origin     string
+	Clip       string
+	Attachment string
+}
+
 // !MAN: Node Style getter/setter
 // + [!DEVMAN]Note: Contains all user inputed styles, all inline styles over ride stylesheet styles
 func (n *Node) SetStyle(key, value string) {

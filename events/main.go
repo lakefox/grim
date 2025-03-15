@@ -1,7 +1,6 @@
 package events
 
 import (
-	"fmt"
 	adapter "grim/adapters"
 	"grim/cstyle"
 	"grim/element"
@@ -131,7 +130,6 @@ func (m *Monitor) RunEvents(n *element.Node) bool {
 		}
 		eventListeners = append(eventListeners, "mousemove")
 	}
-	// !NOTE: I think the issue is when these change to a different state no update is happening
 
 	if evt.Hover != n.Hovered {
 		if evt.Hover {
@@ -365,7 +363,6 @@ func (m *Monitor) GetEvents(data *EventData) {
 
 			// Get the keycode of the pressed key
 			if data.Key != 0 {
-				fmt.Println(data.Key)
 				if self.ContentEditable {
 					// Sync the innertext and value but idk
 					// !ISSUE: This may not work

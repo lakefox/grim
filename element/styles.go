@@ -195,6 +195,10 @@ func (s Styles) GetStyles(n *Node) {
 		}
 	}
 
+	if n.TagName == "img" {
+		styles["background-image"] = "url(\"" + n.Src + "\")"
+	}
+
 	n.ComputedStyle = styles
 
 	n.InitalStyles = map[string]string{}

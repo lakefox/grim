@@ -1,7 +1,6 @@
 package adapter
 
 import (
-	"fmt"
 	"grim/element"
 	"image"
 	"os"
@@ -43,7 +42,6 @@ func (a *Adapter) DispatchEvent(event element.Event) {
 // !ISSUE: Make a init function
 func (a *Adapter) LoadTexture(id, t, key string, texture image.Image) {
 	a.Load(key, texture)
-	fmt.Println("load", id, t)
 	if a.Textures == nil {
 		a.Textures = map[string]map[string]string{}
 	}
@@ -54,7 +52,6 @@ func (a *Adapter) LoadTexture(id, t, key string, texture image.Image) {
 }
 
 func (a *Adapter) UnloadTexture(id, t string) {
-	fmt.Println("unload", id, t)
 	a.Unload(a.Textures[id][t])
 	delete(a.Textures[id], t)
 	if len(a.Textures[id]) == 0 {
