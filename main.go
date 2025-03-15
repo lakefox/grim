@@ -13,6 +13,7 @@ import (
 	img "grim/cstyle/transformers/image"
 	"time"
 
+	"grim/canvas"
 	marginblock "grim/cstyle/transformers/margin-block"
 	"grim/cstyle/transformers/ol"
 	"grim/cstyle/transformers/scrollbar"
@@ -21,7 +22,6 @@ import (
 	"grim/element"
 	"grim/events"
 	"grim/font"
-	"grim/canvas"
 	"grim/scripts"
 	"grim/scripts/a"
 	"grim/utils"
@@ -313,7 +313,7 @@ func getRenderData(data *Window, monitor *events.Monitor) {
 					can.SetFillStyle(self.Background.R, self.Background.G, self.Background.B, self.Background.A)
 					can.SetLineWidth(10)
 					can.RoundedRect(0, 0, float64(wbw), float64(hbw),
-					[]float64{float64(self.Border.Radius.TopLeft), float64(self.Border.Radius.TopRight), float64(self.Border.Radius.BottomRight), float64(self.Border.Radius.BottomLeft)})
+						[]float64{float64(self.Border.Radius.TopLeft), float64(self.Border.Radius.TopRight), float64(self.Border.Radius.BottomRight), float64(self.Border.Radius.BottomLeft)})
 					can.Fill()
 					can.ClosePath()
 
@@ -321,7 +321,6 @@ func getRenderData(data *Window, monitor *events.Monitor) {
 				}
 			}
 			if self.Textures["background"] != key {
-				fmt.Println(k)
 				if self.Textures == nil {
 					self.Textures = map[string]string{}
 				}
