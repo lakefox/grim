@@ -347,3 +347,8 @@ func (c *Canvas) RoundedRect(x, y, width, height float64, radii []float64) {
 	// Close the path
 	c.Context.ClosePath()
 }
+
+// !TODO: Make own gradient type that applies to gg to make portable
+func (c *Canvas) CreateLinearGradient(x0, y0, x1, y1 float64) gg.Gradient {
+	return gg.NewLinearGradient(x0, y0, x1, y1)
+}

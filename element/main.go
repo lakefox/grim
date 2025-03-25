@@ -73,7 +73,7 @@ type State struct {
 	Border          Border
 	Textures        map[string]string
 	EM              float32
-	Background      ic.RGBA
+	Background      []Background
 	Margin          BoxSpacing
 	Padding         BoxSpacing
 	Cursor          string
@@ -108,7 +108,6 @@ type Background struct {
 	Size       string
 	Repeat     string
 	Origin     string
-	Clip       string
 	Attachment string
 }
 

@@ -200,15 +200,17 @@ func getMP(n element.Node, style map[string]string, wh BoxSizing, state *map[str
 }
 
 var unitFactors = map[string]float64{
-	"px": 1,
-	"em": -1, // special handling
-	"pt": 1.33,
-	"pc": 16.89,
-	"%":  -1, // special handling
-	"vw": -1, // special handling
-	"vh": -1, // special handling
-	"cm": 37.79527559,
-	"in": 96,
+	"px":   1,
+	"rem":  -1, // special handling
+	"em":   -1, // special handling
+	"pt":   1.33,
+	"pc":   16.89,
+	"%":    -1, // special handling
+	"vw":   -1, // special handling
+	"vh":   -1, // special handling
+	"cm":   37.79527559,
+	"in":   96,
+	"auto": -1,
 }
 
 // ConvertToPixels converts a CSS measurement to pixels.
@@ -230,21 +232,28 @@ func ConvertToPixels(value string, em, max float32) float32 {
 
 	for unit, factor := range unitFactors {
 		if strings.HasSuffix(value, unit) {
+			if unit == "em" && strings.HasSuffix(value, "rem") {
+				continue
+			}
 			cutStr := strings.TrimSuffix(value, unit)
 			numericValue, err := strconv.ParseFloat(cutStr, 64)
-			if err != nil {
+			if err != nil && value != "auto" {
 				return 0
 			}
-
 			// Handle special units like "em", "%" etc.
 			if factor == -1 {
 				switch unit {
 				case "em":
 					return float32(numericValue) * em
+				// !ISSUE: REM not properly impleamented
+				case "rem":
+					return float32(numericValue) * em
 				case "%", "vw", "vh":
 					return float32(numericValue) * (max / 100)
 				case "pt":
 					return (float32(numericValue) * 96) / 72
+				case "auto":
+					return max
 				}
 			}
 			return float32(numericValue) * float32(factor)

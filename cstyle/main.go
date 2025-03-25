@@ -5,7 +5,6 @@ import (
 	"github.com/golang/freetype/truetype"
 	adapter "grim/adapters"
 	"grim/border"
-	"grim/color"
 	"grim/element"
 	"grim/font"
 	"grim/utils"
@@ -80,7 +79,6 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 		style[k] = v
 	}
 
-	self.Background, _ = color.ParseRGBA(style["background-color"])
 	self.Border, _ = border.Parse(style, self, parent)
 	// Remove border if its 0
 	if self.Border.Top.Width+self.Border.Right.Width+self.Border.Left.Width+self.Border.Bottom.Width == 0 {
@@ -109,6 +107,8 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 	}
 
 	c.State[n.Properties.Id] = self
+
+	self.Background = ParseBackground(style)
 
 	c.State[n.Properties.Id] = self
 	wh, m, p := utils.FindBounds(*n, style, &c.State)
@@ -203,10 +203,6 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 	self.X = x
 	self.Y = y
 
-	if n.Properties.Id == "ROOT:html0:body1:div0" {
-		fmt.Println(n.Properties.Id, x, y, wh.Width, wh.Height)
-	}
-
 	self.ContentEditable = n.ContentEditable
 
 	c.State[n.Properties.Id] = self
@@ -265,27 +261,6 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 	if n.TagName == "canvas" {
 		if n.Canvas != nil {
 			key := n.Properties.Id + "canvas"
-
-			img := n.Canvas.Context.Image()
-			b := img.Bounds()
-			if b.Dx() != int(self.Width) || b.Dy() != int(self.Height) {
-				resized := image.NewRGBA(image.Rect(0, 0, int(self.Width), int(self.Height)))
-				draw.CatmullRom.Scale(resized, resized.Bounds(), img, img.Bounds(), draw.Over, &draw.Options{})
-				// n.Canvas.RGBA = resized
-			}
-
-			c.Adapter.LoadTexture(n.Properties.Id, "canvas", key, img)
-			self.Textures["canvas"] = key
-		}
-	}
-
-	// Load background image
-	if style["background-image"] != "" {
-		if n.Canvas != nil {
-			wbw := int(self.Width + self.Border.Left.Width + self.Border.Right.Width)
-			hbw := int(self.Height + self.Border.Top.Width + self.Border.Bottom.Width)
-
-			key := strconv.Itoa(wbw) + strconv.Itoa(hbw) + utils.RGBAtoString(self.Background)
 
 			img := n.Canvas.Context.Image()
 			b := img.Bounds()

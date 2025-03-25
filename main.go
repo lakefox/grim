@@ -10,10 +10,8 @@ import (
 	"grim/cstyle/plugins/inline"
 	"grim/cstyle/plugins/textAlign"
 	"grim/cstyle/transformers/banda"
-	img "grim/cstyle/transformers/image"
 	"time"
 
-	"grim/canvas"
 	marginblock "grim/cstyle/transformers/margin-block"
 	"grim/cstyle/transformers/ol"
 	"grim/cstyle/transformers/scrollbar"
@@ -96,7 +94,6 @@ func New(adapterFunction *adapter.Adapter, width, height int) Window {
 	css.AddTransformer(marginblock.Init())
 	css.AddTransformer(ul.Init())
 	css.AddTransformer(ol.Init())
-	css.AddTransformer(img.Init())
 
 	el := element.Node{}
 	document := el.CreateElement("ROOT")
@@ -269,7 +266,6 @@ func getRenderData(data *Window, monitor *events.Monitor) {
 
 	data.CSS.ComputeNodeStyle(newDoc)
 
-	// !ISSUE: Clean state of removed elements
 	flatDoc := flatten(newDoc)
 
 	rd := []element.State{}
@@ -287,50 +283,28 @@ func getRenderData(data *Window, monitor *events.Monitor) {
 		keysSet[key] = struct{}{}
 	}
 
-	// Iterate over the map and delete keys not in the set
 	for k, self := range s {
+		key := cstyle.BackgroundKey(self)
 		if _, found := keysSet[k]; !found {
 			for t := range data.CSS.Adapter.Textures[k] {
 				data.CSS.Adapter.UnloadTexture(k, t)
 			}
 			delete(s, k)
 		} else {
-			// Render bg
-			wbw := int(self.Width + self.Border.Left.Width + self.Border.Right.Width)
-			hbw := int(self.Height + self.Border.Top.Width + self.Border.Bottom.Width)
-
-			key := strconv.Itoa(wbw) + strconv.Itoa(hbw) + utils.RGBAtoString(self.Background)
-			match, exists := data.CSS.Adapter.Textures[k]["background"]
-
-			if !exists || match != key {
-				if exists {
-					data.CSS.Adapter.UnloadTexture(k, "background")
-				}
-				if self.Background.A > 0 {
-					// Only make the drawing if it's not found
-					can := canvas.NewCanvas(wbw, hbw)
-					can.BeginPath()
-					can.SetFillStyle(self.Background.R, self.Background.G, self.Background.B, self.Background.A)
-					can.SetLineWidth(10)
-					can.RoundedRect(0, 0, float64(wbw), float64(hbw),
-						[]float64{float64(self.Border.Radius.TopLeft), float64(self.Border.Radius.TopRight), float64(self.Border.Radius.BottomRight), float64(self.Border.Radius.BottomLeft)})
-					can.Fill()
-					can.ClosePath()
-
-					data.CSS.Adapter.LoadTexture(k, "background", key, can.Context.Image())
-				}
-			}
-			if self.Textures["background"] != key {
+			if data.CSS.Adapter.Textures[k]["background"] != key {
+				img := cstyle.GenerateBackground(data.CSS, self)
+				data.CSS.Adapter.LoadTexture(k, "background", key, img)
 				if self.Textures == nil {
 					self.Textures = map[string]string{}
 				}
-				self.Textures["background"] = key
-			}
 
+				self.Textures["background"] = key
+				data.CSS.State[k] = self
+			}
 		}
 	}
 
-	addScroll(&data.document, data.CSS.State)
+	addScroll(&data.document, s)
 
 	data.Scripts.Run(&data.document)
 

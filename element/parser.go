@@ -32,7 +32,7 @@ func ParseCSS(css string) map[string][]*StyleMap {
 		styleBlock := strings.TrimSpace(strings.TrimSuffix(parts[1], "}"))
 
 		// Parse selectors and styles
-		selectors := parseSelectors(selectorBlock)
+		selectors := Token('(', ')', ',', selectorBlock)
 		styles := parseStylesSimple(styleBlock)
 		styles = Expander(styles)
 		// Add to style maps
@@ -113,42 +113,6 @@ func parseStylesSimple(styleBlock string) map[string]string {
 	return styles
 }
 
-func parseSelectors(selectorBlock string) []string {
-	var selectors []string
-	var current strings.Builder
-	var parenthesesDepth int
-
-	for _, char := range selectorBlock {
-		switch char {
-		case '(':
-			// Enter parentheses
-			parenthesesDepth++
-			current.WriteRune(char)
-		case ')':
-			// Exit parentheses
-			parenthesesDepth--
-			current.WriteRune(char)
-		case ',':
-			// Split only if not inside parentheses
-			if parenthesesDepth == 0 {
-				selectors = append(selectors, strings.TrimSpace(current.String()))
-				current.Reset()
-			} else {
-				current.WriteRune(char)
-			}
-		default:
-			current.WriteRune(char)
-		}
-	}
-
-	// Add the last selector (if any)
-	if current.Len() > 0 {
-		selectors = append(selectors, strings.TrimSpace(current.String()))
-	}
-
-	return selectors
-}
-
 // removeComments removes CSS comments without using regex
 func removeComments(css string) string {
 	var result bytes.Buffer
@@ -213,4 +177,43 @@ func parseKeyValue(style string) (string, string) {
 		}
 	}
 	return "", ""
+}
+
+// splitTokens splits a string into tokens, preserving content within parentheses
+func Token(start, end, split rune, s string) []string {
+	var tokens []string
+	var currentToken strings.Builder
+	parenDepth := 0
+	inSpace := true // Track if we're in whitespace
+
+	for _, char := range s {
+		if char == start {
+			parenDepth++
+			currentToken.WriteRune(char)
+			inSpace = false
+		} else if char == end {
+			parenDepth--
+			currentToken.WriteRune(char)
+			inSpace = false
+		} else if char == split && parenDepth == 0 {
+			// If we're at the top level (not inside parentheses) and encounter whitespace
+			if !inSpace && currentToken.Len() > 0 {
+				// We've reached the end of a token
+				tokens = append(tokens, currentToken.String())
+				currentToken.Reset()
+			}
+			inSpace = true
+		} else {
+			// Add the character to the current token
+			currentToken.WriteRune(char)
+			inSpace = false
+		}
+	}
+
+	// Add the final token if any
+	if currentToken.Len() > 0 {
+		tokens = append(tokens, currentToken.String())
+	}
+
+	return tokens
 }

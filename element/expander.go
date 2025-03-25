@@ -19,6 +19,7 @@ var backgroundProps = []string{
 }
 
 func Expander(styles map[string]string) map[string]string {
+	// !TODO: modify to expand all attributes not just the background element
 	parsed := parseBackground(styles["background"])
 
 	for _, v := range backgroundProps {
@@ -32,6 +33,7 @@ func Expander(styles map[string]string) map[string]string {
 			}
 		}
 	}
+
 	delete(styles, "background")
 
 	if styles["margin"] != "" {
@@ -153,10 +155,18 @@ func parseLayer(layer string) map[string]string {
 	}
 
 	// Extract url() part first
-	urlMatch := extractURL(layer)
-	if urlMatch != "" {
-		result["background-image"] = urlMatch
-		layer = strings.Replace(layer, urlMatch, "", 1)
+	if strings.Contains(layer, "url(") {
+		urlMatch := extractFunc("url", layer)
+		if urlMatch != "" {
+			result["background-image"] = urlMatch
+			layer = strings.Replace(layer, urlMatch, "", 1)
+		}
+	} else if strings.Contains("linear-gradient(", layer) {
+		urlMatch := extractFunc("linear-gradient", layer)
+		if urlMatch != "" {
+			result["background-image"] = urlMatch
+			layer = strings.Replace(layer, urlMatch, "", 1)
+		}
 	}
 
 	// Look for position/size pattern (with /)
@@ -177,7 +187,7 @@ func parseLayer(layer string) map[string]string {
 		}
 	}
 	// Process remaining tokens
-	tokens := splitTokens(layer)
+	tokens := Token('(', ')', ' ', layer)
 	for _, token := range tokens {
 		switch {
 		case isColorValue(token):
@@ -187,91 +197,21 @@ func parseLayer(layer string) map[string]string {
 		case isAttachmentValue(token):
 			result["background-attachment"] = token
 		case isBoxValue(token):
-			if result["background-origin"] == "padding-box" {
-				result["background-origin"] = token
-			} else {
-				result["background-clip"] = token
-			}
+			result["background-clip"] = token
 		case isPositionValue(token):
 			// Only set if not already set by position/size pattern
-			if result["background-position"] == "0% 0%" {
-				result["background-position"] = token
-				parsePositionXY(token, result)
-			} else {
-				result["background-position"] += " " + token
-				parsePositionXY(result["background-position"], result)
-			}
+			result["background-position"] += " " + token
+			parsePositionXY(result["background-position"], result)
 		}
 	}
 
 	return result
 }
 
-// splitTokens splits a string into tokens, preserving content within parentheses
-func splitTokens(s string) []string {
-    var tokens []string
-    var currentToken strings.Builder
-    parenDepth := 0
-    inSpace := true  // Track if we're in whitespace
-
-    for _, char := range s {
-        if char == '(' {
-            parenDepth++
-            currentToken.WriteRune(char)
-            inSpace = false
-        } else if char == ')' {
-            parenDepth--
-            currentToken.WriteRune(char)
-            inSpace = false
-        } else if char == ' ' && parenDepth == 0 {
-            // If we're at the top level (not inside parentheses) and encounter whitespace
-            if !inSpace && currentToken.Len() > 0 {
-                // We've reached the end of a token
-                tokens = append(tokens, currentToken.String())
-                currentToken.Reset()
-            }
-            inSpace = true
-        } else {
-            // Add the character to the current token
-            currentToken.WriteRune(char)
-            inSpace = false
-        }
-    }
-
-    // Add the final token if any
-    if currentToken.Len() > 0 {
-        tokens = append(tokens, currentToken.String())
-    }
-
-    return tokens
-}
-
 // parsePositionXY extracts X and Y components from a position string
 func parsePositionXY(position string, result map[string]string) {
-	// Handle specific patterns explicitly
-	if position == "right 3rem top 1rem" {
-		result["background-position-x"] = "right 3rem"
-		result["background-position-y"] = "top 1rem"
-		return
-	}
-
-	if position == "center" {
-		result["background-position-x"] = "center"
-		result["background-position-y"] = "center"
-		return
-	}
-
 	// More general pattern handling
 	parts := strings.Fields(position)
-
-	// Look for patterns like "right 10px" or "top 20px"
-	for i := 0; i < len(parts)-1; i++ {
-		if (parts[i] == "right" || parts[i] == "left") && isLengthOrPercentage(parts[i+1]) {
-			result["background-position-x"] = parts[i] + " " + parts[i+1]
-		} else if (parts[i] == "top" || parts[i] == "bottom") && isLengthOrPercentage(parts[i+1]) {
-			result["background-position-y"] = parts[i] + " " + parts[i+1]
-		}
-	}
 
 	// If we haven't set both x and y yet, handle simpler cases
 	if result["background-position-x"] == "0%" || result["background-position-y"] == "0%" {
@@ -326,9 +266,9 @@ func isColorValue(value string) bool {
 	return e == nil
 }
 
-// extractURL finds and extracts a url() function
-func extractURL(s string) string {
-	urlStart := strings.Index(s, "url(")
+// extractFunc finds and extracts a funcName() function
+func extractFunc(funcName, s string) string {
+	urlStart := strings.Index(s, funcName+"(")
 	if urlStart < 0 {
 		return ""
 	}
