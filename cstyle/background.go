@@ -9,6 +9,7 @@ import (
 	"grim/element"
 	"grim/utils"
 	"image"
+	ic "image/color"
 	_ "image/gif"  // Enable GIF support
 	_ "image/jpeg" // Enable JPEG support
 	_ "image/png"  // Enable PNG support
@@ -45,11 +46,11 @@ func ParseBackground(style map[string]string) []element.Background {
 
 	amount := 0
 	for _, v := range backgroundProps {
-		s := strings.Split(style[v], ",")
+		s := utils.SplitByComma(style[v])
 		f := []string{}
-		for _, v := range s {
-			if strings.TrimSpace(v) != "" {
-				f = append(f, v)
+		for _, b := range s {
+			if strings.TrimSpace(b) != "" {
+				f = append(f, b)
 			}
 		}
 		c := len(f)
@@ -137,7 +138,6 @@ func GenerateBackground(c CSS, self element.State) image.Image {
 	can := canvas.NewCanvas(wbw, hbw)
 	fmt.Println("=======")
 	for _, bg := range self.Background {
-		fmt.Println(bg)
 		if bg.Color.A > 0 {
 			// Draw the solid background color if it is not completely tranparent
 			can.BeginPath()
@@ -225,7 +225,6 @@ func GenerateBackground(c CSS, self element.State) image.Image {
 
 								width = int(float32(width) * s)
 								height = int(float32(height) * s)
-								fmt.Println(width, height)
 							} else {
 								s = utils.ConvertToPixels(parts[0], self.EM, sWidth)
 								height = int(s * float32(height/width))
@@ -320,7 +319,7 @@ func GenerateBackground(c CSS, self element.State) image.Image {
 						}
 					}
 				}
-				fmt.Println(width, height, sWidth, sHeight)
+
 				resized := image.NewRGBA(image.Rect(0, 0, width, height))
 				draw.CatmullRom.Scale(resized, resized.Bounds(), img, img.Bounds(), draw.Over, &draw.Options{})
 
@@ -611,9 +610,18 @@ func GenerateBackground(c CSS, self element.State) image.Image {
 					}
 				}
 
-				parseLinearGradient(int(self.Width), int(self.Height), bg.Image)
+				pg := parseLinearGradient(int(self.Width), int(self.Height), self.EM, bg.Image)
+				fmt.Println(pg)
 				// !NOTE: Does not support interpolation
-				// lg := can.NewLinearGradient()
+				lg := can.CreateLinearGradient(pg.x1, pg.y1, pg.x2, pg.y2)
+
+				for _, v := range pg.steps {
+					fmt.Println(v.offset)
+					lg.AddColorStop(v.offset, v.color)
+				}
+
+				can.Context.SetFillStyle(lg)
+				can.FillRect(float64(x),float64(y),float64(width),float64(height))
 			}
 		}
 
@@ -622,25 +630,231 @@ func GenerateBackground(c CSS, self element.State) image.Image {
 }
 
 type LinearGradient struct {
-	angle int
+	x1    float64
+	y1    float64
+	x2    float64
+	y2    float64
 	steps []step
 }
 
 type step struct {
-	color  image.RGBA
-	length int
+	color  ic.RGBA
+	offset float64
 }
 
 // background-image: linear-gradient(45deg, blue, red);
-func parseLinearGradient(width, height int, lg string) LinearGradient {
+func parseLinearGradient(width, height int, em float32, lg string) LinearGradient {
 	lg = strings.TrimPrefix(lg, "linear-gradient(")
 	lg = strings.TrimSuffix(lg, ")")
 
 	parts := element.Token('(', ')', ',', lg)
-
-	for _, v := range parts {
+	var x1, y1, x2, y2 float64
+	var col ic.RGBA
+	var dist float32
+	steps := []step{}
+	for i, v := range parts {
 		fmt.Println("PART", v)
+		isAng := false
+		if i == 0 {
+			var angle string
+			switch v {
+			case "to top":
+				angle = "0"
+				isAng = true
+			case "to bottom":
+				angle = "180"
+				isAng = true
+			case "to left":
+				angle = "270"
+				isAng = true
+			case "to right":
+				angle = "90"
+				isAng = true
+			default:
+				if strings.HasSuffix(v, "deg") {
+					angle = strings.TrimSuffix(v, "deg")
+					isAng = true
+				} else {
+					angle = "180"
+				}
+			}
+
+			ang, _ := strconv.Atoi(angle)
+			fmt.Println(ang)
+			x1, y1, x2, y2 = calculateGradientPoints(float64(width), float64(height), float64(ang))
+			dist = float32(math.Sqrt(((x2 - x1) * (x2 - x1)) + ((y2 - y1) * (y2 - y1))))
+		}
+		fmt.Println(isAng)
+
+		if !isAng {
+			p := strings.Split(strings.TrimSpace(v), " ")
+
+			c, err := color.ParseRGBA(p[0])
+			fmt.Println(c,err, p[0],v)
+			if err == nil {
+				col = c
+				if len(p) == 1 {
+					// just red
+					steps = append(steps, step{
+						color: col,
+					})
+					continue
+				} else {
+					// red 10% 20% etc..
+					p = p[1:]
+
+					for _, q := range p {
+						steps = append(steps, step{
+							color:  col,
+							offset: float64(utils.ConvertToPixels(q, em, dist)/dist),
+						})
+					}
+				}
+			} else {
+				// just 10%
+				steps = append(steps, step{
+					color:  col,
+					offset: float64(utils.ConvertToPixels(v, em, dist)/dist),
+				})
+			}
+		}
+	}
+	// also clean up ones that dont have a set distance
+	// If you don't specify the location of a color, it is placed halfway between the one that precedes it and the one that follows it. The following two gradients are equivalent.
+	var prevoffset, nextoffset float64
+	for i, v := range steps {
+		if i > 0 {
+			if v.offset == 0 {
+				for c := i; c < len(steps); c++ {
+					if steps[c].offset != 0 {
+						nextoffset = steps[c].offset
+						break
+					}
+				}
+				if nextoffset == 0 {
+					steps[i].offset = float64((dist / float32(len(steps)-1)) * float32(i))/float64(dist)
+				} else {
+					steps[i].offset = (nextoffset - prevoffset) / 2
+				}
+				prevoffset = steps[i].offset
+			}
+		} else {
+			// Reset the start to 0 if user set it
+			steps[i].offset = 0
+		}
 	}
 
-	return LinearGradient{}
+	return LinearGradient{
+		x1:    x1,
+		y1:    y1,
+		x2:    x2,
+		y2:    y2,
+		steps: steps,
+	}
+}
+
+// CalculateGradientPoints takes a width, height, and CSS degree angle
+// and returns the start and end points for a linear gradient
+func calculateGradientPoints(width, height float64, cssAngle float64) (float64, float64, float64, float64) {
+	// Convert CSS angle to radians (CSS angles are measured clockwise from the top)
+	// We need to convert to mathematical angles (counterclockwise from right)
+	angle := math.Pi * (90 - cssAngle) / 180
+
+	// Find center of rectangle
+	centerX := width / 2
+	centerY := height / 2
+
+	// Calculate the slope of the line
+	slope := math.Tan(angle)
+
+	// Calculate the diagonal length of the rectangle to ensure the line extends enough
+	diagonal := math.Sqrt(width*width + height*height)
+
+	// Calculate a point far enough along the angle to ensure we can find intersections
+	farX := centerX + diagonal*math.Cos(angle)
+	farY := centerY - diagonal*math.Sin(angle) // Subtract because y-coordinates increase downward
+
+	// Initialize start and end points
+	var startX, startY, endX, endY float64
+
+	// Find where the line intersects with the rectangle boundaries
+	// Line equation: y = m(x - centerX) + centerY where m is the slope
+
+	// Function to check if a point is inside the rectangle
+	isInside := func(x, y float64) bool {
+		return x >= 0 && x <= width && y >= 0 && y <= height
+	}
+
+	// Check intersection with left edge (x = 0)
+	leftY := -slope*centerX + centerY
+	if isInside(0, leftY) {
+		if (farX - centerX) < 0 {
+			startX = 0
+			startY = leftY
+		} else {
+			endX = 0
+			endY = leftY
+		}
+	}
+
+	// Check intersection with right edge (x = width)
+	rightY := slope*(width-centerX) + centerY
+	if isInside(width, rightY) {
+		if (farX - centerX) > 0 {
+			endX = width
+			endY = rightY
+		} else {
+			startX = width
+			startY = rightY
+		}
+	}
+
+	// Check intersection with top edge (y = 0)
+	topX := centerX + (0-centerY)/slope
+	if isInside(topX, 0) && !math.IsInf(topX, 0) {
+		if (farY - centerY) < 0 {
+			endX = topX
+			endY = 0
+		} else {
+			startX = topX
+			startY = 0
+		}
+	}
+
+	// Check intersection with bottom edge (y = height)
+	bottomX := centerX + (height-centerY)/slope
+	if isInside(bottomX, height) && !math.IsInf(bottomX, 0) {
+		if (farY - centerY) > 0 {
+			endX = bottomX
+			endY = height
+		} else {
+			startX = bottomX
+			startY = height
+		}
+	}
+
+	// Handle special cases for vertical and horizontal gradients
+	if cssAngle == 0 { // From bottom to top
+		startX = centerX
+		startY = height
+		endX = centerX
+		endY = 0
+	} else if cssAngle == 180 { // From top to bottom
+		startX = centerX
+		startY = 0
+		endX = centerX
+		endY = height
+	} else if cssAngle == 90 { // From left to right
+		startX = 0
+		startY = centerY
+		endX = width
+		endY = centerY
+	} else if cssAngle == 270 { // From right to left
+		startX = width
+		startY = centerY
+		endX = 0
+		endY = centerY
+	}
+
+	return startX, startY, endX, endY
 }

@@ -347,3 +347,53 @@ func GetInnerText(n *html.Node) string {
 func RGBAtoString(c ic.RGBA) string {
 	return fmt.Sprintf("R%d%d%d%d", c.R, c.G, c.B, c.A)
 }
+
+func SplitByComma(input string) []string {
+	var result []string
+	var current strings.Builder
+
+	// Track nesting level for each bracket type
+	squareBrackets := 0 // []
+	curlyBraces := 0    // {}
+	parentheses := 0    // ()
+
+	for _, char := range input {
+		switch char {
+		case '[':
+			squareBrackets++
+			current.WriteRune(char)
+		case ']':
+			squareBrackets--
+			current.WriteRune(char)
+		case '{':
+			curlyBraces++
+			current.WriteRune(char)
+		case '}':
+			curlyBraces--
+			current.WriteRune(char)
+		case '(':
+			parentheses++
+			current.WriteRune(char)
+		case ')':
+			parentheses--
+			current.WriteRune(char)
+		case ',':
+			// Only split on comma if we're not inside any brackets
+			if squareBrackets == 0 && curlyBraces == 0 && parentheses == 0 {
+				result = append(result, strings.TrimSpace(current.String()))
+				current.Reset()
+			} else {
+				current.WriteRune(char)
+			}
+		default:
+			current.WriteRune(char)
+		}
+	}
+
+	// Add the last segment if there's anything left
+	if current.Len() > 0 {
+		result = append(result, strings.TrimSpace(current.String()))
+	}
+
+	return result
+}
