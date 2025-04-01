@@ -620,13 +620,11 @@ func GenerateBackground(c CSS, self element.State) image.Image {
 				}
 
 				can.Context.SetFillStyle(lg)
-				
 
 				if bg.Repeat != "" {
 					parts := strings.Split(bg.Repeat, " ")
 					canvasHeight := self.Height + self.Border.Top.Width + self.Border.Bottom.Width
 					canvasWidth := self.Width + self.Border.Left.Width + self.Border.Right.Width
-
 
 					// Set default values for horizontal and vertical repeat
 					repeatX := "no-repeat"
@@ -662,7 +660,7 @@ func GenerateBackground(c CSS, self element.State) image.Image {
 								can.FillRect(currentX, currentY, float64(width), float64(height))
 							}
 						}
-						
+
 					} else if repeatX == "repeat" && repeatY == "no-repeat" {
 						// Repeat only horizontally at the specified y
 						tilesBackX := int(math.Ceil(float64(x) / float64(width)))
@@ -938,30 +936,30 @@ func calculateGradientPoints(width, height float64, cssAngle float64) (float64, 
 type RadialGradient struct {
 	x1    float64
 	y1    float64
-	r1 float64
+	r1    float64
 	x2    float64
 	y2    float64
-	r2 float64
+	r2    float64
 	steps []step
 }
 
 // background-image: linear-gradient(45deg, blue, red);
 func parseRadialGradient(width, height int, em float32, rg string) RadialGradient {
-	rg = strings.TrimPrefix(rg, "radial-gradient(")
-	rg = strings.TrimSuffix(rg, ")")
-
-	parts := element.Token('(', ')', ',', rg)
-
-	x1 := width/2
-	y1 := height/2
-
-	for _, v := range parts {
-		fmt.Println(v)
-		if i == 0 {
-			if strings.Contains(v, "at") {
-				
-			}
-		}
-	}
+	// rg = strings.TrimPrefix(rg, "radial-gradient(")
+	// rg = strings.TrimSuffix(rg, ")")
+	//
+	// parts := element.Token('(', ')', ',', rg)
+	//
+	// x1 := width / 2
+	// y1 := height / 2
+	//
+	// for _, v := range parts {
+	// 	fmt.Println(v)
+	// 	if i == 0 {
+	// 		if strings.Contains(v, "at") {
+	//
+	// 		}
+	// 	}
+	// }
 	return RadialGradient{}
 }

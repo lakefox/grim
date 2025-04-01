@@ -8,7 +8,6 @@ comment
 /test/mem.pprof
 .vscode
 .DS_Store
-tests
 grimui.pxd
 icon.pxd
 imports.sh
