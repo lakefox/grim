@@ -366,6 +366,7 @@ var namedColors = map[string]ic.RGBA{
 	"teal":                 {0, 128, 128, 255},
 	"thistle":              {216, 191, 216, 255},
 	"tomato":               {255, 99, 71, 255},
+	"transparent":          {0, 0, 0, 0},
 	"turquoise":            {64, 224, 208, 255},
 	"violet":               {238, 130, 238, 255},
 	"wheat":                {245, 222, 179, 255},

@@ -499,6 +499,7 @@ func GenerateBackground(c CSS, self element.State) image.Image {
 					can.DrawImage(resized, float64(x), float64(y))
 				}
 			} else if len(bg.Image) > 18 && bg.Image[0:16] == "linear-gradient(" {
+				// !ISSUE: GG fills rect completely with gradient
 				var width, height int
 
 				if bg.Size != "" {
@@ -611,17 +612,186 @@ func GenerateBackground(c CSS, self element.State) image.Image {
 				}
 
 				pg := parseLinearGradient(int(self.Width), int(self.Height), self.EM, bg.Image)
-				fmt.Println(pg)
 				// !NOTE: Does not support interpolation
 				lg := can.CreateLinearGradient(pg.x1, pg.y1, pg.x2, pg.y2)
-
+				lg.AddColorStop(0, pg.steps[0].color)
 				for _, v := range pg.steps {
-					fmt.Println(v.offset)
 					lg.AddColorStop(v.offset, v.color)
 				}
 
 				can.Context.SetFillStyle(lg)
-				can.FillRect(float64(x),float64(y),float64(width),float64(height))
+				
+
+				if bg.Repeat != "" {
+					parts := strings.Split(bg.Repeat, " ")
+					canvasHeight := self.Height + self.Border.Top.Width + self.Border.Bottom.Width
+					canvasWidth := self.Width + self.Border.Left.Width + self.Border.Right.Width
+
+
+					// Set default values for horizontal and vertical repeat
+					repeatX := "no-repeat"
+					repeatY := "no-repeat"
+
+					// Handle single-value repeat
+					if len(parts) == 1 {
+						if parts[0] == "repeat-x" {
+							repeatX = "repeat"
+						} else if parts[0] == "repeat-y" {
+							repeatY = "repeat"
+						} else if parts[0] == "repeat" || parts[0] == "space" || parts[0] == "round" {
+							repeatX = parts[0]
+							repeatY = parts[0]
+						}
+					} else if len(parts) == 2 {
+						repeatX = parts[0]
+						repeatY = parts[1]
+					}
+
+					// Handle repeat-x and repeat-y as x/y directional repeats
+					if repeatX == "repeat" && repeatY == "repeat" {
+						// Calculate proper starting point to maintain pattern alignment
+						tilesBackX := int(math.Ceil(float64(x) / float64(width)))
+						tilesBackY := int(math.Ceil(float64(y) / float64(height)))
+
+						startX := float64(x) - float64(tilesBackX*width)
+						startY := float64(y) - float64(tilesBackY*height)
+
+						// Draw covering the entire canvas
+						for currentY := startY; currentY < float64(canvasHeight); currentY += float64(height) {
+							for currentX := startX; currentX < float64(canvasWidth); currentX += float64(width) {
+								can.FillRect(currentX, currentY, float64(width), float64(height))
+							}
+						}
+						
+					} else if repeatX == "repeat" && repeatY == "no-repeat" {
+						// Repeat only horizontally at the specified y
+						tilesBackX := int(math.Ceil(float64(x) / float64(width)))
+						startX := float64(x) - float64(tilesBackX*width)
+						startY := float64(y)
+
+						for currentX := startX; currentX < float64(canvasWidth); currentX += float64(width) {
+							can.FillRect(currentX, startY, float64(width), float64(height))
+						}
+					} else if repeatX == "no-repeat" && repeatY == "repeat" {
+						// Repeat only vertically at the specified x
+						tilesBackY := int(math.Ceil(float64(y) / float64(height)))
+						startX := float64(x)
+						startY := float64(y) - float64(tilesBackY*height)
+						for currentY := startY; currentY < float64(canvasHeight); currentY += float64(height) {
+
+							fmt.Println(startX, currentY, height, sHeight)
+							can.FillRect(startX, currentY, float64(width), float64(height))
+						}
+					} else if repeatX == "space" || repeatY == "space" {
+						// Handle space - tiles with equal spacing, no clipping
+						if repeatX == "space" && repeatY != "space" {
+							// Only horizontal spacing
+							availableWidth := float64(canvasWidth)
+							numTiles := int(math.Floor(availableWidth / float64(width)))
+
+							if numTiles > 1 {
+								spacing := (availableWidth - float64(numTiles*width)) / float64(numTiles-1)
+								for i := 0; i < numTiles; i++ {
+									posX := float64(i) * (float64(width) + spacing)
+									can.FillRect(posX, float64(y), float64(width), float64(height))
+								}
+							} else {
+								// Only one tile - center it
+								posX := (availableWidth - float64(width)) / 2
+								can.FillRect(posX, float64(y), float64(width), float64(height))
+							}
+						} else if repeatX != "space" && repeatY == "space" {
+							// Only vertical spacing
+							availableHeight := float64(canvasHeight)
+							numTiles := int(math.Floor(availableHeight / float64(height)))
+
+							if numTiles > 1 {
+								spacing := (availableHeight - float64(numTiles*height)) / float64(numTiles-1)
+								for i := 0; i < numTiles; i++ {
+									posY := float64(i) * (float64(height) + spacing)
+									can.FillRect(float64(x), posY, float64(width), float64(height))
+								}
+							} else {
+								// Only one tile - center it
+								posY := (availableHeight - float64(height)) / 2
+								can.FillRect(float64(x), posY, float64(width), float64(height))
+							}
+						} else {
+							// Both directions use space
+							availableWidth := float64(canvasWidth)
+							availableHeight := float64(canvasHeight)
+							numTilesX := int(math.Floor(availableWidth / float64(width)))
+							numTilesY := int(math.Floor(availableHeight / float64(height)))
+
+							spacingX := 0.0
+							spacingY := 0.0
+
+							if numTilesX > 1 {
+								spacingX = (availableWidth - float64(numTilesX*width)) / float64(numTilesX-1)
+							}
+
+							if numTilesY > 1 {
+								spacingY = (availableHeight - float64(numTilesY*height)) / float64(numTilesY-1)
+							}
+
+							for i := 0; i < numTilesY; i++ {
+								posY := float64(i) * (float64(height) + spacingY)
+								for j := 0; j < numTilesX; j++ {
+									posX := float64(j) * (float64(width) + spacingX)
+									can.FillRect(posX, posY, float64(width), float64(height))
+								}
+							}
+						}
+					} else if repeatX == "round" || repeatY == "round" {
+						// Handle round - scales images to fit whole number of tiles
+						if repeatX == "round" && repeatY != "round" {
+							// Only horizontal rounding
+							availableWidth := float64(canvasWidth)
+							numTiles := math.Max(1, math.Round(availableWidth/float64(width)))
+							roundedWidth := int(availableWidth / numTiles)
+
+							for i := 0; i < int(numTiles); i++ {
+								posX := float64(i) * float64(roundedWidth)
+								can.FillRect(posX, float64(y), float64(roundedWidth), float64(height))
+							}
+						} else if repeatX != "round" && repeatY == "round" {
+							// Only vertical rounding
+							availableHeight := float64(canvasHeight)
+							numTiles := math.Max(1, math.Round(availableHeight/float64(height)))
+							roundedHeight := int(availableHeight / numTiles)
+
+							for i := 0; i < int(numTiles); i++ {
+								posY := float64(i) * float64(roundedHeight)
+								can.FillRect(float64(x), posY, float64(width), float64(roundedHeight))
+							}
+						} else {
+							// Both directions use round
+							availableWidth := float64(canvasWidth)
+							availableHeight := float64(canvasHeight)
+							numTilesX := math.Max(1, math.Round(availableWidth/float64(width)))
+							numTilesY := math.Max(1, math.Round(availableHeight/float64(height)))
+
+							roundedWidth := int(availableWidth / numTilesX)
+							roundedHeight := int(availableHeight / numTilesY)
+
+							for i := 0; i < int(numTilesY); i++ {
+								posY := float64(i) * float64(roundedHeight)
+								for j := 0; j < int(numTilesX); j++ {
+									posX := float64(j) * float64(roundedWidth)
+									can.FillRect(posX, posY, float64(roundedWidth), float64(roundedHeight))
+								}
+							}
+						}
+					} else {
+						// Default case: no-repeat in both directions
+						can.FillRect(float64(x), float64(y), float64(width), float64(height))
+					}
+				} else {
+					can.FillRect(float64(x), float64(y), float64(width), float64(height))
+				}
+
+			} else if len(bg.Image) > 18 && bg.Image[0:16] == "radial-gradient(" {
+				parseRadialGradient(int(self.Width), int(self.Height), self.EM, bg.Image)
 			}
 		}
 
@@ -653,7 +823,6 @@ func parseLinearGradient(width, height int, em float32, lg string) LinearGradien
 	var dist float32
 	steps := []step{}
 	for i, v := range parts {
-		fmt.Println("PART", v)
 		isAng := false
 		if i == 0 {
 			var angle string
@@ -680,17 +849,14 @@ func parseLinearGradient(width, height int, em float32, lg string) LinearGradien
 			}
 
 			ang, _ := strconv.Atoi(angle)
-			fmt.Println(ang)
 			x1, y1, x2, y2 = calculateGradientPoints(float64(width), float64(height), float64(ang))
 			dist = float32(math.Sqrt(((x2 - x1) * (x2 - x1)) + ((y2 - y1) * (y2 - y1))))
 		}
-		fmt.Println(isAng)
 
 		if !isAng {
 			p := strings.Split(strings.TrimSpace(v), " ")
 
 			c, err := color.ParseRGBA(p[0])
-			fmt.Println(c,err, p[0],v)
 			if err == nil {
 				col = c
 				if len(p) == 1 {
@@ -706,7 +872,7 @@ func parseLinearGradient(width, height int, em float32, lg string) LinearGradien
 					for _, q := range p {
 						steps = append(steps, step{
 							color:  col,
-							offset: float64(utils.ConvertToPixels(q, em, dist)/dist),
+							offset: float64(utils.ConvertToPixels(q, em, dist) / dist),
 						})
 					}
 				}
@@ -714,7 +880,7 @@ func parseLinearGradient(width, height int, em float32, lg string) LinearGradien
 				// just 10%
 				steps = append(steps, step{
 					color:  col,
-					offset: float64(utils.ConvertToPixels(v, em, dist)/dist),
+					offset: float64(utils.ConvertToPixels(v, em, dist) / dist),
 				})
 			}
 		}
@@ -723,24 +889,19 @@ func parseLinearGradient(width, height int, em float32, lg string) LinearGradien
 	// If you don't specify the location of a color, it is placed halfway between the one that precedes it and the one that follows it. The following two gradients are equivalent.
 	var prevoffset, nextoffset float64
 	for i, v := range steps {
-		if i > 0 {
-			if v.offset == 0 {
-				for c := i; c < len(steps); c++ {
-					if steps[c].offset != 0 {
-						nextoffset = steps[c].offset
-						break
-					}
+		if v.offset == 0 {
+			for c := i; c < len(steps); c++ {
+				if steps[c].offset != 0 {
+					nextoffset = steps[c].offset
+					break
 				}
-				if nextoffset == 0 {
-					steps[i].offset = float64((dist / float32(len(steps)-1)) * float32(i))/float64(dist)
-				} else {
-					steps[i].offset = (nextoffset - prevoffset) / 2
-				}
-				prevoffset = steps[i].offset
 			}
-		} else {
-			// Reset the start to 0 if user set it
-			steps[i].offset = 0
+			if nextoffset == 0 {
+				steps[i].offset = float64((dist/float32(len(steps)-1))*float32(i)) / float64(dist)
+			} else {
+				steps[i].offset = (nextoffset - prevoffset) / 2
+			}
+			prevoffset = steps[i].offset
 		}
 	}
 
@@ -758,103 +919,49 @@ func parseLinearGradient(width, height int, em float32, lg string) LinearGradien
 func calculateGradientPoints(width, height float64, cssAngle float64) (float64, float64, float64, float64) {
 	// Convert CSS angle to radians (CSS angles are measured clockwise from the top)
 	// We need to convert to mathematical angles (counterclockwise from right)
-	angle := math.Pi * (90 - cssAngle) / 180
+	angle := math.Pi * (360 - cssAngle) / 180
 
 	// Find center of rectangle
 	centerX := width / 2
 	centerY := height / 2
 
-	// Calculate the slope of the line
-	slope := math.Tan(angle)
-
-	// Calculate the diagonal length of the rectangle to ensure the line extends enough
-	diagonal := math.Sqrt(width*width + height*height)
-
-	// Calculate a point far enough along the angle to ensure we can find intersections
-	farX := centerX + diagonal*math.Cos(angle)
-	farY := centerY - diagonal*math.Sin(angle) // Subtract because y-coordinates increase downward
-
-	// Initialize start and end points
 	var startX, startY, endX, endY float64
 
-	// Find where the line intersects with the rectangle boundaries
-	// Line equation: y = m(x - centerX) + centerY where m is the slope
-
-	// Function to check if a point is inside the rectangle
-	isInside := func(x, y float64) bool {
-		return x >= 0 && x <= width && y >= 0 && y <= height
-	}
-
-	// Check intersection with left edge (x = 0)
-	leftY := -slope*centerX + centerY
-	if isInside(0, leftY) {
-		if (farX - centerX) < 0 {
-			startX = 0
-			startY = leftY
-		} else {
-			endX = 0
-			endY = leftY
-		}
-	}
-
-	// Check intersection with right edge (x = width)
-	rightY := slope*(width-centerX) + centerY
-	if isInside(width, rightY) {
-		if (farX - centerX) > 0 {
-			endX = width
-			endY = rightY
-		} else {
-			startX = width
-			startY = rightY
-		}
-	}
-
-	// Check intersection with top edge (y = 0)
-	topX := centerX + (0-centerY)/slope
-	if isInside(topX, 0) && !math.IsInf(topX, 0) {
-		if (farY - centerY) < 0 {
-			endX = topX
-			endY = 0
-		} else {
-			startX = topX
-			startY = 0
-		}
-	}
-
-	// Check intersection with bottom edge (y = height)
-	bottomX := centerX + (height-centerY)/slope
-	if isInside(bottomX, height) && !math.IsInf(bottomX, 0) {
-		if (farY - centerY) > 0 {
-			endX = bottomX
-			endY = height
-		} else {
-			startX = bottomX
-			startY = height
-		}
-	}
-
-	// Handle special cases for vertical and horizontal gradients
-	if cssAngle == 0 { // From bottom to top
-		startX = centerX
-		startY = height
-		endX = centerX
-		endY = 0
-	} else if cssAngle == 180 { // From top to bottom
-		startX = centerX
-		startY = 0
-		endX = centerX
-		endY = height
-	} else if cssAngle == 90 { // From left to right
-		startX = 0
-		startY = centerY
-		endX = width
-		endY = centerY
-	} else if cssAngle == 270 { // From right to left
-		startX = width
-		startY = centerY
-		endX = 0
-		endY = centerY
-	}
+	startX = centerX + (-height * math.Cos(angle))
+	endX = centerX + (height * math.Cos(angle))
+	startY = centerY + (-height * math.Sin(angle))
+	endY = centerY + (height * math.Sin(angle))
 
 	return startX, startY, endX, endY
+}
+
+type RadialGradient struct {
+	x1    float64
+	y1    float64
+	r1 float64
+	x2    float64
+	y2    float64
+	r2 float64
+	steps []step
+}
+
+// background-image: linear-gradient(45deg, blue, red);
+func parseRadialGradient(width, height int, em float32, rg string) RadialGradient {
+	rg = strings.TrimPrefix(rg, "radial-gradient(")
+	rg = strings.TrimSuffix(rg, ")")
+
+	parts := element.Token('(', ')', ',', rg)
+
+	x1 := width/2
+	y1 := height/2
+
+	for _, v := range parts {
+		fmt.Println(v)
+		if i == 0 {
+			if strings.Contains(v, "at") {
+				
+			}
+		}
+	}
+	return RadialGradient{}
 }

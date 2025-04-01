@@ -215,5 +215,9 @@ func Token(start, end, split rune, s string) []string {
 		tokens = append(tokens, currentToken.String())
 	}
 
+	for i, v := range tokens {
+		tokens[i] = strings.TrimSpace(v)
+	}
+
 	return tokens
 }
