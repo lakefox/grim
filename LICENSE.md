@@ -1,34 +1,3 @@
-# Grim License
-
-Grim - A lightweight HTML/CSS rendering engine  
-Copyright (C) 2025 [Mason Wright]
-
-This project is licensed under the **GNU General Public License v3.0 (GPLv3)**.  
-The full GPL v3 license text is included below.  
-
----
-
-## **Dual Licensing Notice**
-
-Grim is available under two licenses:
-
-### **1. Open-Source License (GPL v3)**
-- You can use, modify, and distribute Grim **for free** under the GPL.
-- If you distribute Grim or a modified version, **you must also release your source code under GPL**.
-- The full GPL license text can be found at:  
-  [https://www.gnu.org/licenses/gpl-3.0.html](https://www.gnu.org/licenses/gpl-3.0.html)
-
-### **2. Commercial License**
-If you want to use Grim **in a proprietary, closed-source project** **without** releasing your modifications, you must **purchase a commercial license**.  
-
-Contact: [license@grimui.com]  
-Website: [grimui.com]  
-
-### **3. Free Commercial License for Contributors**
-Contributors who make **meaningful contributions** (see `CONTRIBUTING.md`) are granted a **free commercial license** to use Grim in their own proprietary software.
-
----
-
 ## **GNU General Public License v3.0 (GPLv3)**
 ```text
                     GNU GENERAL PUBLIC LICENSE
