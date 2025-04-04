@@ -2,7 +2,7 @@ package cstyle
 
 import (
 	"bytes"
-	"fmt"
+	"github.com/fogleman/gg"
 	"golang.org/x/image/draw"
 	"grim/canvas"
 	"grim/color"
@@ -136,7 +136,6 @@ func GenerateBackground(c CSS, self element.State) image.Image {
 	hbw := int(self.Height + self.Border.Top.Width + self.Border.Bottom.Width)
 
 	can := canvas.NewCanvas(wbw, hbw)
-	fmt.Println("=======")
 	for _, bg := range self.Background {
 		if bg.Color.A > 0 {
 			// Draw the solid background color if it is not completely tranparent
@@ -498,7 +497,7 @@ func GenerateBackground(c CSS, self element.State) image.Image {
 				} else {
 					can.DrawImage(resized, float64(x), float64(y))
 				}
-			} else if len(bg.Image) > 18 && bg.Image[0:16] == "linear-gradient(" {
+			} else if len(bg.Image) > 18 && (bg.Image[0:16] == "linear-gradient(" || bg.Image[0:16] == "radial-gradient(") {
 				// !ISSUE: GG fills rect completely with gradient
 				var width, height int
 
@@ -610,12 +609,22 @@ func GenerateBackground(c CSS, self element.State) image.Image {
 						}
 					}
 				}
+				var steps []step
+				var lg gg.Gradient
 
-				pg := parseLinearGradient(int(self.Width), int(self.Height), self.EM, bg.Image)
-				// !NOTE: Does not support interpolation
-				lg := can.CreateLinearGradient(pg.x1, pg.y1, pg.x2, pg.y2)
-				lg.AddColorStop(0, pg.steps[0].color)
-				for _, v := range pg.steps {
+				if bg.Image[0:16] == "linear-gradient(" {
+					pg := parseLinearGradient(int(self.Width), int(self.Height), self.EM, bg.Image)
+					// !NOTE: Does not support interpolation
+					lg = can.CreateLinearGradient(pg.x1, pg.y1, pg.x2, pg.y2)
+					steps = pg.steps
+				} else if bg.Image[0:16] == "radial-gradient(" {
+					pg := parseRadialGradient(int(sWidth), int(sHeight), self.EM, bg.Image)
+					lg = can.CreateRadialGradient(pg.x1, pg.y1, pg.r1, pg.x2, pg.y2, pg.r2)
+					steps = pg.steps
+				}
+
+				lg.AddColorStop(0, steps[0].color)
+				for _, v := range steps {
 					lg.AddColorStop(v.offset, v.color)
 				}
 
@@ -676,8 +685,6 @@ func GenerateBackground(c CSS, self element.State) image.Image {
 						startX := float64(x)
 						startY := float64(y) - float64(tilesBackY*height)
 						for currentY := startY; currentY < float64(canvasHeight); currentY += float64(height) {
-
-							fmt.Println(startX, currentY, height, sHeight)
 							can.FillRect(startX, currentY, float64(width), float64(height))
 						}
 					} else if repeatX == "space" || repeatY == "space" {
@@ -852,7 +859,7 @@ func parseLinearGradient(width, height int, em float32, lg string) LinearGradien
 		}
 
 		if !isAng {
-			p := strings.Split(strings.TrimSpace(v), " ")
+			p := strings.Split(v, " ")
 
 			c, err := color.ParseRGBA(p[0])
 			if err == nil {
@@ -945,21 +952,235 @@ type RadialGradient struct {
 
 // background-image: linear-gradient(45deg, blue, red);
 func parseRadialGradient(width, height int, em float32, rg string) RadialGradient {
-	// rg = strings.TrimPrefix(rg, "radial-gradient(")
-	// rg = strings.TrimSuffix(rg, ")")
-	//
-	// parts := element.Token('(', ')', ',', rg)
-	//
-	// x1 := width / 2
-	// y1 := height / 2
-	//
-	// for _, v := range parts {
-	// 	fmt.Println(v)
-	// 	if i == 0 {
-	// 		if strings.Contains(v, "at") {
-	//
-	// 		}
-	// 	}
-	// }
-	return RadialGradient{}
+	rg = strings.TrimPrefix(rg, "radial-gradient(")
+	rg = strings.TrimSuffix(rg, ")")
+
+	parts := element.Token('(', ')', ',', rg)
+
+	var x1, y1, r1,
+		x2, y2, r2 float64
+
+	shape := "circle"
+	size := "farthest-corner"
+	position := "center"
+
+	var col ic.RGBA
+	var dist float32
+
+	steps := []step{}
+
+	// Parse the first argument
+	isColorStop := true
+	vs := strings.Split(parts[0], " ")
+	atAt := false
+	for _, p := range vs {
+		if p == "at" {
+			atAt = true
+			continue
+		}
+		if atAt {
+			//  <position>
+			position = p
+		} else {
+			if p == "circle" || p == "ellipse" {
+				// <radial-shape>
+				shape = p
+				isColorStop = false
+			} else if p == "closest-corner" || p == "closest-side" ||
+				p == "farthest-corner" || p == "farthest-side" {
+				// <radial-extent>
+				size = p
+			} else {
+				// <length> || <length-percentage>
+				_, err := color.ParseRGBA(vs[0]) // make sure p is not a color
+				if err != nil {
+					size = p
+				}
+			}
+		}
+	}
+
+	// !ISSUE: ellipitcal gradients are not supported
+	// + instead match on both for circle (need to update gg)
+	if shape == "circle" || shape == "ellipse" {
+		ps := strings.Split(position, " ")
+		if len(ps) == 2 {
+			x1 = getPosition(ps[0], width, height, em, "x")
+			y1 = getPosition(ps[1], width, height, em, "y")
+		} else if len(ps) == 1 {
+			x1 = getPosition(ps[0], width, height, em, "x")
+			y1 = getPosition(ps[0], width, height, em, "y")
+		} else {
+			x1 = float64(width) / 2
+			y1 = float64(height) / 2
+		}
+
+		// Set xy2 to be the same as xy1 to prevent a shift
+		x2 = x1
+		y2 = y1
+
+		// Only r2 gets a size (it detirmines the size of the gradient)
+		r2 = getSize(size, float64(width), float64(height), em, x1, y1)
+		dist = float32(r2)
+	}
+
+	for i, v := range parts {
+		vs = strings.Split(v, " ")
+
+		if i == 0 && !isColorStop {
+			continue
+		}
+		c, err := color.ParseRGBA(vs[0])
+		if err == nil {
+			col = c
+			if len(vs) == 1 {
+				// just red
+				steps = append(steps, step{
+					color: col,
+				})
+				continue
+			} else {
+				// red 10% 20% etc..
+				vs = vs[1:]
+
+				for _, q := range vs {
+					steps = append(steps, step{
+						color:  col,
+						offset: float64(utils.ConvertToPixels(q, em, dist) / dist),
+					})
+				}
+			}
+		} else {
+			// just 10%
+			steps = append(steps, step{
+				color:  col,
+				offset: float64(utils.ConvertToPixels(v, em, dist) / dist),
+			})
+		}
+	}
+
+	// Interpolate the color steps
+	var prevoffset, nextoffset float64
+	for i, v := range steps {
+		if v.offset == 0 {
+			for c := i; c < len(steps); c++ {
+				if steps[c].offset != 0 {
+					nextoffset = steps[c].offset
+					break
+				}
+			}
+			if nextoffset == 0 {
+				steps[i].offset = float64((dist/float32(len(steps)-1))*float32(i)) / float64(dist)
+			} else {
+				steps[i].offset = (nextoffset - prevoffset) / 2
+			}
+			prevoffset = steps[i].offset
+		}
+	}
+
+	return RadialGradient{
+		x1:    x1,
+		y1:    y1,
+		r1:    r1,
+		x2:    x2,
+		y2:    y2,
+		r2:    r2,
+		steps: steps,
+	}
+}
+
+func getPosition(position string, width, height int, em float32, part string) float64 {
+	switch position {
+	case "left":
+		return 0
+	case "right":
+		return float64(width)
+	case "top":
+		return 0
+	case "bottom":
+		return float64(height)
+	case "center":
+		if part == "x" {
+			return float64(width) / 2
+		} else if part == "y" {
+			return float64(height) / 2
+		}
+	default:
+		if part == "x" {
+			return float64(utils.ConvertToPixels(position, em, float32(width)))
+		} else if part == "y" {
+			return float64(utils.ConvertToPixels(position, em, float32(height)))
+		}
+	}
+	return 0
+}
+
+func getSize(size string, width, height float64, em float32, x, y float64) float64 {
+	// Top left
+	c1dist := math.Sqrt(((x - 0) * (x - 0)) + ((y - 0) * (y - 0)))
+	// Top right
+	c2dist := math.Sqrt(((x - width) * (x - width)) + ((y - 0) * (y - 0)))
+	// Bottom right
+	c3dist := math.Sqrt(((x - width) * (x - width)) + ((y - height) * (y - height)))
+	// Bottom left
+	c4dist := math.Sqrt(((x - 0) * (x - 0)) + ((y - height) * (y - height)))
+	// Top
+	s1dist := y
+	// Right
+	s2dist := math.Abs(x - width)
+	// Bottom
+	s3dist := math.Abs(y - height)
+	// Left
+	s4dist := x
+	var res float64
+	switch size {
+	case "farthest-corner":
+		if c1dist >= c2dist && c1dist >= c3dist && c1dist >= c4dist {
+			res = c1dist
+		} else if c2dist >= c1dist && c2dist >= c3dist && c2dist >= c4dist {
+			res = c2dist
+		} else if c3dist >= c1dist && c3dist >= c2dist && c3dist >= c4dist {
+			res = c3dist
+		} else if c4dist >= c1dist && c4dist >= c2dist && c4dist >= c3dist {
+			res = c4dist
+		}
+	case "closest-corner":
+		if c1dist <= c2dist && c1dist <= c3dist && c1dist <= c4dist {
+			res = c1dist
+		} else if c2dist <= c1dist && c2dist <= c3dist && c2dist <= c4dist {
+			res = c2dist
+		} else if c3dist <= c1dist && c3dist <= c2dist && c3dist <= c4dist {
+			res = c3dist
+		} else if c4dist <= c1dist && c4dist <= c2dist && c4dist <= c3dist {
+			res = c4dist
+		}
+	case "farthest-side":
+		if s1dist >= s2dist && s1dist >= s3dist && s1dist >= s4dist {
+			res = s1dist
+		} else if s2dist >= s1dist && s2dist >= s3dist && s2dist >= s4dist {
+			res = s2dist
+		} else if s3dist >= s1dist && s3dist >= s2dist && s3dist >= s4dist {
+			res = s3dist
+		} else if s4dist >= s1dist && s4dist >= s2dist && s4dist >= s3dist {
+			res = s4dist
+		}
+	case "closest-side":
+		if s1dist <= s2dist && s1dist <= s3dist && s1dist <= s4dist {
+			res = s1dist
+		} else if s2dist <= s1dist && s2dist <= s3dist && s2dist <= s4dist {
+			res = s2dist
+		} else if s3dist <= s1dist && s3dist <= s2dist && s3dist <= s4dist {
+			res = s3dist
+		} else if s4dist <= s1dist && s4dist <= s2dist && s4dist <= s3dist {
+			res = s4dist
+		}
+	default:
+		// !NOTE: This is the corrent way to do it for circles not ellipses (but ellipses aren't supported)
+		if width < height {
+			res = float64(utils.ConvertToPixels(size, em, float32(width)))
+		} else {
+			res = float64(utils.ConvertToPixels(size, em, float32(height)))
+		}
+	}
+	return res
 }

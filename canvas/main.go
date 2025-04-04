@@ -352,3 +352,6 @@ func (c *Canvas) RoundedRect(x, y, width, height float64, radii []float64) {
 func (c *Canvas) CreateLinearGradient(x0, y0, x1, y1 float64) gg.Gradient {
 	return gg.NewLinearGradient(x0, y0, x1, y1)
 }
+func (c *Canvas) CreateRadialGradient(x0, y0, r0, x1, y1, r1 float64) gg.Gradient {
+	return gg.NewRadialGradient(x0, y0, r0, x1, y1, r1)
+}
