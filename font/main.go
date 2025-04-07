@@ -1,11 +1,11 @@
 package font
 
 import (
+	"errors"
 	"golang.org/x/image/math/fixed"
 	adapter "grim/adapters"
 	"grim/canvas"
 	"grim/element"
-	"grim/lgc"
 	"grim/utils"
 	"image"
 	"image/color"
@@ -164,47 +164,13 @@ func LoadFont(fontName string, fontSize int, bold string, italic bool, fs *adapt
 	// Read the font file
 	fontData, err := fs.ReadFile(fontFile)
 	if err != nil {
-		return nil, lgc.Error(lgc.Caller(
-			"Font: "+lgc.String(fontName),
-			"Size: "+lgc.Number(fontSize),
-			"Weight: "+lgc.String(bold),
-			"Italic: "+lgc.Bool(italic),
-		),
-			lgc.Desc(
-				lgc.Red(lgc.WarningMark("Font file not found!")),
-				"Calculated Path: "+lgc.String(fontFile),
-				"Checked Directories: ",
-				lgc.Slice(fs.Sources),
-				"The Calculated path is the file path generated from the CSS font-family variable.",
-				"The path was unable to be found on your OS in the folders specified.",
-			),
-			lgc.Fix(
-				"Error Message:",
-				lgc.Err(err),
-				"If the error message above is...",
-			),
-		)
+		return nil, errors.New("Font file not found!")
 	}
 
 	// Parse the TrueType font data
 	fnt, err := truetype.Parse(fontData)
 	if err != nil {
-		return nil,
-			lgc.Error(
-				lgc.Desc(
-					lgc.Red(lgc.WarningMark("Unable to parse font data!")),
-					lgc.InfoMark("File was read, but the file wasn't parsed correctly"),
-					"File: "+lgc.String(fontFile),
-				),
-				lgc.Fix(
-					"The file was unable to be parsed by the github.com/golang/freetype/truetype",
-					"this could be an issue with either truetype or the file provided.",
-					"Make sure the .ttf will load in other programs to verify it is not",
-					"corruped.",
-					"More details below:",
-					lgc.Err(err),
-				),
-			)
+		return nil, errors.New("Unable to parse font data!\n")
 	}
 	return fnt, nil
 }
