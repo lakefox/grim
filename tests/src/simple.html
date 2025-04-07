@@ -1,7 +1,7 @@
 <html>
 	<head>
 		<style>
-			#box {
+			.box {
 				width: 500px;
 				height: 500px;
 				
@@ -10,19 +10,24 @@
 				background-position-x: center;
 				background-position-y: center;
 				background-origin: border-box;
-				background-image: radial-gradient(black, white);
 				background-color: #000;
 				background-repeat: round;
 
 
 				border: dashed 10px red;
 				border-left: dashed 50px red;
+				color: white;
+			}
+			.box:hover {
+				font-family: monospace;
 			}
 		</style>
 	</head>
 	<body>
 	
-		<div id="box"></div>
+		<div class="box">
+			<span>hello</span>
+		</div>
 	</body>
 
 </html>

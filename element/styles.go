@@ -1,6 +1,7 @@
 package element
 
 import (
+	"fmt"
 	"sort"
 	"strconv"
 	"strings"
@@ -48,21 +49,52 @@ var inheritedProps = []string{
 }
 
 func QuickStyles(n *Node) {
-	styles := make(map[string]string)
-
 	// Inherit styles from parent
 	if n.Parent != nil {
 		ps := n.Parent.ComputedStyle
 		for _, prop := range inheritedProps {
 			if value, ok := ps[prop]; ok && value != "" {
-				styles[prop] = value
+				n.ComputedStyle[prop] = value
 			}
 		}
 	}
+}
 
-	// Add node's own styles
-	for k, v := range styles {
+func ConditionalStyleHandler(n *Node, newStyles map[string]string) {
+	// Reset all styles to inital
+	styles := map[string]string{}
+
+	for k, v := range n.InitalStyles {
+		if newStyles[k] == "" && n.ComputedStyle[k] != v {
+			styles[k] = v	
+		}
 		n.ComputedStyle[k] = v
+	}
+	// Then inherit the parents styles
+	for _, k := range inheritedProps {
+		if newStyles[k] != "" {
+			n.ComputedStyle[k] = newStyles[k]
+		}
+	}
+	
+	// Then apply the conditional styles
+	if n.Hovered && n.ConditionalStyles[":hover"] != nil {
+		for k, v := range n.ConditionalStyles[":hover"] {
+			n.ComputedStyle[k] = v
+			styles[k] = v
+		}
+	}
+	if n.Focused && n.ConditionalStyles[":focus"] != nil {
+		for k, v := range n.ConditionalStyles[":focus"] {
+			n.ComputedStyle[k] = v
+			styles[k] = v
+		}
+	}
+	fmt.Println(n.Properties.Id, n.ComputedStyle["font-family"], n.ComputedStyle["color"], n.InitalStyles["color"])
+	if n.ConditionalStyles[":hover"] != nil || n.ConditionalStyles[":focus"] != nil {
+		for _, v := range n.Children {
+			ConditionalStyleHandler(v, styles)
+		}
 	}
 }
 
@@ -180,10 +212,6 @@ func (s Styles) GetStyles(n *Node) {
 		}
 		styles[k] = v
 	}
-	// Add node's own styles
-	// for k, v := range n.Styles() {
-	// 	styles[k] = v
-	// }
 
 	// Handle z-index inheritance
 	if n.Parent != nil && styles["z-index"] == "" {

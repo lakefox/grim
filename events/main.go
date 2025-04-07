@@ -134,32 +134,10 @@ func (m *Monitor) RunEvents(n *element.Node) bool {
 	if evt.Hover != n.Hovered {
 		if evt.Hover {
 			n.Hovered = true
-			h := n.ConditionalStyles[":hover"]
-			if h != nil {
-				for k, v := range h {
-					n.ComputedStyle[k] = v
-				}
-			}
 		} else {
 			n.Hovered = false
-			h := n.ConditionalStyles[":hover"]
-			f := n.ConditionalStyles[":focus"]
-			if h != nil {
-				for k := range h {
-					if n.Focused {
-						// Reapply the focused style if focused. If a focues prop doesnt exist
-						// then replace it with a inital style
-						if f[k] != "" {
-							n.ComputedStyle[k] = f[k]
-						} else {
-							n.ComputedStyle[k] = n.InitalStyles[k]
-						}
-					} else {
-						n.ComputedStyle[k] = n.InitalStyles[k]
-					}
-				}
-			}
 		}
+		element.ConditionalStyleHandler(n, map[string]string{})
 	}
 
 	if len(m.Focus.Nodes) > 0 && m.Focus.Selected > -1 {

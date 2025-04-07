@@ -21,6 +21,7 @@ import (
 
 type MetaData struct {
 	Font                *truetype.Font
+	FontFamily          string
 	Color               color.RGBA
 	Text                string
 	Underlined          bool
@@ -201,7 +202,7 @@ func MeasureSpace(t *MetaData) int {
 
 func Key(text *MetaData) string {
 	key := text.Text + utils.RGBAtoString(text.Color) + utils.RGBAtoString(text.DecorationColor) + text.Align + text.WordBreak + strconv.Itoa(text.WordSpacing) + strconv.Itoa(text.LetterSpacing) + text.WhiteSpace + strconv.Itoa(text.DecorationThickness) + strconv.Itoa(text.EM)
-	key += strconv.FormatBool(text.Overlined) + strconv.FormatBool(text.Underlined) + strconv.FormatBool(text.LineThrough)
+	key += strconv.FormatBool(text.Overlined) + strconv.FormatBool(text.Underlined) + strconv.FormatBool(text.LineThrough) + text.FontFamily
 	return key
 }
 
@@ -230,6 +231,7 @@ func GetMetaData(n *element.Node, style map[string]string, state *map[string]ele
 
 	text := MetaData{}
 	text.Font = font
+	text.FontFamily = style["font-family"]
 	letterSpacing := utils.ConvertToPixels(style["letter-spacing"], self.EM, parent.Width)
 	wordSpacing := utils.ConvertToPixels(style["word-spacing"], self.EM, parent.Width)
 	lineHeight := utils.ConvertToPixels(style["line-height"], self.EM, parent.Width)

@@ -234,6 +234,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 		key := font.Key(metadata)
 		m, exists := c.Adapter.Textures[n.Properties.Id]["text"]
 		var width int
+
 		if exists && m == key {
 			width = font.MeasureText(metadata, metadata.Text+" ")
 		} else {

@@ -6,6 +6,7 @@ import (
 	"grim/canvas"
 	ic "image/color"
 	"slices"
+	"strconv"
 	"strings"
 )
 
@@ -255,38 +256,8 @@ func (n *Node) CreateElement(name string) Node {
 	}
 }
 
-func Itoa(num int) string {
-	if num == 0 {
-		return "0"
-	}
-
-	isNegative := num < 0
-	if isNegative {
-		num = -num
-	}
-
-	dic := [10]byte{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'}
-	result := make([]byte, 0, 10) // Preallocate a slice for better performance
-
-	for num > 0 {
-		rv := num % 10
-		result = append(result, dic[rv])
-		num /= 10
-	}
-
-	// Reverse the result slice since digits are appended in reverse order
-	for i, j := 0, len(result)-1; i < j; i, j = i+1, j-1 {
-		result[i], result[j] = result[j], result[i]
-	}
-
-	if isNegative {
-		return "-" + string(result)
-	}
-	return string(result)
-}
-
 func GenerateUniqueId(parent *Node, tagName string) string {
-	return parent.Properties.Id + ":" + tagName + Itoa(len(parent.Children))
+	return parent.Properties.Id + ":" + tagName + strconv.Itoa(len(parent.Children))
 }
 
 func (n *Node) AppendChild(c *Node) {
@@ -358,36 +329,17 @@ func (n *Node) Remove() {
 
 func (n *Node) Focus() {
 	n.Focused = true
-	f := n.ConditionalStyles[":focus"]
-	if f != nil {
-		for k, v := range f {
-			n.ComputedStyle[k] = v
-		}
-	}
+	ConditionalStyleHandler(n, map[string]string{})
 }
 
 func (n *Node) Blur() {
 	n.Focused = false
-	h := n.ConditionalStyles[":hover"]
-	f := n.ConditionalStyles[":focus"]
-	if f != nil {
-		for k := range f {
-			if n.Hovered {
-				if h[k] != "" {
-					n.ComputedStyle[k] = h[k]
-				} else {
-					n.ComputedStyle[k] = n.InitalStyles[k]
-				}
-			} else {
-				n.ComputedStyle[k] = n.InitalStyles[k]
-			}
-		}
-	}
+	ConditionalStyleHandler(n, map[string]string{})
 }
 
 func (n *Node) GetContext(width, height int) *canvas.Canvas {
-	n.ComputedStyle["width"] = Itoa(width) + "px"
-	n.ComputedStyle["height"] = Itoa(height) + "px"
+	n.ComputedStyle["width"] = strconv.Itoa(width) + "px"
+	n.ComputedStyle["height"] = strconv.Itoa(height) + "px"
 	ctx := canvas.NewCanvas(width, height)
 	n.Canvas = ctx
 	return ctx

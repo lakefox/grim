@@ -72,13 +72,16 @@ func Expander(styles map[string]string) map[string]string {
 	}
 	delete(styles, "padding")
 
-	flex := parseFlex(styles["flex"])
+	if styles["flex"] != "" {
+		flex := parseFlex(styles["flex"])
 
-	delete(styles, "flex")
+		delete(styles, "flex")
 
-	styles["flex-basis"] = flex.FlexBasis
-	styles["flex-grow"] = flex.FlexGrow
-	styles["flex-shrink"] = flex.FlexShrink
+		styles["flex-basis"] = flex.FlexBasis
+		styles["flex-grow"] = flex.FlexGrow
+		styles["flex-shrink"] = flex.FlexShrink
+	}
+
 	return styles
 }
 
