@@ -1,7 +1,6 @@
 package element
 
 import (
-	"fmt"
 	"sort"
 	"strconv"
 	"strings"
@@ -90,7 +89,7 @@ func ConditionalStyleHandler(n *Node, newStyles map[string]string) {
 			styles[k] = v
 		}
 	}
-	fmt.Println(n.Properties.Id, n.ComputedStyle["font-family"], n.ComputedStyle["color"], n.InitalStyles["color"])
+
 	if n.ConditionalStyles[":hover"] != nil || n.ConditionalStyles[":focus"] != nil {
 		for _, v := range n.Children {
 			ConditionalStyleHandler(v, styles)

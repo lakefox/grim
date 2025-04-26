@@ -5,7 +5,7 @@ import (
 	"image/color"
 	"math"
 
-	"github.com/fogleman/gg"
+	"grim/gg"
 )
 
 // Canvas represents a drawing surface

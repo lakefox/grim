@@ -6,6 +6,7 @@ import (
 	"grim/element"
 	"image"
 	"os"
+	"fmt"
 	"path/filepath"
 	"runtime"
 	"slices"
@@ -25,6 +26,7 @@ func Init() *adapter.Adapter {
 		textureLoaded := rl.LoadTextureFromImage(img)
 		rl.UnloadImage(img)
 		wm.Textures[key] = &textureLoaded
+		fmt.Println(len(wm.Textures), key)
 
 	}
 	a.Unload = func(key string) {

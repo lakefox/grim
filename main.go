@@ -293,6 +293,7 @@ func getRenderData(data *Window, monitor *events.Monitor) {
 		} else {
 			if data.CSS.Adapter.Textures[k]["background"] != key {
 				img := cstyle.GenerateBackground(data.CSS, self)
+				data.CSS.Adapter.UnloadTexture(k, "background")
 				data.CSS.Adapter.LoadTexture(k, "background", key, img)
 				if self.Textures == nil {
 					self.Textures = map[string]string{}
@@ -303,7 +304,7 @@ func getRenderData(data *Window, monitor *events.Monitor) {
 			}
 		}
 	}
-
+	fmt.Println(len(keys))
 	addScroll(&data.document, s)
 
 	data.Scripts.Run(&data.document)

@@ -2,7 +2,7 @@ package cstyle
 
 import (
 	"bytes"
-	"github.com/fogleman/gg"
+	"grim/gg"
 	"golang.org/x/image/draw"
 	"grim/canvas"
 	"grim/color"

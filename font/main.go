@@ -299,7 +299,7 @@ func GetMetaData(n *element.Node, style map[string]string, state *map[string]ele
 	return &text
 }
 
-func Render(text *MetaData) (image.Image, int) {
+func RenderFont(text *MetaData) (image.Image, int) {
 	if text.LineHeight == 0 {
 		text.LineHeight = text.EM + 3
 	}

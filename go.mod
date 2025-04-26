@@ -13,7 +13,6 @@ require (
 )
 
 require (
-	github.com/fogleman/gg v1.3.0
 	github.com/gen2brain/raylib-go/raylib v0.0.0-20231123174446-48309e2407b7
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 )

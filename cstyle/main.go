@@ -242,7 +242,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 				c.Adapter.UnloadTexture(n.Properties.Id, "text")
 			}
 			var data image.Image
-			data, width = font.Render(metadata)
+			data, width = font.RenderFont(metadata)
 			c.Adapter.LoadTexture(n.Properties.Id, "text", key, data)
 		}
 		self.Textures["text"] = key
@@ -271,6 +271,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 				// n.Canvas.RGBA = resized
 			}
 
+			c.Adapter.UnloadTexture(n.Properties.Id, "canvas")
 			c.Adapter.LoadTexture(n.Properties.Id, "canvas", key, img)
 			self.Textures["canvas"] = key
 		}
