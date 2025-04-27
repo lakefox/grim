@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"grim"
 	"grim/adapters/raylib"
-	"net/http"
-	_ "net/http/pprof"
+	// "net/http"
+	// _ "net/http/pprof"
 )
 // go tool pprof -http=localhost:5678 http://localhost:6060/debug/pprof/hea
 // func logMemoryUsage() {
@@ -29,13 +29,13 @@ import (
 // }
 
 func main() {
-	go func() {
-		http.ListenAndServe("localhost:6060", nil)
-	}()
+	// go func() {
+	// 	http.ListenAndServe("localhost:6060", nil)
+	// }()
 	// go logMemoryUsage()
 	// !ISSUE: Flex2 doesn't work anymore
 	window := grim.New(raylib.Init(), 850, 400)
-	window.Path("./src/index.html")
+	window.Path("./src/simple.html")
 	document := window.Document()
 
 	// qsa := document.QuerySelectorAll(`:where(h1, h2, h3)`)

@@ -10,6 +10,7 @@ import (
 	"strings"
 )
 
+// !TODO: Make everything a setter
 type Node struct {
 	TagName           string
 	InnerText         string
@@ -56,7 +57,7 @@ type Node struct {
 	Properties    Properties
 }
 
-// !TODO: I would like to remove element.Node.Properties if possible but I don't think it is
+// !TODO: I would like to remove element.Node.Properties if possible but I don't think it is possible
 type Properties struct {
 	Id             string
 	EventListeners map[string][]func(Event)

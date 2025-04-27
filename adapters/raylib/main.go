@@ -6,7 +6,6 @@ import (
 	"grim/element"
 	"image"
 	"os"
-	"fmt"
 	"path/filepath"
 	"runtime"
 	"slices"
@@ -26,7 +25,6 @@ func Init() *adapter.Adapter {
 		textureLoaded := rl.LoadTextureFromImage(img)
 		rl.UnloadImage(img)
 		wm.Textures[key] = &textureLoaded
-		fmt.Println(len(wm.Textures), key)
 
 	}
 	a.Unload = func(key string) {
@@ -113,41 +111,6 @@ func (wm *WindowManager) OpenWindow(width, height int32) {
 	rl.SetWindowState(rl.FlagWindowResizable)
 }
 
-//	func (wm *WindowManager) LoadTextures(nodes []element.State) {
-//		if wm.Textures == nil {
-//			wm.Textures = make(map[string]*rl.Texture2D)
-//		}
-//
-//		for _, node := range nodes {
-//			if len(node.Textures) > 0 {
-//				for _, key := range node.Textures {
-//					rt, exists := wm.Textures[key]
-//					bounds, inLibrary := wm.Adapter.Library.GetBounds(key)
-//					matches := true
-//					if inLibrary && exists {
-//						matches = (rt.Width == int32(bounds.Width) && rt.Height == int32(bounds.Height))
-//						if matches {
-//							wm.Adapter.Library.Check(key)
-//						}
-//					}
-//					// Unload existing texture if there is a mismatch
-//					if exists && (!matches && !inLibrary) {
-//						rl.UnloadTexture(*rt)
-//						delete(wm.Textures, key)
-//					}
-//					if (!exists && inLibrary) || !matches {
-//						texture, _ := wm.Adapter.Library.Get(key)
-//						img := rl.NewImageFromImage(texture)
-//						textureLoaded := rl.LoadTextureFromImage(img)
-//						rl.UnloadImage(img)
-//						wm.Textures[key] = &textureLoaded
-//					}
-//				}
-//
-//			}
-//		}
-//	}
-//
 // Draw draws all nodes on the window
 func (wm *WindowManager) Draw(nodes []element.State) {
 	indexes := []float32{0}
@@ -349,20 +312,35 @@ func getSystemFonts(fs *adapter.FileSystem) {
 	switch runtime.GOOS {
 	case "windows":
 		// System Fonts
-		fs.AddDir("C:\\Windows\\Fonts")
+		AddDir("C:\\Windows\\Fonts", fs)
 		// User Fonts
-		fs.AddDir("%APPDATA%\\Microsoft\\Windows\\Fonts")
+		AddDir("%APPDATA%\\Microsoft\\Windows\\Fonts", fs)
 	case "darwin":
 		// System Fonts
-		fs.AddDir("/System/Library/Fonts")
-		fs.AddDir("/Library/Fonts")
+		AddDir("/System/Library/Fonts", fs)
+		AddDir("/Library/Fonts", fs)
 		// User Fonts
-		fs.AddDir(filepath.Join(os.Getenv("HOME"), "Library/Fonts"))
+		AddDir(filepath.Join(os.Getenv("HOME"), "Library/Fonts"), fs)
 	case "linux":
 		// System Fonts
-		fs.AddDir("/usr/share/fonts")
-		fs.AddDir("/usr/local/share/fonts")
+		AddDir("/usr/share/fonts", fs)
+		AddDir("/usr/local/share/fonts", fs)
 		// User Fonts
-		fs.AddDir(filepath.Join(os.Getenv("HOME"), ".fonts"))
+		AddDir(filepath.Join(os.Getenv("HOME"), ".fonts"), fs)
 	}
+}
+
+func AddDir(path string, fs *adapter.FileSystem) error {
+	// Walk through the directory and collect all file paths
+	fs.Sources = append(fs.Sources, path)
+	err := filepath.Walk(path, func(filePath string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() { // Only add files, not directories
+			fs.Paths = append(fs.Paths, filePath)
+		}
+		return nil
+	})
+	return err
 }

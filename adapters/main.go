@@ -3,8 +3,6 @@ package adapter
 import (
 	"grim/element"
 	"image"
-	"os"
-	"path/filepath"
 )
 
 type Adapter struct {
@@ -70,18 +68,4 @@ func (fs *FileSystem) AddFile(path string) {
 	fs.Paths = append(fs.Paths, path)
 }
 
-// !ISSUE: Breaks fs rules
-func (fs *FileSystem) AddDir(path string) error {
-	// Walk through the directory and collect all file paths
-	fs.Sources = append(fs.Sources, path)
-	err := filepath.Walk(path, func(filePath string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if !info.IsDir() { // Only add files, not directories
-			fs.Paths = append(fs.Paths, filePath)
-		}
-		return nil
-	})
-	return err
-}
+
