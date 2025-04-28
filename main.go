@@ -109,10 +109,10 @@ func New(adapterFunction *adapter.Adapter, width, height int) Window {
 	return w
 }
 
+// !ISSUE: This should be a adapter function
 func (w *Window) Open() {
 	for !w.shouldStop {
 		w.CSS.Adapter.Render(w.RenderData)
-
 	}
 }
 
@@ -304,7 +304,7 @@ func getRenderData(data *Window, monitor *events.Monitor) {
 			}
 		}
 	}
-	fmt.Println(len(keys))
+
 	addScroll(&data.document, s)
 
 	data.Scripts.Run(&data.document)

@@ -14,10 +14,10 @@ import (
 func Init() cstyle.Transformer {
 	return cstyle.Transformer{
 		Selector: func(n *element.Node, c *cstyle.CSS) bool {
-			return n.TagName == "ol"
+			return n.TagName() == "ol"
 		},
 		Handler: func(n *element.Node, c *cstyle.CSS) *element.Node {
-			tN := n.CreateElement(n.TagName)
+			tN := n.CreateElement(n.TagName())
 			var maxOS int
 			var widths []int
 			// !ISSUE: Update this to match ul

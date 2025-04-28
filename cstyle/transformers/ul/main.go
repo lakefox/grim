@@ -8,12 +8,12 @@ import (
 func Init() cstyle.Transformer {
 	return cstyle.Transformer{
 		Selector: func(n *element.Node, c *cstyle.CSS) bool {
-			return n.TagName == "ul"
+			return n.TagName() == "ul"
 		},
 		Handler: func(n *element.Node, c *cstyle.CSS) *element.Node {
 			// !TODO: make ul/ol stylable
 			for i, v := range n.Children {
-				if v.TagName != "li" {
+				if v.TagName() != "li" {
 					continue
 				}
 				dot := v.CreateElement("div")
@@ -29,7 +29,7 @@ func Init() cstyle.Transformer {
 				v.ComputedStyle["display"] = "flex"
 				v.ComputedStyle["align-items"] = "center"
 
-				dot.Properties.Id = element.GenerateUniqueId(v, dot.TagName)
+				dot.Properties.Id = element.GenerateUniqueId(v, dot.TagName())
 				n.Children[i] = v
 
 			}

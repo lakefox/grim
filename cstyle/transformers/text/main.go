@@ -25,7 +25,7 @@ func Init() cstyle.Transformer {
 			}
 		},
 		Handler: func(n *element.Node, c *cstyle.CSS) *element.Node {
-			if nonRenderTags[n.TagName] {
+			if nonRenderTags[n.TagName()] {
 				return n
 			}
 			words := strings.Split(strings.TrimSpace(DecodeHTMLEscapes(n.InnerText)), " ")
@@ -70,7 +70,7 @@ func DecodeHTMLEscapes(input string) string {
 }
 
 func InsertAfter(n, c, tgt *element.Node) {
-	c.Properties.Id = element.GenerateUniqueId(n, c.TagName)
+	c.Properties.Id = element.GenerateUniqueId(n, c.TagName())
 	nodeIndex := -1
 	for i, v := range n.Children {
 		if v.Properties.Id == tgt.Properties.Id {
@@ -88,6 +88,6 @@ func InsertAfter(n, c, tgt *element.Node) {
 }
 
 func AppendChild(n, c *element.Node) {
-	c.Properties.Id = element.GenerateUniqueId(n, c.TagName)
+	c.Properties.Id = element.GenerateUniqueId(n, c.TagName())
 	n.Children = append(n.Children, c)
 }

@@ -12,39 +12,39 @@ import (
 
 // !TODO: Make everything a setter
 type Node struct {
-	TagName           string
-	InnerText         string
-	Parent            *Node
-	Children          []*Node
-	style             map[string]string
-	ComputedStyle     map[string]string
-	Id                string
+	tagName           string // non modifiable
+	InnerText         string // modifable
+	Parent            *Node // nm
+	Children          []*Node // m
+	style             map[string]string // nm
+	ComputedStyle     map[string]string // nm
+	Id                string // m
 	ClassList         ClassList
-	Href              string
-	Src               string
-	Title             string
+	Href              string // m
+	Src               string // m
+	Title             string // m
 	attribute         map[string]string
-	ScrollLeft        int
-	ScrollTop         int
-	TabIndex          int
-	ContentEditable   bool
-	Required          bool
-	Disabled          bool
-	Checked           bool
-	Focused           bool
-	Hovered           bool
-	InitalStyles      map[string]string
-	StyleSheets       *Styles
-	ConditionalStyles map[string]map[string]string
+	ScrollLeft        int // m
+	ScrollTop         int // m
+	TabIndex          int // m
+	ContentEditable   bool // m
+	Required          bool // m
+	Disabled          bool // m
+	Checked           bool // m
+	Focused           bool // nm
+	Hovered           bool // nm
+	InitalStyles      map[string]string // nm
+	StyleSheets       *Styles // nm
+	ConditionalStyles map[string]map[string]string // nm
 
 	// !NOTE: ScrollHeight is the amount of scroll left, not the total amount of scroll
 	// + if you  want the same scrollHeight like js the add the height of the element to it
-	ScrollHeight   int
-	ScrollWidth    int
+	ScrollHeight   int // nm
+	ScrollWidth    int // nm
 	Canvas         *canvas.Canvas
-	PseudoElements map[string]map[string]string
+	PseudoElements map[string]map[string]string // nm
 
-	Value         string
+	Value         string // m
 	OnClick       func(Event)
 	OnContextMenu func(Event)
 	OnMouseDown   func(Event)
@@ -111,6 +111,10 @@ type Background struct {
 	Repeat     string
 	Origin     string
 	Attachment string
+}
+
+func (n *Node) TagName() string {
+	return n.tagName
 }
 
 // !MAN: Node Style getter/setter
@@ -231,7 +235,7 @@ func (n *Node) CreateElement(name string) Node {
 		ti = 9999999
 	}
 	return Node{
-		TagName:   name,
+		tagName:   name,
 		InnerText: "",
 		Children:  []*Node{},
 		Id:        "",
@@ -263,7 +267,7 @@ func GenerateUniqueId(parent *Node, tagName string) string {
 
 func (n *Node) AppendChild(c *Node) {
 	c.Parent = n
-	c.Properties.Id = GenerateUniqueId(n, c.TagName)
+	c.Properties.Id = GenerateUniqueId(n, c.tagName)
 	n.Children = append(n.Children, c)
 	if n.Parent != nil {
 		n.StyleSheets.GetStyles(c)
@@ -272,7 +276,7 @@ func (n *Node) AppendChild(c *Node) {
 
 func (n *Node) InsertAfter(c, tgt *Node) {
 	c.Parent = n
-	c.Properties.Id = GenerateUniqueId(n, c.TagName)
+	c.Properties.Id = GenerateUniqueId(n, c.tagName)
 	if n.Parent != nil {
 		n.StyleSheets.GetStyles(c)
 	}
@@ -294,7 +298,7 @@ func (n *Node) InsertBefore(c, tgt *Node) {
 	c.Parent = n
 	// Set Id
 
-	c.Properties.Id = GenerateUniqueId(n, c.TagName)
+	c.Properties.Id = GenerateUniqueId(n, c.tagName)
 	if n.Parent != nil {
 		n.StyleSheets.GetStyles(c)
 	}
@@ -420,7 +424,7 @@ func NodeToHTML(node *Node) (string, string) {
 	// }
 
 	var buffer bytes.Buffer
-	buffer.WriteString("<" + node.TagName)
+	buffer.WriteString("<" + node.tagName)
 
 	if node.ContentEditable {
 		buffer.WriteString(" contentEditable=\"true\"")
@@ -493,7 +497,7 @@ func NodeToHTML(node *Node) (string, string) {
 	if node.InnerText != "" && !ChildrenHaveText(node) {
 		buffer.WriteString(node.InnerText)
 	}
-	return buffer.String(), "</" + node.TagName + ">"
+	return buffer.String(), "</" + node.tagName + ">"
 }
 
 func OuterHTML(node *Node) string {

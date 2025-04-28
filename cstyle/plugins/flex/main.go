@@ -507,7 +507,7 @@ func countText(n *element.Node) int {
 	count := 0
 	groups := []int{}
 	for _, v := range n.Children {
-		if v.TagName == "text" {
+		if v.TagName() == "text" {
 			count += 1
 		}
 		if v.ComputedStyle["display"] == "block" {

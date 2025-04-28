@@ -60,7 +60,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 		self.Textures = map[string]string{}
 	}
 
-	if nonRenderTags[n.TagName] {
+	if nonRenderTags[n.TagName()] {
 		return self
 	}
 
@@ -247,7 +247,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 		}
 		self.Textures["text"] = key
 
-		if (style["height"] == "" && style["min-height"] == "") || n.TagName == "text" {
+		if (style["height"] == "" && style["min-height"] == "") || n.TagName() == "text" {
 			self.Height = float32(metadata.LineHeight)
 			n.ComputedStyle["height"] = strconv.Itoa(int(self.Height)) + "px"
 		}
@@ -259,7 +259,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 	}
 
 	// Load canvas into textures
-	if n.TagName == "canvas" {
+	if n.TagName() == "canvas" {
 		if n.Canvas != nil {
 			key := n.Properties.Id + "canvas"
 
@@ -301,7 +301,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 
 		sh := int((cState.Y + cState.Height) - self.Y)
 		if self.ScrollHeight < sh {
-			if n.Children[i].TagName != "grim-track" {
+			if n.Children[i].TagName() != "grim-track" {
 				self.ScrollHeight = sh
 				self.ScrollHeight += int(cState.Margin.Top + cState.Margin.Bottom + cState.Padding.Top + cState.Padding.Bottom + cState.Border.Top.Width + cState.Border.Bottom.Width)
 
@@ -311,7 +311,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 		sw := int((cState.X + cState.Width) - self.X)
 
 		if self.ScrollWidth < sw {
-			if n.Children[i].TagName != "grim-track" {
+			if n.Children[i].TagName() != "grim-track" {
 				self.ScrollWidth = sw
 			}
 		}

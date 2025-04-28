@@ -222,7 +222,7 @@ func (s Styles) GetStyles(n *Node) {
 		}
 	}
 
-	if n.TagName == "img" {
+	if n.tagName == "img" {
 		styles["background-image"] = "url(\"" + n.Src + "\")"
 		styles["background-size"] = "100% 100%"
 	}

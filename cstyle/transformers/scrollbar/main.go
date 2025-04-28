@@ -103,7 +103,7 @@ func Init() cstyle.Transformer {
 					thumb.ComputedStyle[k] = v
 				}
 
-				scrollbar.Properties.Id = element.GenerateUniqueId(n, scrollbar.TagName)
+				scrollbar.Properties.Id = element.GenerateUniqueId(n, scrollbar.TagName())
 				AppendChild(&scrollbar, &thumb)
 				AppendChild(n, &scrollbar)
 			}
@@ -148,7 +148,7 @@ func Init() cstyle.Transformer {
 				for k, v := range ps["::-webkit-scrollbar-thumb"] {
 					thumb.ComputedStyle[k] = v
 				}
-				scrollbar.Properties.Id = element.GenerateUniqueId(n, scrollbar.TagName)
+				scrollbar.Properties.Id = element.GenerateUniqueId(n, scrollbar.TagName())
 				AppendChild(&scrollbar, &thumb)
 
 				// !DEVMAN,NOTE: This prevents recursion
@@ -174,6 +174,6 @@ func Init() cstyle.Transformer {
 }
 
 func AppendChild(n, c *element.Node) {
-	c.Properties.Id = element.GenerateUniqueId(n, c.TagName)
+	c.Properties.Id = element.GenerateUniqueId(n, c.TagName())
 	n.Children = append(n.Children, c)
 }

@@ -35,12 +35,12 @@ func main() {
 	// go logMemoryUsage()
 	// !ISSUE: Flex2 doesn't work anymore
 	window := grim.New(raylib.Init(), 850, 400)
-	window.Path("./src/simple.html")
+	window.Path("./src/index.html")
 	document := window.Document()
 
 	// qsa := document.QuerySelectorAll(`:where(h1, h2, h3)`)
 	qsa := document.QuerySelector(`.box`)
-	fmt.Println(qsa.ClassList)
+	fmt.Println("Classlist: ", qsa.ClassList)
 
 	window.Open()
 

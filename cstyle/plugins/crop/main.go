@@ -27,7 +27,7 @@ func Init() cstyle.Plugin {
 			contentWidth := float32(self.ScrollWidth)
 
 			for _, v := range n.Children {
-				if v.TagName == "grim-track" && v.GetAttribute("direction") == "y" {
+				if v.TagName() == "grim-track" && v.GetAttribute("direction") == "y" {
 					if containerHeight < contentHeight {
 						p := c.State[v.Properties.Id]
 						p.Hidden = false
@@ -50,7 +50,7 @@ func Init() cstyle.Plugin {
 						scrollTop = 0
 					}
 				}
-				if v.TagName == "grim-track" && v.GetAttribute("direction") == "x" {
+				if v.TagName() == "grim-track" && v.GetAttribute("direction") == "x" {
 					if containerWidth < contentWidth {
 						p := c.State[v.Properties.Id]
 						p.Hidden = false
@@ -88,7 +88,7 @@ func Init() cstyle.Plugin {
 			}
 
 			for _, v := range n.Children {
-				if v.ComputedStyle["position"] == "fixed" || v.TagName == "grim-track" {
+				if v.ComputedStyle["position"] == "fixed" || v.TagName() == "grim-track" {
 					continue
 				}
 				child := c.State[v.Properties.Id]
