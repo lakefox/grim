@@ -49,8 +49,8 @@ var inheritedProps = []string{
 
 func QuickStyles(n *Node) {
 	// Inherit styles from parent
-	if n.Parent != nil {
-		ps := n.Parent.ComputedStyle
+	if n.parent != nil {
+		ps := n.parent.ComputedStyle
 		for _, prop := range inheritedProps {
 			if value, ok := ps[prop]; ok && value != "" {
 				n.ComputedStyle[prop] = value
@@ -65,7 +65,7 @@ func ConditionalStyleHandler(n *Node, newStyles map[string]string) {
 
 	for k, v := range n.InitalStyles {
 		if newStyles[k] == "" && n.ComputedStyle[k] != v {
-			styles[k] = v	
+			styles[k] = v
 		}
 		n.ComputedStyle[k] = v
 	}
@@ -75,7 +75,7 @@ func ConditionalStyleHandler(n *Node, newStyles map[string]string) {
 			n.ComputedStyle[k] = newStyles[k]
 		}
 	}
-	
+
 	// Then apply the conditional styles
 	if n.Hovered && n.ConditionalStyles[":hover"] != nil {
 		for k, v := range n.ConditionalStyles[":hover"] {
@@ -110,8 +110,8 @@ func (s Styles) GetStyles(n *Node) {
 	conditionalStyles := make(map[string]map[string]string)
 
 	// Inherit styles from parent
-	if n.Parent != nil {
-		ps := n.Parent.ComputedStyle
+	if n.parent != nil {
+		ps := n.parent.ComputedStyle
 		for _, prop := range inheritedProps {
 			if value, ok := ps[prop]; ok && value != "" {
 				styles[prop] = value
@@ -213,8 +213,8 @@ func (s Styles) GetStyles(n *Node) {
 	}
 
 	// Handle z-index inheritance
-	if n.Parent != nil && styles["z-index"] == "" {
-		parentZIndex := n.Parent.ComputedStyle["z-index"]
+	if n.parent != nil && styles["z-index"] == "" {
+		parentZIndex := n.parent.ComputedStyle["z-index"]
 		if parentZIndex != "" {
 			z, _ := strconv.Atoi(parentZIndex)
 			z += 1

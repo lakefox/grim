@@ -262,7 +262,7 @@ func getRenderData(data *Window, monitor *events.Monitor) {
 
 	monitor.RunEvents(data.document.Children[0])
 	start := time.Now()
-	newDoc := copyDocument(data.CSS, data.document.Children[0], &data.document)
+	newDoc := element.CopyDocument(data.document.Children[0], &data.document)
 
 	data.CSS.ComputeNodeStyle(newDoc)
 
@@ -317,28 +317,6 @@ func getRenderData(data *Window, monitor *events.Monitor) {
 	(data.CSS.State) = s
 }
 
-func copyDocument(c cstyle.CSS, node *element.Node, parent *element.Node) *element.Node {
-	n := *node
-	n.Parent = parent
-	// !DEVMAN: Copying is done here, would like to remove this and add it to ComputeNodeStyle, so I can save a tree climb
-	// + Maybe just have this copy the node and the styles don't need to be recomputed everytime
-
-	if len(node.Children) > 0 {
-		n.Children = make([]*element.Node, 0, len(node.Children))
-		// n.Children = append(n.Children, node.Children...)
-		// for _, v := range node.Children {
-		for i := range node.Children {
-			n.Children = append(n.Children, node.Children[i])
-		}
-		for i := range node.Children {
-			n.Children[i] = copyDocument(c, node.Children[i], &n)
-		}
-
-	}
-
-	return &n
-}
-
 func addScroll(n *element.Node, s map[string]element.State) {
 	// !NOTE: This is the only spot you can pierce the vale
 	n.ScrollHeight = s[n.Properties.Id].ScrollHeight
@@ -351,8 +329,6 @@ func addScroll(n *element.Node, s map[string]element.State) {
 func createNode(node *html.Node, parent *element.Node, stylesheets *element.Styles) {
 	if node.Type == html.ElementNode {
 		newNode := parent.CreateElement(node.Data)
-		newNode.Parent = parent
-		newNode.Properties.Id = element.GenerateUniqueId(parent, node.Data)
 		for _, attr := range node.Attr {
 			switch attr.Key {
 			case "class":
@@ -384,7 +360,9 @@ func createNode(node *html.Node, parent *element.Node, stylesheets *element.Styl
 				newNode.SetAttribute(attr.Key, attr.Val)
 			}
 		}
-		newNode.InnerText = strings.TrimSpace(utils.GetInnerText(node))
+
+		newNode.SetInnerText(strings.TrimSpace(utils.GetInnerText(node)))
+		parent.AppendChild(&newNode)
 		parent.StyleSheets.GetStyles(&newNode)
 		// Recursively traverse child nodes
 		for child := node.FirstChild; child != nil; child = child.NextSibling {
@@ -392,7 +370,7 @@ func createNode(node *html.Node, parent *element.Node, stylesheets *element.Styl
 				createNode(child, &newNode, stylesheets)
 			}
 		}
-		parent.AppendChild(&newNode)
+		
 	} else {
 		for child := node.FirstChild; child != nil; child = child.NextSibling {
 			if child.Type == html.ElementNode {

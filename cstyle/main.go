@@ -71,7 +71,8 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 	}
 
 	plugins := c.Plugins
-	parent := s[n.Parent.Properties.Id]
+	parentNode := n.Parent()
+	parent := s[parentNode.Properties.Id]
 	// Cache the style map
 	style := n.ComputedStyle
 
@@ -135,7 +136,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 		offsetNode := n
 		// Should skip the current element and the ROOT
 		for i := len(ancestors) - 2; i > 0; i-- {
-			offsetNode = offsetNode.Parent
+			offsetNode = offsetNode.Parent()
 			pos := offsetNode.ComputedStyle["position"]
 			if pos == "relative" || pos == "absolute" {
 				break
@@ -160,11 +161,11 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 			bottom = true
 		}
 	} else {
-		for i, v := range n.Parent.Children {
+		for i, v := range parentNode.Children {
 			if v.ComputedStyle["position"] != "absolute" {
 				if v.Properties.Id == n.Properties.Id {
 					if i > 0 {
-						sib := n.Parent.Children[i-1]
+						sib := parentNode.Children[i-1]
 						sibling := s[sib.Properties.Id]
 						if sib.ComputedStyle["position"] != "absolute" {
 							if style["display"] == "inline" {
@@ -206,9 +207,9 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 	self.ContentEditable = n.ContentEditable
 
 	c.State[n.Properties.Id] = self
-
-	if !element.ChildrenHaveText(n) && len(n.InnerText) > 0 {
-		n.InnerText = strings.TrimSpace(n.InnerText)
+	innerText := n.GetInnerText()
+	if !element.ChildrenHaveText(n) && len(innerText) > 0 {
+		n.SetInnerText(strings.TrimSpace(innerText))
 		italic := false
 
 		if style["font-style"] == "italic" {
@@ -277,22 +278,20 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 		}
 	}
 
-	self.Value = n.InnerText
+	self.Value = n.GetInnerText()
 	self.TabIndex = n.TabIndex
 	c.State[n.Properties.Id] = self
-	c.State[n.Parent.Properties.Id] = parent
+	c.State[parentNode.Properties.Id] = parent
 
 	self.ScrollHeight = 0
 	self.ScrollWidth = 0
 	var childYOffset float32
 
 	for i := 0; i < len(n.Children); i++ {
-		v := n.Children[i]
-		v.Parent = n
-		cState := c.ComputeNodeStyle(v)
+		cState := c.ComputeNodeStyle(n.Children[i])
 
 		if style["height"] == "" && style["max-height"] == "" {
-			if v.ComputedStyle["position"] != "absolute" && cState.Y+cState.Height > childYOffset {
+			if n.Children[i].ComputedStyle["position"] != "absolute" && cState.Y+cState.Height > childYOffset {
 				childYOffset = cState.Y + cState.Height
 				self.Height = cState.Y - self.Border.Top.Width - self.Y + cState.Height
 				self.Height += cState.Margin.Top + cState.Margin.Bottom + cState.Padding.Top + cState.Padding.Bottom + cState.Border.Top.Width + cState.Border.Bottom.Width

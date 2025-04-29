@@ -104,8 +104,8 @@ func Init() cstyle.Transformer {
 				}
 
 				scrollbar.Properties.Id = element.GenerateUniqueId(n, scrollbar.TagName())
-				AppendChild(&scrollbar, &thumb)
-				AppendChild(n, &scrollbar)
+				scrollbar.AppendChild(&thumb)
+				n.AppendChild(&scrollbar)
 			}
 
 			// Y scrollbar
@@ -148,10 +148,13 @@ func Init() cstyle.Transformer {
 				for k, v := range ps["::-webkit-scrollbar-thumb"] {
 					thumb.ComputedStyle[k] = v
 				}
-				scrollbar.Properties.Id = element.GenerateUniqueId(n, scrollbar.TagName())
-				AppendChild(&scrollbar, &thumb)
 
-				// !DEVMAN,NOTE: This prevents recursion
+				// !NOTE: This need to be here because at this point scrollbar hasn't been added to the parent
+				// + ,so it doesn't have a prid to build off of
+				scrollbar.Properties.Id = element.GenerateUniqueId(n, scrollbar.TagName())
+				scrollbar.AppendChild(&thumb)
+
+				// !NOTE: This prevents recursion
 				if !strings.Contains(style["width"], "calc") {
 					n.ComputedStyle["width"] = "calc(" + style["width"] + "-" + trackWidth + ")"
 				}
@@ -165,7 +168,7 @@ func Init() cstyle.Transformer {
 				} else {
 					n.ComputedStyle["padding-right"] = trackWidth
 				}
-				AppendChild(n, &scrollbar)
+				n.AppendChild(&scrollbar)
 			}
 
 			return n
@@ -173,7 +176,3 @@ func Init() cstyle.Transformer {
 	}
 }
 
-func AppendChild(n, c *element.Node) {
-	c.Properties.Id = element.GenerateUniqueId(n, c.TagName())
-	n.Children = append(n.Children, c)
-}

@@ -2,11 +2,11 @@ package cstyle
 
 import (
 	"bytes"
-	"grim/gg"
 	"golang.org/x/image/draw"
 	"grim/canvas"
 	"grim/color"
 	"grim/element"
+	"grim/gg"
 	"grim/utils"
 	"image"
 	ic "image/color"

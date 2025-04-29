@@ -16,10 +16,9 @@ func GetXY(n element.Node, state map[string]element.State) (float32, float32) {
 
 	offsetX := float32(0)
 	offsetY := float32(0)
-
-	if n.Parent != nil {
-		parent := s[n.Parent.Properties.Id]
-		// x, y := GetXY(n.Parent, state)
+	p := n.Parent()
+	if p != nil {
+		parent := s[p.Properties.Id]
 		offsetX += parent.Border.Left.Width + parent.Padding.Left
 		offsetY += parent.Border.Top.Width + parent.Padding.Top
 	}
@@ -39,10 +38,10 @@ func FindBounds(n element.Node, style map[string]string, state *map[string]eleme
 
 	fs := self.EM
 
+	p := n.Parent()
 	var pwh BoxSizing
-	if n.Parent != nil {
-		parent = s[n.Parent.Properties.Id]
-		// pwh = GetWH(*n.Parent, state)
+	if p != nil {
+		parent = s[p.Properties.Id]
 		pwh = BoxSizing{
 			Width:  parent.Width,
 			Height: parent.Height,
@@ -89,15 +88,15 @@ func FindBounds(n element.Node, style map[string]string, state *map[string]eleme
 	}
 
 	m := getMP(n, style, wh, state, "margin")
-	p := getMP(n, style, wh, state, "padding")
+	padding := getMP(n, style, wh, state, "padding")
 
-	if n.Parent != nil {
-		wh.Width += p.Left + p.Right
-		wh.Height += p.Top + p.Bottom
+	if p != nil {
+		wh.Width += padding.Left + padding.Right
+		wh.Height += padding.Top + padding.Bottom
 	}
 
 	if wStyle == "100%" && style["position"] != "absolute" {
-		wh.Width -= (m.Right + m.Left + self.Border.Left.Width + self.Border.Right.Width + parent.Padding.Left + parent.Padding.Right + p.Left + p.Right)
+		wh.Width -= (m.Right + m.Left + self.Border.Left.Width + self.Border.Right.Width + parent.Padding.Left + parent.Padding.Right + padding.Left + padding.Right)
 	}
 
 	if style["height"] == "100%" {
@@ -108,7 +107,7 @@ func FindBounds(n element.Node, style map[string]string, state *map[string]eleme
 		}
 	}
 
-	return wh, m, p
+	return wh, m, padding
 }
 
 func getMP(n element.Node, style map[string]string, wh BoxSizing, state *map[string]element.State, t string) element.BoxSpacing {
@@ -137,15 +136,16 @@ func getMP(n element.Node, style map[string]string, wh BoxSizing, state *map[str
 		m.Bottom = ConvertToPixels(bottomStyle, fs, wh.Height)
 	}
 
+	p := n.Parent()	
+
 	if t == "margin" {
 		siblingMargin := float32(0)
 		firstChild := false
 		// Margin Collapse
 		// !ISSUE: Check margin collapse
-		// if n.Parent != nil && n.Parent.CStyle["display"] == "flex" {
-		if n.Parent != nil {
+		if p != nil {
 			sibIndex := -1
-			for i, v := range n.Parent.Children {
+			for i, v := range p.Children {
 				if v.Properties.Id == n.Properties.Id {
 					sibIndex = i - 1
 
@@ -153,13 +153,13 @@ func getMP(n element.Node, style map[string]string, wh BoxSizing, state *map[str
 				}
 			}
 			if sibIndex > -1 {
-				sib := s[n.Parent.Children[sibIndex].Properties.Id]
+				sib := s[p.Children[sibIndex].Properties.Id]
 				siblingMargin = sib.Margin.Bottom
 			}
 		}
 
 		// Handle top margin collapse
-		for i, v := range n.Parent.Children {
+		for i, v := range p.Children {
 			if v.Properties.Id == n.Properties.Id {
 				if i == 0 {
 					firstChild = true
@@ -168,10 +168,10 @@ func getMP(n element.Node, style map[string]string, wh BoxSizing, state *map[str
 			}
 		}
 		if firstChild {
-			parent := s[n.Parent.Properties.Id]
+			parent := s[p.Properties.Id]
 			if parent.Margin.Top < m.Top {
 				parent.Margin.Top = m.Top
-				(*state)[n.Parent.Properties.Id] = parent
+				(*state)[p.Properties.Id] = parent
 			}
 			m.Top = 0
 		} else {
@@ -186,8 +186,7 @@ func getMP(n element.Node, style map[string]string, wh BoxSizing, state *map[str
 
 		// Handle auto margins
 		if leftStyle == "auto" && rightStyle == "auto" {
-			// pwh := GetWH(*n.Parent, state)
-			parent := s[n.Parent.Properties.Id]
+			parent := s[p.Properties.Id]
 			pwh := BoxSizing{
 				Width: parent.Width,
 			}

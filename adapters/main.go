@@ -67,5 +67,3 @@ type FileSystem struct {
 func (fs *FileSystem) AddFile(path string) {
 	fs.Paths = append(fs.Paths, path)
 }
-
-

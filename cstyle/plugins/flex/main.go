@@ -529,7 +529,7 @@ func countText(n *element.Node) int {
 func minHeight(n *element.Node, c *cstyle.CSS, prev float32) float32 {
 	self := c.State[n.Properties.Id]
 	if n.ComputedStyle["min-height"] != "" {
-		mw := utils.ConvertToPixels(n.ComputedStyle["min-height"], self.EM, c.State[n.Parent.Properties.Id].Width)
+		mw := utils.ConvertToPixels(n.ComputedStyle["min-height"], self.EM, c.State[n.Parent().Properties.Id].Width)
 		return utils.Max(prev, mw)
 	} else {
 		return prev
@@ -549,7 +549,7 @@ func getMinHeight(n *element.Node, c *cstyle.CSS) float32 {
 		selfHeight = self.Height
 	}
 	if n.ComputedStyle["min-height"] != "" {
-		mh := utils.ConvertToPixels(n.ComputedStyle["min-height"], self.EM, c.State[n.Parent.Properties.Id].Width)
+		mh := utils.ConvertToPixels(n.ComputedStyle["min-height"], self.EM, c.State[n.Parent().Properties.Id].Width)
 		selfHeight = utils.Max(mh, selfHeight)
 	}
 
@@ -569,7 +569,7 @@ func getMinWidth(n *element.Node, c *cstyle.CSS) float32 {
 		selfWidth = self.Width
 	}
 	if n.ComputedStyle["min-width"] != "" {
-		mw := utils.ConvertToPixels(n.ComputedStyle["min-width"], self.EM, c.State[n.Parent.Properties.Id].Width)
+		mw := utils.ConvertToPixels(n.ComputedStyle["min-width"], self.EM, c.State[n.Parent().Properties.Id].Width)
 		selfWidth = utils.Max(mw, selfWidth)
 	}
 
@@ -621,19 +621,20 @@ func getNodeWidth(n *element.Node, c *cstyle.CSS) float32 {
 
 func setWidth(n *element.Node, c *cstyle.CSS, width float32) float32 {
 	self := c.State[n.Properties.Id]
+	prid := n.Parent().Properties.Id
 
 	if n.ComputedStyle["width"] != "" {
-		return utils.ConvertToPixels(n.ComputedStyle["width"], self.EM, c.State[n.Parent.Properties.Id].Width) + self.Padding.Left + self.Padding.Right
+		return utils.ConvertToPixels(n.ComputedStyle["width"], self.EM, c.State[prid].Width) + self.Padding.Left + self.Padding.Right
 	}
 
 	var maxWidth, minWidth float32
 	maxWidth = 10e9
 	if n.ComputedStyle["min-width"] != "" {
-		minWidth = utils.ConvertToPixels(n.ComputedStyle["min-width"], self.EM, c.State[n.Parent.Properties.Id].Width)
+		minWidth = utils.ConvertToPixels(n.ComputedStyle["min-width"], self.EM, c.State[prid].Width)
 		minWidth += self.Padding.Left + self.Padding.Right
 	}
 	if n.ComputedStyle["max-width"] != "" {
-		maxWidth = utils.ConvertToPixels(n.ComputedStyle["min-width"], self.EM, c.State[n.Parent.Properties.Id].Width)
+		maxWidth = utils.ConvertToPixels(n.ComputedStyle["min-width"], self.EM, c.State[prid].Width)
 		maxWidth += self.Padding.Left + self.Padding.Right
 	}
 
@@ -642,18 +643,19 @@ func setWidth(n *element.Node, c *cstyle.CSS, width float32) float32 {
 
 func setHeight(n *element.Node, c *cstyle.CSS, height float32) float32 {
 	self := c.State[n.Properties.Id]
+	prid := n.Parent().Properties.Id
 
 	if n.ComputedStyle["height"] != "" {
-		return utils.ConvertToPixels(n.ComputedStyle["height"], self.EM, c.State[n.Parent.Properties.Id].Height)
+		return utils.ConvertToPixels(n.ComputedStyle["height"], self.EM, c.State[prid].Height)
 	}
 
 	var maxHeight, minHeight float32
 	maxHeight = 10e9
 	if n.ComputedStyle["min-height"] != "" {
-		minHeight = utils.ConvertToPixels(n.ComputedStyle["min-height"], self.EM, c.State[n.Parent.Properties.Id].Height)
+		minHeight = utils.ConvertToPixels(n.ComputedStyle["min-height"], self.EM, c.State[prid].Height)
 	}
 	if n.ComputedStyle["max-height"] != "" {
-		maxHeight = utils.ConvertToPixels(n.ComputedStyle["min-height"], self.EM, c.State[n.Parent.Properties.Id].Height)
+		maxHeight = utils.ConvertToPixels(n.ComputedStyle["min-height"], self.EM, c.State[prid].Height)
 	}
 
 	return utils.Max(minHeight, utils.Min(height, maxHeight))

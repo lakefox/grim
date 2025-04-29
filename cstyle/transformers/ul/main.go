@@ -17,7 +17,8 @@ func Init() cstyle.Transformer {
 					continue
 				}
 				dot := v.CreateElement("div")
-				dot.Parent = n
+				v.AppendChild(&dot)
+				// !CHECK: this too
 				element.QuickStyles(&dot)
 				dot.ComputedStyle["background-color"] = "#000"
 				dot.ComputedStyle["border-radius"] = "100px"
@@ -29,7 +30,6 @@ func Init() cstyle.Transformer {
 				v.ComputedStyle["display"] = "flex"
 				v.ComputedStyle["align-items"] = "center"
 
-				dot.Properties.Id = element.GenerateUniqueId(v, dot.TagName())
 				n.Children[i] = v
 
 			}

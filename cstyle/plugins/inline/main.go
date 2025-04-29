@@ -13,21 +13,22 @@ func Init() cstyle.Plugin {
 		},
 		Handler: func(n *element.Node, c *cstyle.CSS) {
 			self := c.State[n.Properties.Id]
-			parent := c.State[n.Parent.Properties.Id]
+			p := n.Parent()
+			parent := c.State[p.Properties.Id]
 			copyOfX := self.X
 			copyOfY := self.Y
 			if copyOfX < parent.X+parent.Padding.Left {
 				copyOfX = parent.X + parent.Padding.Left
 			}
 
-			for i, v := range n.Parent.Children {
+			for i, v := range p.Children {
 				if i > 0 {
 					if v.ComputedStyle["position"] != "absolute" {
 						if v.Properties.Id == n.Properties.Id {
-							sib := n.Parent.Children[i-1]
+							sib := p.Children[i-1]
 							if sib.ComputedStyle["position"] == "absolute" {
 								if i-2 >= 0 {
-									sib = n.Parent.Children[i-2]
+									sib = p.Children[i-2]
 								} else {
 									continue
 								}
@@ -45,11 +46,11 @@ func Init() cstyle.Plugin {
 									self.Y = sibling.Y
 									self.X = sibling.X + sibling.Width
 								}
-								if n.InnerText != "" {
+								if n.GetInnerText() != "" {
 									baseY := sibling.Y
 									var max float32
 									for a := i; a >= 0; a-- {
-										b := n.Parent.Children[a]
+										b := p.Children[a]
 										bStyle := c.State[b.Properties.Id]
 										if bStyle.Y == baseY {
 											if bStyle.EM > max {
@@ -59,7 +60,7 @@ func Init() cstyle.Plugin {
 									}
 
 									for a := i; a >= 0; a-- {
-										b := n.Parent.Children[a]
+										b := p.Children[a]
 										bStyle := c.State[b.Properties.Id]
 										if bStyle.Y == baseY {
 											bStyle.Y += (float32(math.Ceil(float64((max - (max * 0.3))))) - float32(math.Ceil(float64(bStyle.EM-(bStyle.EM*0.3)))))

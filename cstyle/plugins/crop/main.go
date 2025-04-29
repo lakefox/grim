@@ -32,21 +32,25 @@ func Init() cstyle.Plugin {
 						p := c.State[v.Properties.Id]
 						p.Hidden = false
 						c.State[v.Properties.Id] = p
-						p = c.State[v.Children[0].Properties.Id]
-						p.Hidden = false
+						if len(v.Children) > 0 {
+							p = c.State[v.Children[0].Properties.Id]
+							p.Hidden = false
 
-						p.Height = (containerHeight / contentHeight) * containerHeight
+							p.Height = (containerHeight / contentHeight) * containerHeight
 
-						p.Y = self.Y + float32(scrollTop)
+							p.Y = self.Y + float32(scrollTop)
 
-						c.State[v.Children[0].Properties.Id] = p
+							c.State[v.Children[0].Properties.Id] = p
+						}
 					} else {
 						p := c.State[v.Properties.Id]
 						p.Hidden = true
 						c.State[v.Properties.Id] = p
-						p = c.State[v.Children[0].Properties.Id]
-						p.Hidden = true
-						c.State[v.Children[0].Properties.Id] = p
+						if len(v.Children) > 0 {
+							p = c.State[v.Children[0].Properties.Id]
+							p.Hidden = true
+							c.State[v.Children[0].Properties.Id] = p
+						}
 						scrollTop = 0
 					}
 				}
@@ -55,23 +59,28 @@ func Init() cstyle.Plugin {
 						p := c.State[v.Properties.Id]
 						p.Hidden = false
 						c.State[v.Properties.Id] = p
-						p = c.State[v.Children[0].Properties.Id]
-						p.Hidden = false
 
-						containerHeight -= utils.ConvertToPixels(v.ComputedStyle["height"], self.EM, self.Width)
+						if len(v.Children) > 0 {
+							p = c.State[v.Children[0].Properties.Id]
+							p.Hidden = false
 
-						p.Width = (containerWidth / contentWidth) * containerWidth
+							containerHeight -= utils.ConvertToPixels(v.ComputedStyle["height"], self.EM, self.Width)
 
-						p.X = self.X + float32(scrollLeft)
+							p.Width = (containerWidth / contentWidth) * containerWidth
 
+							p.X = self.X + float32(scrollLeft)
+						}
 						c.State[v.Children[0].Properties.Id] = p
 					} else {
 						p := c.State[v.Properties.Id]
 						p.Hidden = true
 						c.State[v.Properties.Id] = p
-						p = c.State[v.Children[0].Properties.Id]
-						p.Hidden = true
-						c.State[v.Children[0].Properties.Id] = p
+
+						if len(v.Children) > 0 {
+							p = c.State[v.Children[0].Properties.Id]
+							p.Hidden = true
+							c.State[v.Children[0].Properties.Id] = p
+						}
 						scrollLeft = 0
 					}
 				}

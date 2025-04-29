@@ -11,30 +11,32 @@ import (
 )
 
 // !TODO: Make everything a setter
+// + if things become slow (they should) due to the appendchild, add a compute pause function that skips all check for the internal running,
+// + can add to ComputeNodeStyle at the start and then removed at the end
 type Node struct {
-	tagName           string // non modifiable
-	InnerText         string // modifable
-	Parent            *Node // nm
-	Children          []*Node // m
+	tagName           string            // non modifiable
+	innerText         string            // modifable
+	parent            *Node             // nm
+	Children          []*Node           // m
 	style             map[string]string // nm
 	ComputedStyle     map[string]string // nm
-	Id                string // m
+	Id                string            // m
 	ClassList         ClassList
 	Href              string // m
 	Src               string // m
 	Title             string // m
 	attribute         map[string]string
-	ScrollLeft        int // m
-	ScrollTop         int // m
-	TabIndex          int // m
-	ContentEditable   bool // m
-	Required          bool // m
-	Disabled          bool // m
-	Checked           bool // m
-	Focused           bool // nm
-	Hovered           bool // nm
-	InitalStyles      map[string]string // nm
-	StyleSheets       *Styles // nm
+	ScrollLeft        int                          // m
+	ScrollTop         int                          // m
+	TabIndex          int                          // m
+	ContentEditable   bool                         // m
+	Required          bool                         // m
+	Disabled          bool                         // m
+	Checked           bool                         // m
+	Focused           bool                         // nm
+	Hovered           bool                         // nm
+	InitalStyles      map[string]string            // nm
+	StyleSheets       *Styles                      // nm
 	ConditionalStyles map[string]map[string]string // nm
 
 	// !NOTE: ScrollHeight is the amount of scroll left, not the total amount of scroll
@@ -117,6 +119,18 @@ func (n *Node) TagName() string {
 	return n.tagName
 }
 
+func (n *Node) Parent() *Node {
+	return n.parent
+}
+
+func (n *Node) GetInnerText() string {
+	return n.innerText
+}
+
+func (n *Node) SetInnerText(text string) {
+	n.innerText = text
+}
+
 // !MAN: Node Style getter/setter
 // + [!DEVMAN]Note: Contains all user inputed styles, all inline styles over ride stylesheet styles
 func (n *Node) SetStyle(key, value string) {
@@ -137,14 +151,14 @@ func (n *Node) GetComputedStyle(key string) string {
 
 // !MAN: Generates the InnerHTML of an element
 // !TODO: Add a setter
-func (n *Node) InnerHTML() string {
+func (n *Node) GetInnerHTML() string {
 	// !TODO: Will need to update the styles once this can be parsed
 	return InnerHTML(n)
 }
 
 // !MAN: Generates the OuterHTML of an element
 // !TODO: Add a setter
-func (n *Node) OuterHTML() string {
+func (n *Node) GetOuterHTML() string {
 	tag, closing := NodeToHTML(n)
 	return tag + InnerHTML(n) + closing
 }
@@ -209,7 +223,7 @@ func (n *Node) GetAttribute(name string) string {
 
 func (n *Node) SetAttribute(key, value string) {
 	n.attribute[key] = value
-	if n.Parent != nil {
+	if n.parent != nil {
 		n.StyleSheets.GetStyles(n)
 	}
 }
@@ -236,7 +250,7 @@ func (n *Node) CreateElement(name string) Node {
 	}
 	return Node{
 		tagName:   name,
-		InnerText: "",
+		innerText: "",
 		Children:  []*Node{},
 		Id:        "",
 		ClassList: ClassList{
@@ -266,18 +280,18 @@ func GenerateUniqueId(parent *Node, tagName string) string {
 }
 
 func (n *Node) AppendChild(c *Node) {
-	c.Parent = n
+	c.parent = n
 	c.Properties.Id = GenerateUniqueId(n, c.tagName)
 	n.Children = append(n.Children, c)
-	if n.Parent != nil {
+	if n.parent != nil {
 		n.StyleSheets.GetStyles(c)
 	}
 }
 
 func (n *Node) InsertAfter(c, tgt *Node) {
-	c.Parent = n
+	c.parent = n
 	c.Properties.Id = GenerateUniqueId(n, c.tagName)
-	if n.Parent != nil {
+	if n.parent != nil {
 		n.StyleSheets.GetStyles(c)
 	}
 	nodeIndex := -1
@@ -295,11 +309,11 @@ func (n *Node) InsertAfter(c, tgt *Node) {
 }
 
 func (n *Node) InsertBefore(c, tgt *Node) {
-	c.Parent = n
+	c.parent = n
 	// Set Id
 
 	c.Properties.Id = GenerateUniqueId(n, c.tagName)
-	if n.Parent != nil {
+	if n.parent != nil {
 		n.StyleSheets.GetStyles(c)
 	}
 	nodeIndex := -1
@@ -320,16 +334,16 @@ func (n *Node) InsertBefore(c, tgt *Node) {
 
 func (n *Node) Remove() {
 	nodeIndex := -1
-	for i, v := range n.Parent.Children {
+	for i, v := range n.parent.Children {
 		if v.Properties.Id == n.Properties.Id {
 			nodeIndex = i
 			break
 		}
 	}
 	if nodeIndex > 0 {
-		n.Parent.Children = append(n.Parent.Children[:nodeIndex], n.Parent.Children[nodeIndex+1:]...)
+		n.parent.Children = append(n.parent.Children[:nodeIndex], n.parent.Children[nodeIndex+1:]...)
 	}
-	n.Parent.StyleSheets.GetStyles(n.Parent)
+	n.parent.StyleSheets.GetStyles(n.parent)
 }
 
 func (n *Node) Focus() {
@@ -419,10 +433,6 @@ func funcInSlice(f func(Event), slice []func(Event)) bool {
 }
 
 func NodeToHTML(node *Node) (string, string) {
-	// if node.TagName == "text" {
-	// 	return node.InnerText + " ", ""
-	// }
-
 	var buffer bytes.Buffer
 	buffer.WriteString("<" + node.tagName)
 
@@ -494,8 +504,8 @@ func NodeToHTML(node *Node) (string, string) {
 	buffer.WriteString(">")
 
 	// Add inner text if present
-	if node.InnerText != "" && !ChildrenHaveText(node) {
-		buffer.WriteString(node.InnerText)
+	if node.innerText != "" && !ChildrenHaveText(node) {
+		buffer.WriteString(node.innerText)
 	}
 	return buffer.String(), "</" + node.tagName + ">"
 }
@@ -528,7 +538,7 @@ func InnerHTML(node *Node) string {
 
 func ChildrenHaveText(n *Node) bool {
 	for _, child := range n.Children {
-		if len(strings.TrimSpace(child.InnerText)) != 0 {
+		if len(strings.TrimSpace(child.innerText)) != 0 {
 			return true
 		}
 		// Recursively check if any child nodes have text
@@ -537,4 +547,23 @@ func ChildrenHaveText(n *Node) bool {
 		}
 	}
 	return false
+}
+
+func CopyDocument(node *Node, parent *Node) *Node {
+	n := *node
+	n.parent = parent
+	// !DEVMAN: Copying is done here, would like to remove this and add it to ComputeNodeStyle, so I can save a tree climb
+
+	if len(node.Children) > 0 {
+		n.Children = make([]*Node, 0, len(node.Children))
+		for i := range node.Children {
+			n.Children = append(n.Children, node.Children[i])
+		}
+		for i := range node.Children {
+			n.Children[i] = CopyDocument(node.Children[i], &n)
+		}
+
+	}
+
+	return &n
 }

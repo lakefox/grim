@@ -19,7 +19,6 @@ import (
 	"golang.org/x/image/font"
 )
 
-
 type MetaData struct {
 	Font                *truetype.Font
 	FontFamily          string
@@ -210,7 +209,7 @@ func Key(text *MetaData) string {
 func GetMetaData(n *element.Node, style map[string]string, state *map[string]element.State, font *truetype.Font) *MetaData {
 	s := *state
 	self := s[n.Properties.Id]
-	parent := s[n.Parent.Properties.Id]
+	parent := s[n.Parent().Properties.Id]
 
 	// !DEVMAN: In some cases like a span the width will be unset. In that case
 	// + find the closest parent that has a width greater than 0
@@ -286,7 +285,7 @@ func GetMetaData(n *element.Node, style map[string]string, state *map[string]ele
 	text.LineThrough = style["text-decoration"] == "line-through"
 	text.EM = int(self.EM)
 	text.Width = int(parent.Width)
-	text.Text = n.InnerText
+	text.Text = n.GetInnerText()
 	text.UnderlineOffset = int(underlineoffset)
 
 	if style["text-underline-offset"] == "" {

@@ -192,8 +192,8 @@ func TestSelector(n *Node, selector string) (bool, bool) {
 			return !m, false
 		} else if len(selector) >= 11 && selector[0:11] == ":nth-child(" {
 			index := 0
-			if n.Parent != nil {
-				for _, v := range n.Parent.Children {
+			if n.parent != nil {
+				for _, v := range n.parent.Children {
 					index++
 					if v.Properties.Id == n.Properties.Id {
 						break
@@ -234,7 +234,7 @@ func TestSelector(n *Node, selector string) (bool, bool) {
 				if !m {
 					match = false
 				}
-				currentElement = currentElement.Parent
+				currentElement = currentElement.parent
 			}
 			has = match
 			break
@@ -242,7 +242,7 @@ func TestSelector(n *Node, selector string) (bool, bool) {
 		for _, dc := range directChildren {
 			adjacentSiblings := splitSelector(dc, '+')
 			if len(adjacentSiblings) > 1 {
-				for i, v := range n.Parent.Children {
+				for i, v := range n.parent.Children {
 					if v.Properties.Id == n.Properties.Id {
 						// Make sure the current element matches the last selector
 						m, _ := TestSelector(n, adjacentSiblings[len(adjacentSiblings)-1])
@@ -251,7 +251,7 @@ func TestSelector(n *Node, selector string) (bool, bool) {
 							// Skip the first selector, its been matched to the current node
 							adjIndex := len(adjacentSiblings) - 2
 							for j := i - 1; j >= i-len(adjacentSiblings)+1; j-- {
-								sm, _ := TestSelector(n.Parent.Children[j], adjacentSiblings[adjIndex])
+								sm, _ := TestSelector(n.parent.Children[j], adjacentSiblings[adjIndex])
 								if !sm {
 									match = false
 									break
@@ -272,8 +272,8 @@ func TestSelector(n *Node, selector string) (bool, bool) {
 				if len(generalSiblings) > 1 {
 					match := false
 					for _, sel := range generalSiblings {
-						for i := 0; i < len(n.Parent.Children); i++ {
-							v := n.Parent.Children[i]
+						for i := 0; i < len(n.parent.Children); i++ {
+							v := n.parent.Children[i]
 							m, _ := TestSelector(v, sel)
 							if m {
 								if match {
@@ -298,17 +298,17 @@ func TestSelector(n *Node, selector string) (bool, bool) {
 						// + the next tag, but doesn't check the main tag if it did and the main didn't
 						// + have the selector then it would move up. So instead the main tag is skipped
 						// + until the next check.
-						currentElement := n.Parent
+						currentElement := n.parent
 						match := false
 						for i := len(descendants) - 1; i > 0; i-- {
 							m := false
-							for currentElement.Parent != nil && !m {
+							for currentElement.parent != nil && !m {
 								m, _ = TestSelector(currentElement, descendants[i])
 								if m {
 									match = m
 									break
 								}
-								currentElement = currentElement.Parent
+								currentElement = currentElement.parent
 							}
 
 							if !m {
@@ -352,9 +352,9 @@ func TestSelector(n *Node, selector string) (bool, bool) {
 			}
 		}
 		if s == ":first-child" {
-			has = n.Parent.Children[0].Properties.Id == n.Properties.Id
+			has = n.parent.Children[0].Properties.Id == n.Properties.Id
 		} else if s == ":last-child" {
-			has = n.Parent.Children[len(n.Parent.Children)-1].Properties.Id == n.Properties.Id
+			has = n.parent.Children[len(n.parent.Children)-1].Properties.Id == n.Properties.Id
 		}
 		if has {
 			return true, isPsuedo
