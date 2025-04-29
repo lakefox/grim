@@ -1,6 +1,7 @@
 package element
 
 import (
+	"fmt"
 	"sort"
 	"strconv"
 	"strings"
@@ -105,6 +106,7 @@ func (s Styles) GetStyles(n *Node) {
 	if strings.Contains(n.Properties.Id, "head") {
 		return
 	}
+	fmt.Println("Styles: ", n.Properties.Id)
 	styles := make(map[string]string)
 	pseudoStyles := make(map[string]map[string]string)
 	conditionalStyles := make(map[string]map[string]string)

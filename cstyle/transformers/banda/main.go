@@ -19,6 +19,12 @@ func Init() cstyle.Transformer {
 			ps := n.StyleSheets.PsuedoStyles[n.Properties.Id]
 			if ps["::before"] != nil {
 				before := n.CreateElement("before")
+				if len(n.Children) == 0 {
+					n.AppendChild(&before)
+				} else {
+					n.InsertBefore(&before, n.Children[0])
+				}
+
 				before.ComputedStyle["display"] = "inline"
 
 				for k, v := range ps["::before"] {
@@ -27,15 +33,13 @@ func Init() cstyle.Transformer {
 
 				before.SetInnerText(ps["::before"]["content"][1 : len(ps["::before"]["content"])-1])
 
-				if len(n.Children) == 0 {
-					n.AppendChild(&before)
-				} else {
-					n.InsertBefore(&before, n.Children[0])
-				}
+				
 			}
 
 			if ps["::after"] != nil {
 				after := n.CreateElement("after")
+				n.AppendChild(&after)
+
 				after.ComputedStyle["display"] = "inline"
 
 				for k, v := range ps["::after"] {
@@ -44,7 +48,7 @@ func Init() cstyle.Transformer {
 
 				after.SetInnerText(ps["::after"]["content"][1 : len(ps["::after"]["content"])-1])
 
-				n.AppendChild(&after)
+				
 			}
 
 			return n

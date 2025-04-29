@@ -18,6 +18,8 @@ func Init() cstyle.Transformer {
 				}
 				dot := v.CreateElement("div")
 				v.AppendChild(&dot)
+				v.ComputedStyle["display"] = "flex"
+				v.ComputedStyle["align-items"] = "center"
 				// !CHECK: this too
 				element.QuickStyles(&dot)
 				dot.ComputedStyle["background-color"] = "#000"
@@ -26,9 +28,7 @@ func Init() cstyle.Transformer {
 				dot.ComputedStyle["height"] = "5px"
 				dot.ComputedStyle["margin-right"] = "10px"
 
-				v.Children = append(v.Children, &dot)
-				v.ComputedStyle["display"] = "flex"
-				v.ComputedStyle["align-items"] = "center"
+				
 
 				n.Children[i] = v
 
