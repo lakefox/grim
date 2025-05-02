@@ -477,7 +477,7 @@ func CompareSelector(selector string, n *Node) bool {
 	if selector == "*" {
 		return true
 	}
-	if baseParts.Id == n.Id || baseParts.Id == "" {
+	if baseParts.Id == n.id || baseParts.Id == "" {
 		if baseParts.TagName == n.tagName || baseParts.TagName == "" {
 			match := true
 			for _, v := range baseParts.ClassList {
@@ -575,8 +575,8 @@ func ShouldTestSelector(n *Node, selector string) bool {
 func GenBaseElements(n *Node) []string {
 	selectors := []string{}
 	selectors = append(selectors, n.tagName)
-	if n.Id != "" {
-		selectors = append(selectors, "#"+n.Id)
+	if n.id != "" {
+		selectors = append(selectors, "#"+n.id)
 	}
 
 	for _, c := range n.ClassList.Classes() {

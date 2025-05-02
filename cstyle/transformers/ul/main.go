@@ -28,8 +28,6 @@ func Init() cstyle.Transformer {
 				dot.ComputedStyle["height"] = "5px"
 				dot.ComputedStyle["margin-right"] = "10px"
 
-				
-
 				n.Children[i] = v
 
 			}

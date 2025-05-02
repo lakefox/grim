@@ -1,6 +1,7 @@
 package crop
 
 import (
+	"fmt"
 	"grim/cstyle"
 	"grim/element"
 	"grim/utils"
@@ -19,6 +20,7 @@ func Init() cstyle.Plugin {
 			self := c.State[n.Properties.Id]
 
 			scrollTop, scrollLeft := findScroll(n)
+			fmt.Println(n.Properties.Id,scrollTop, scrollLeft)
 
 			containerHeight := self.Height
 			contentHeight := float32(self.ScrollHeight)
@@ -160,8 +162,9 @@ func updateChildren(n *element.Node, c *cstyle.CSS, offsetY, offsetX int) {
 }
 
 func findScroll(n *element.Node) (int, int) {
-	if n.ScrollTop != 0 || n.ScrollLeft != 0 {
-		return n.ScrollTop, n.ScrollLeft
+	left, top := n.GetScroll()
+	if top != 0 || left != 0 {
+		return top, left
 	} else {
 		for _, v := range n.Children {
 			if v.ComputedStyle["overflow"] == "" && v.ComputedStyle["overflow-x"] == "" && v.ComputedStyle["overflow-y"] == "" {

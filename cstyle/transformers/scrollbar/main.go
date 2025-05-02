@@ -19,7 +19,7 @@ func Init() cstyle.Transformer {
 		},
 		Handler: func(n *element.Node, c *cstyle.CSS) *element.Node {
 			style := n.ComputedStyle
-
+			top, left := n.GetScroll()
 			overflowProps := strings.Split(style["overflow"], " ")
 			if n.ComputedStyle["overflow-y"] == "" {
 				val := overflowProps[0]
@@ -81,7 +81,7 @@ func Init() cstyle.Transformer {
 
 				thumb := n.CreateElement("grim-thumbx")
 				thumb.ComputedStyle["position"] = "absolute"
-				thumb.ComputedStyle["left"] = strconv.Itoa(n.ScrollLeft) + "px"
+				thumb.ComputedStyle["left"] = strconv.Itoa(left) + "px"
 				thumb.ComputedStyle["top"] = thumbMargin
 				thumb.ComputedStyle["height"] = thumbWidth
 				thumb.ComputedStyle["width"] = "20px"
@@ -125,7 +125,7 @@ func Init() cstyle.Transformer {
 				thumb := n.CreateElement("grim-thumby")
 
 				thumb.ComputedStyle["position"] = "absolute"
-				thumb.ComputedStyle["top"] = strconv.Itoa(n.ScrollTop) + "px"
+				thumb.ComputedStyle["top"] = strconv.Itoa(top) + "px"
 				// !ISSUE: parse the string then calculate the offset for thin and normal
 				thumb.ComputedStyle["right"] = "3px"
 				thumb.ComputedStyle["width"] = thumbWidth
@@ -175,4 +175,3 @@ func Init() cstyle.Transformer {
 		},
 	}
 }
-

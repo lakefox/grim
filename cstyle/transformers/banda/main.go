@@ -33,7 +33,6 @@ func Init() cstyle.Transformer {
 
 				before.SetInnerText(ps["::before"]["content"][1 : len(ps["::before"]["content"])-1])
 
-				
 			}
 
 			if ps["::after"] != nil {
@@ -48,11 +47,9 @@ func Init() cstyle.Transformer {
 
 				after.SetInnerText(ps["::after"]["content"][1 : len(ps["::after"]["content"])-1])
 
-				
 			}
 
 			return n
 		},
 	}
 }
-

@@ -156,20 +156,23 @@ func (m *Monitor) RunEvents(n *element.Node) bool {
 		}
 	}
 
+	left, top := n.GetScroll()
+
 	if evt.ScrollX != 0 {
 		if n.ComputedStyle["overflow"] == "auto" || n.ComputedStyle["overflow"] == "scroll" ||
 			n.ComputedStyle["overflow-x"] == "auto" || n.ComputedStyle["overflow-x"] == "scroll" {
 			s := m.CSS.State
 			self := s[n.Properties.Id]
 			containerWidth := self.Width
-			n.ScrollLeft += evt.ScrollX
 
-			if (int((float32(int(n.ScrollLeft))/((containerWidth/float32(n.ScrollWidth))*containerWidth))*containerWidth) + int(containerWidth)) >= n.ScrollWidth {
-				n.ScrollLeft = (((n.ScrollWidth) - int(containerWidth)) * int(containerWidth)) / n.ScrollWidth
+			left += evt.ScrollX
+
+			if (int((float32(int(left))/((containerWidth/float32(n.ScrollWidth))*containerWidth))*containerWidth) + int(containerWidth)) >= n.ScrollWidth {
+				left = (((n.ScrollWidth) - int(containerWidth)) * int(containerWidth)) / n.ScrollWidth
 			}
 
-			if n.ScrollLeft <= 0 {
-				n.ScrollLeft = 0
+			if left <= 0 {
+				left = 0
 			}
 
 			if n.OnScroll != nil {
@@ -188,25 +191,28 @@ func (m *Monitor) RunEvents(n *element.Node) bool {
 			s := m.CSS.State
 			self := s[n.Properties.Id]
 			containerHeight := self.Height
-			n.ScrollTop -= evt.ScrollY
+			top -= evt.ScrollY
 
 			// This is the scroll scaling equation if it is less than the scroll height then let it add the next scroll amount
-			if (int((float32(int(n.ScrollTop))/((containerHeight/float32(n.ScrollHeight))*containerHeight))*containerHeight) + int(containerHeight)) >= n.ScrollHeight {
-				n.ScrollTop = (((n.ScrollHeight) - int(containerHeight)) * int(containerHeight)) / n.ScrollHeight
+			if (int((float32(int(top))/((containerHeight/float32(n.ScrollHeight))*containerHeight))*containerHeight) + int(containerHeight)) >= n.ScrollHeight {
+				top = (((n.ScrollHeight) - int(containerHeight)) * int(containerHeight)) / n.ScrollHeight
 			}
 
-			if n.ScrollTop <= 0 {
-				n.ScrollTop = 0
+			if top <= 0 {
+				top = 0
 			}
 
 			if n.OnScroll != nil {
 				n.OnScroll(evt)
 			}
-
 			evt.ScrollY = 0
 			m.EventMap[n.Properties.Id] = evt
 			scrolled = true
 		}
+	}
+
+	if scrolled {
+		n.ScrollTo(left, top)
 	}
 
 	for _, v := range eventListeners {

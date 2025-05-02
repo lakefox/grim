@@ -20,14 +20,14 @@ type Node struct {
 	Children          []*Node           // m
 	style             map[string]string // nm
 	ComputedStyle     map[string]string // nm
-	Id                string            // m
+	id                string            // m
 	ClassList         ClassList
-	Href              string // m
-	Src               string // m
-	Title             string // m
+	href              string // m
+	src               string // m
+	title             string // m
 	attribute         map[string]string
-	ScrollLeft        int                          // m
-	ScrollTop         int                          // m
+	scrollLeft        int                          // m
+	scrollTop         int                          // m
 	TabIndex          int                          // m
 	ContentEditable   bool                         // m
 	Required          bool                         // m
@@ -129,6 +129,37 @@ func (n *Node) GetInnerText() string {
 
 func (n *Node) SetInnerText(text string) {
 	n.innerText = text
+}
+
+func (n *Node) GetId() string {
+	return n.id
+}
+
+func (n *Node) SetId(id string) {
+	n.id = id
+}
+
+func (n *Node) GetHref() string {
+	return n.href
+}
+
+func (n *Node) SetHref(href string) {
+	n.href = href
+}
+func (n *Node) GetSrc() string {
+	return n.src
+}
+
+func (n *Node) SetSrc(src string) {
+	n.src = src
+}
+
+func (n *Node) GetTitle() string {
+	return n.title
+}
+
+func (n *Node) SetTitle(title string) {
+	n.title = title
 }
 
 // !MAN: Node Style getter/setter
@@ -252,13 +283,13 @@ func (n *Node) CreateElement(name string) Node {
 		tagName:   name,
 		innerText: "",
 		Children:  []*Node{},
-		Id:        "",
+		id:        "",
 		ClassList: ClassList{
 			classes: []string{},
 		},
-		Href:              "",
-		Src:               "",
-		Title:             "",
+		href:              "",
+		src:               "",
+		title:             "",
 		attribute:         make(map[string]string),
 		ComputedStyle:     make(map[string]string),
 		ConditionalStyles: make(map[string]map[string]string),
@@ -365,8 +396,18 @@ func (n *Node) GetContext(width, height int) *canvas.Canvas {
 }
 
 func (n *Node) ScrollTo(x, y int) {
-	n.ScrollTop = y
-	n.ScrollLeft = x
+	n.scrollLeft = x
+	n.scrollTop = y
+}
+
+func (n *Node) ScrollBy(x, y int) {
+	n.scrollTop += y
+	n.scrollLeft += x
+}
+
+// Left, Right
+func (n *Node) GetScroll() (int, int) {
+	return n.scrollLeft, n.scrollTop
 }
 
 type Event struct {
@@ -441,23 +482,23 @@ func NodeToHTML(node *Node) (string, string) {
 	}
 
 	// Add ID if present
-	if node.Id != "" {
-		buffer.WriteString(" id=\"" + node.Id + "\"")
+	if node.id != "" {
+		buffer.WriteString(" id=\"" + node.id + "\"")
 	}
 
 	// Add ID if present
-	if node.Title != "" {
-		buffer.WriteString(" title=\"" + node.Title + "\"")
+	if node.title != "" {
+		buffer.WriteString(" title=\"" + node.title + "\"")
 	}
 
 	// Add ID if present
-	if node.Src != "" {
-		buffer.WriteString(" src=\"" + node.Src + "\"")
+	if node.src != "" {
+		buffer.WriteString(" src=\"" + node.src + "\"")
 	}
 
 	// Add ID if present
-	if node.Href != "" {
-		buffer.WriteString(" href=\"" + node.Href + "\"")
+	if node.href != "" {
+		buffer.WriteString(" href=\"" + node.href + "\"")
 	}
 
 	// Add class list if present

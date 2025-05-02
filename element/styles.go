@@ -1,7 +1,6 @@
 package element
 
 import (
-	"fmt"
 	"sort"
 	"strconv"
 	"strings"
@@ -106,7 +105,7 @@ func (s Styles) GetStyles(n *Node) {
 	if strings.Contains(n.Properties.Id, "head") {
 		return
 	}
-	fmt.Println("Styles: ", n.Properties.Id)
+
 	styles := make(map[string]string)
 	pseudoStyles := make(map[string]map[string]string)
 	conditionalStyles := make(map[string]map[string]string)
@@ -225,7 +224,7 @@ func (s Styles) GetStyles(n *Node) {
 	}
 
 	if n.tagName == "img" {
-		styles["background-image"] = "url(\"" + n.Src + "\")"
+		styles["background-image"] = "url(\"" + n.src + "\")"
 		styles["background-size"] = "100% 100%"
 	}
 

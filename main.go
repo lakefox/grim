@@ -337,17 +337,17 @@ func createNode(node *html.Node, parent *element.Node, stylesheets *element.Styl
 					newNode.ClassList.Add(class)
 				}
 			case "id":
-				newNode.Id = attr.Val
+				newNode.SetId(attr.Val)
 			case "contenteditable":
 				if attr.Val == "" || attr.Val == "true" {
 					newNode.ContentEditable = true
 				}
 			case "href":
-				newNode.Href = attr.Val
+				newNode.SetHref(attr.Val)
 			case "src":
-				newNode.Src = attr.Val
+				newNode.SetSrc(attr.Val)
 			case "title":
-				newNode.Title = attr.Val
+				newNode.SetTitle(attr.Val)
 			case "tabindex":
 				newNode.TabIndex, _ = strconv.Atoi(attr.Val)
 			case "disabled":
@@ -370,7 +370,7 @@ func createNode(node *html.Node, parent *element.Node, stylesheets *element.Styl
 				createNode(child, &newNode, stylesheets)
 			}
 		}
-		
+
 	} else {
 		for child := node.FirstChild; child != nil; child = child.NextSibling {
 			if child.Type == html.ElementNode {

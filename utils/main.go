@@ -136,7 +136,7 @@ func getMP(n element.Node, style map[string]string, wh BoxSizing, state *map[str
 		m.Bottom = ConvertToPixels(bottomStyle, fs, wh.Height)
 	}
 
-	p := n.Parent()	
+	p := n.Parent()
 
 	if t == "margin" {
 		siblingMargin := float32(0)
