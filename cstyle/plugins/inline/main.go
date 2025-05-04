@@ -46,7 +46,7 @@ func Init() cstyle.Plugin {
 									self.Y = sibling.Y
 									self.X = sibling.X + sibling.Width
 								}
-								if n.GetInnerText() != "" {
+								if n.InnerText() != "" {
 									baseY := sibling.Y
 									var max float32
 									for a := i; a >= 0; a-- {

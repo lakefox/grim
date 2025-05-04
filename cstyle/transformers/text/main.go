@@ -18,7 +18,7 @@ var nonRenderTags = map[string]bool{
 func Init() cstyle.Transformer {
 	return cstyle.Transformer{
 		Selector: func(n *element.Node, c *cstyle.CSS) bool {
-			if len(strings.TrimSpace(n.GetInnerText())) > 0 && !element.ChildrenHaveText(n) {
+			if len(strings.TrimSpace(n.InnerText())) > 0 && !element.ChildrenHaveText(n) {
 				return true
 			} else {
 				return false
@@ -28,16 +28,16 @@ func Init() cstyle.Transformer {
 			if nonRenderTags[n.TagName()] {
 				return n
 			}
-			words := strings.Split(strings.TrimSpace(DecodeHTMLEscapes(n.GetInnerText())), " ")
-			n.SetInnerText("")
+			words := strings.Split(strings.TrimSpace(DecodeHTMLEscapes(n.InnerText())), " ")
+			n.InnerText("")
 			if n.ComputedStyle["display"] == "inline" {
-				n.SetInnerText(DecodeHTMLEscapes(words[0]))
+				n.InnerText(DecodeHTMLEscapes(words[0]))
 				for i := 0; i < len(words)-1; i++ {
 					// Add the words backwards because you are inserting adjacent to the parent
 					a := (len(words) - 1) - i
 					if len(strings.TrimSpace(words[a])) > 0 {
 						el := n.CreateElement("text")
-						el.SetInnerText(words[a])
+						el.InnerText(words[a])
 						// !CHECK: Idk if this breaks text
 						// el.Parent = n
 						// element.QuickStyles(&el)
@@ -51,7 +51,7 @@ func Init() cstyle.Transformer {
 				for i := 0; i < len(words); i++ {
 					if len(strings.TrimSpace(words[i])) > 0 {
 						el := n.CreateElement("text")
-						el.SetInnerText(words[i])
+						el.InnerText(words[i])
 						// el.Parent = n
 						// element.QuickStyles(&el)
 						el.ComputedStyle["display"] = "inline"

@@ -203,17 +203,17 @@ func TestSelector(n *Node, selector string) (bool, bool) {
 			m := NthChildMatch(selector[11:len(selector)-1], index)
 			return m, false
 		} else if selector == ":required" {
-			return n.Required, false
+			return n.required, false
 		} else if selector == ":enabled" {
-			return !n.Disabled, false
+			return !n.disabled, false
 		} else if selector == ":disabled" {
-			return n.Disabled, false
+			return n.disabled, false
 		} else if selector == ":checked" {
-			return n.Checked, false
+			return n.checked, false
 		} else if selector == ":focus" {
-			return n.Focused, false
+			return n.focused, false
 		} else if selector == ":hover" {
-			return n.Hovered, false
+			return n.hovered, false
 		} else if selector == ":before" {
 			return true, true
 		} else if selector == ":after" {

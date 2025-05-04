@@ -69,9 +69,9 @@ func Init() cstyle.Transformer {
 					maxOS = w
 				}
 
-				dot.SetInnerText(strconv.Itoa(i+1) + ".")
+				dot.InnerText(strconv.Itoa(i+1) + ".")
 
-				content.SetInnerText(v.GetInnerText())
+				content.InnerText(v.InnerText())
 				content.ComputedStyle["display"] = "block"
 
 				li.AppendChild(&dot)

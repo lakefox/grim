@@ -77,13 +77,13 @@ func ConditionalStyleHandler(n *Node, newStyles map[string]string) {
 	}
 
 	// Then apply the conditional styles
-	if n.Hovered && n.ConditionalStyles[":hover"] != nil {
+	if n.hovered && n.ConditionalStyles[":hover"] != nil {
 		for k, v := range n.ConditionalStyles[":hover"] {
 			n.ComputedStyle[k] = v
 			styles[k] = v
 		}
 	}
-	if n.Focused && n.ConditionalStyles[":focus"] != nil {
+	if n.focused && n.ConditionalStyles[":focus"] != nil {
 		for k, v := range n.ConditionalStyles[":focus"] {
 			n.ComputedStyle[k] = v
 			styles[k] = v
@@ -162,9 +162,9 @@ func (s Styles) GetStyles(n *Node) {
 					}
 				}
 			} else {
-				if !n.Hovered && !isPseudo {
+				if !n.hovered && !isPseudo {
 					if strings.Contains(m.Selector, ":hover") {
-						n.Hovered = true
+						n.hovered = true
 
 						match, _ = TestSelector(n, m.Selector)
 
@@ -178,12 +178,12 @@ func (s Styles) GetStyles(n *Node) {
 							}
 						}
 
-						n.Hovered = false
+						n.hovered = false
 					}
 				}
-				if !n.Focused && !isPseudo {
+				if !n.focused && !isPseudo {
 					if strings.Contains(m.Selector, ":focus") {
-						n.Focused = true
+						n.focused = true
 
 						match, _ = TestSelector(n, m.Selector)
 
@@ -197,7 +197,7 @@ func (s Styles) GetStyles(n *Node) {
 							}
 						}
 
-						n.Focused = false
+						n.focused = false
 					}
 				}
 			}

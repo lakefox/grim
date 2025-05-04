@@ -28,13 +28,13 @@ type Node struct {
 	attribute         map[string]string
 	scrollLeft        int                          // m
 	scrollTop         int                          // m
-	TabIndex          int                          // m
-	ContentEditable   bool                         // m
-	Required          bool                         // m
-	Disabled          bool                         // m
-	Checked           bool                         // m
-	Focused           bool                         // nm
-	Hovered           bool                         // nm
+	tabIndex          int                          // m
+	contentEditable   bool                         // m
+	required          bool                         // m
+	disabled          bool                         // m
+	checked           bool                         // m
+	focused           bool                         // nm
+	hovered           bool                         // nm
 	InitalStyles      map[string]string            // nm
 	StyleSheets       *Styles                      // nm
 	ConditionalStyles map[string]map[string]string // nm
@@ -123,43 +123,53 @@ func (n *Node) Parent() *Node {
 	return n.parent
 }
 
-func (n *Node) GetInnerText() string {
+func (n *Node) InnerText(value ...string) string {
+	if len(value) != 0 {
+		n.innerText = value[0]
+	}
 	return n.innerText
 }
 
-func (n *Node) SetInnerText(text string) {
-	n.innerText = text
-}
-
-func (n *Node) GetId() string {
+func (n *Node) Id(value ...string) string {
+	if len(value) != 0 {
+		n.id = value[0]
+	}
 	return n.id
 }
 
-func (n *Node) SetId(id string) {
-	n.id = id
-}
-
-func (n *Node) GetHref() string {
+func (n *Node) Href(value ...string) string {
+	if len(value) != 0 {
+		n.href = value[0]
+	}
 	return n.href
 }
 
-func (n *Node) SetHref(href string) {
-	n.href = href
-}
-func (n *Node) GetSrc() string {
+func (n *Node) Src(value ...string) string {
+	if len(value) != 0 {
+		n.src = value[0]
+	}
 	return n.src
 }
 
-func (n *Node) SetSrc(src string) {
-	n.src = src
-}
-
-func (n *Node) GetTitle() string {
+func (n *Node) Title(value ...string) string {
+	if len(value) != 0 {
+		n.title = value[0]
+	}
 	return n.title
 }
 
-func (n *Node) SetTitle(title string) {
-	n.title = title
+func (n *Node) ContentEditable(value ...bool) bool {
+	if len(value) != 0 {
+		n.contentEditable = value[0]
+	}
+	return n.contentEditable
+}
+
+func (n *Node) TabIndex(value ...int) int {
+	if len(value) != 0 {
+		n.tabIndex = value[0]
+	}
+	return n.tabIndex
 }
 
 // !MAN: Node Style getter/setter
@@ -182,7 +192,7 @@ func (n *Node) GetComputedStyle(key string) string {
 
 // !MAN: Generates the InnerHTML of an element
 // !TODO: Add a setter
-func (n *Node) GetInnerHTML() string {
+func (n *Node) InnerHTML() string {
 	// !TODO: Will need to update the styles once this can be parsed
 	return InnerHTML(n)
 }
@@ -295,8 +305,8 @@ func (n *Node) CreateElement(name string) Node {
 		ConditionalStyles: make(map[string]map[string]string),
 		style:             make(map[string]string),
 		Value:             "",
-		TabIndex:          ti,
-		ContentEditable:   false,
+		tabIndex:          ti,
+		contentEditable:   false,
 		StyleSheets:       n.StyleSheets,
 		Properties: Properties{
 			Id:             "",
@@ -378,12 +388,12 @@ func (n *Node) Remove() {
 }
 
 func (n *Node) Focus() {
-	n.Focused = true
+	n.focused = true
 	ConditionalStyleHandler(n, map[string]string{})
 }
 
 func (n *Node) Blur() {
-	n.Focused = false
+	n.focused = false
 	ConditionalStyleHandler(n, map[string]string{})
 }
 
@@ -477,7 +487,7 @@ func NodeToHTML(node *Node) (string, string) {
 	var buffer bytes.Buffer
 	buffer.WriteString("<" + node.tagName)
 
-	if node.ContentEditable {
+	if node.contentEditable {
 		buffer.WriteString(" contentEditable=\"true\"")
 	}
 

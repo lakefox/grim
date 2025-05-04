@@ -285,7 +285,7 @@ func GetMetaData(n *element.Node, style map[string]string, state *map[string]ele
 	text.LineThrough = style["text-decoration"] == "line-through"
 	text.EM = int(self.EM)
 	text.Width = int(parent.Width)
-	text.Text = n.GetInnerText()
+	text.Text = n.InnerText()
 	text.UnderlineOffset = int(underlineoffset)
 
 	if style["text-underline-offset"] == "" {

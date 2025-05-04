@@ -31,7 +31,7 @@ func Init() cstyle.Transformer {
 					before.ComputedStyle[k] = v
 				}
 
-				before.SetInnerText(ps["::before"]["content"][1 : len(ps["::before"]["content"])-1])
+				before.InnerText(ps["::before"]["content"][1 : len(ps["::before"]["content"])-1])
 
 			}
 
@@ -45,7 +45,7 @@ func Init() cstyle.Transformer {
 					after.ComputedStyle[k] = v
 				}
 
-				after.SetInnerText(ps["::after"]["content"][1 : len(ps["::after"]["content"])-1])
+				after.InnerText(ps["::after"]["content"][1 : len(ps["::after"]["content"])-1])
 
 			}
 

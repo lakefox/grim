@@ -204,12 +204,12 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 	self.X = x
 	self.Y = y
 
-	self.ContentEditable = n.ContentEditable
+	self.ContentEditable = n.ContentEditable()
 
 	c.State[n.Properties.Id] = self
-	innerText := n.GetInnerText()
+	innerText := n.InnerText()
 	if !element.ChildrenHaveText(n) && len(innerText) > 0 {
-		n.SetInnerText(strings.TrimSpace(innerText))
+		n.InnerText(strings.TrimSpace(innerText))
 		italic := false
 
 		if style["font-style"] == "italic" {
@@ -278,8 +278,8 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 		}
 	}
 
-	self.Value = n.GetInnerText()
-	self.TabIndex = n.TabIndex
+	self.Value = n.InnerText()
+	self.TabIndex = n.TabIndex()
 	c.State[n.Properties.Id] = self
 	c.State[parentNode.Properties.Id] = parent
 
