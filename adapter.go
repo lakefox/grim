@@ -1,4 +1,4 @@
-package adapter
+package grim
 
 import (
 	"grim/element"
@@ -15,11 +15,6 @@ type Adapter struct {
 	// id -> type -> key
 	Textures map[string]map[string]string
 }
-
-func Init() {}
-
-// Only render complex
-func RenderType() {}
 
 func (a *Adapter) AddEventListener(name string, callback func(element.Event)) {
 	if a.events == nil {

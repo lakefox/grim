@@ -1,17 +1,17 @@
 package marginblock
 
 import (
-	"grim/cstyle"
+	"grim"
 	"grim/element"
 	"strings"
 )
 
-func Init() cstyle.Transformer {
-	return cstyle.Transformer{
-		Selector: func(n *element.Node, c *cstyle.CSS) bool {
+func Init() grim.Transformer {
+	return grim.Transformer{
+		Selector: func(n *element.Node, c *grim.CSS) bool {
 			return n.ComputedStyle["margin-block"] != "" || n.ComputedStyle["margin-block-start"] != "" || n.ComputedStyle["margin-block-end"] != ""
 		},
-		Handler: func(n *element.Node, c *cstyle.CSS) *element.Node {
+		Handler: func(n *element.Node, c *grim.CSS) *element.Node {
 
 			writingMode := n.ComputedStyle["writing-mode"]
 			mb := parseMarginBlock(n.ComputedStyle["margin-block"])

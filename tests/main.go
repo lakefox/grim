@@ -4,6 +4,17 @@ import (
 	"fmt"
 	"grim"
 	"grim/adapters/raylib"
+	"grim/plugins/crop"
+	"grim/plugins/flex"
+	"grim/plugins/inline"
+	"grim/plugins/textAlign"
+	"grim/transformers/banda"
+
+	marginblock "grim/transformers/margin-block"
+	"grim/transformers/ol"
+	"grim/transformers/scrollbar"
+	"grim/transformers/text"
+	"grim/transformers/ul"
 	// "net/http"
 	// _ "net/http/pprof"
 )
@@ -36,6 +47,10 @@ func main() {
 	// go logMemoryUsage()
 	// !ISSUE: Flex2 doesn't work anymore
 	window := grim.New(raylib.Init(), 850, 400)
+
+	window.Plugins(inline.Iint(), textAlign.Init(), flex.Init(), crop.Init())
+	window.Transformers(text.Init(), banda.Init(), scrollbar.Init(), marginblock.Init(), ul.Init(), ol.Init())
+
 	window.Path("./src/index.html")
 	document := window.Document()
 

@@ -1,8 +1,6 @@
-package events
+package grim 
 
 import (
-	adapter "grim/adapters"
-	"grim/cstyle"
 	"grim/element"
 	"sort"
 	"strconv"
@@ -29,9 +27,9 @@ type Modifiers struct {
 }
 
 type Monitor struct {
-	Adapter  *adapter.Adapter
+	Adapter  *Adapter
 	EventMap map[string]element.Event
-	CSS      *cstyle.CSS
+	CSS      *CSS
 	Focus    Focus
 	Drag     Drag
 }

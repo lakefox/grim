@@ -1,9 +1,8 @@
-package font
+package grim 
 
 import (
 	"errors"
 	"golang.org/x/image/math/fixed"
-	adapter "grim/adapters"
 	"grim/canvas"
 	"grim/element"
 	"grim/utils"
@@ -51,7 +50,7 @@ type Shadow struct {
 }
 
 // LoadSystemFont loads a font from the system fonts directory or loads a specific font by name
-func GetFontPath(fontName string, bold string, italic bool, fs *adapter.FileSystem) string {
+func GetFontPath(fontName string, bold string, italic bool, fs *FileSystem) string {
 	if len(fontName) == 0 {
 		fontName = "serif"
 	}
@@ -159,7 +158,7 @@ func GetWeightName(weight string) string {
 	}
 }
 
-func LoadFont(fontName string, fontSize int, bold string, italic bool, fs *adapter.FileSystem) (*truetype.Font, error) {
+func LoadFont(fontName string, fontSize int, bold string, italic bool, fs *FileSystem) (*truetype.Font, error) {
 	// Use a TrueType font file for the specified font name
 	fontFile := GetFontPath(fontName, bold, italic, fs)
 	// Read the font file
@@ -200,7 +199,7 @@ func MeasureSpace(t *MetaData) int {
 	return MeasureText(t, " ")
 }
 
-func Key(text *MetaData) string {
+func FontKey(text *MetaData) string {
 	key := text.Text + utils.RGBAtoString(text.Color) + utils.RGBAtoString(text.DecorationColor) + text.Align + text.WordBreak + strconv.Itoa(text.WordSpacing) + strconv.Itoa(text.LetterSpacing) + text.WhiteSpace + strconv.Itoa(text.DecorationThickness) + strconv.Itoa(text.EM)
 	key += strconv.FormatBool(text.Overlined) + strconv.FormatBool(text.Underlined) + strconv.FormatBool(text.LineThrough) + text.FontFamily
 	return key

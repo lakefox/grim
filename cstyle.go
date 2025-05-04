@@ -1,12 +1,9 @@
-package cstyle
+package grim 
 
 import (
 	"fmt"
 	"github.com/golang/freetype/truetype"
-	adapter "grim/adapters"
-	"grim/border"
 	"grim/element"
-	"grim/font"
 	"grim/utils"
 	"image"
 	"strconv"
@@ -31,7 +28,7 @@ type CSS struct {
 	Plugins      []Plugin
 	Transformers []Transformer
 	Fonts        map[string]*truetype.Font
-	Adapter      *adapter.Adapter
+	Adapter      *Adapter
 	Path         string
 	State        map[string]element.State
 }
@@ -80,7 +77,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 		style[k] = v
 	}
 
-	self.Border, _ = border.Parse(style, self, parent)
+	self.Border, _ = ParseBorder(style, self, parent)
 	// Remove border if its 0
 	if self.Border.Top.Width+self.Border.Right.Width+self.Border.Left.Width+self.Border.Bottom.Width == 0 {
 		self.Textures["border"] = ""
@@ -223,7 +220,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 		fnt, ok := c.Fonts[fid]
 
 		if !ok {
-			f, err := font.LoadFont(style["font-family"], int(self.EM), style["font-weight"], italic, &c.Adapter.FileSystem)
+			f, err := LoadFont(style["font-family"], int(self.EM), style["font-weight"], italic, &c.Adapter.FileSystem)
 			if err != nil {
 				panic(err)
 			}
@@ -231,19 +228,19 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 			fnt = f
 		}
 
-		metadata := font.GetMetaData(n, style, &c.State, fnt)
-		key := font.Key(metadata)
+		metadata := GetMetaData(n, style, &c.State, fnt)
+		key := FontKey(metadata)
 		m, exists := c.Adapter.Textures[n.Properties.Id]["text"]
 		var width int
 
 		if exists && m == key {
-			width = font.MeasureText(metadata, metadata.Text+" ")
+			width = MeasureText(metadata, metadata.Text+" ")
 		} else {
 			if exists {
 				c.Adapter.UnloadTexture(n.Properties.Id, "text")
 			}
 			var data image.Image
-			data, width = font.RenderFont(metadata)
+			data, width = RenderFont(metadata)
 			c.Adapter.LoadTexture(n.Properties.Id, "text", key, data)
 		}
 		self.Textures["text"] = key
@@ -330,7 +327,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 	}
 	c.State[n.Properties.Id] = self
 
-	border.Draw(&self, c.Adapter, n.Properties.Id)
+	DrawBorder(&self, c.Adapter, n.Properties.Id)
 	c.State[n.Properties.Id] = self
 
 	for _, v := range plugins {

@@ -1,16 +1,16 @@
 package ul
 
 import (
-	"grim/cstyle"
+	"grim"
 	"grim/element"
 )
 
-func Init() cstyle.Transformer {
-	return cstyle.Transformer{
-		Selector: func(n *element.Node, c *cstyle.CSS) bool {
+func Init() grim.Transformer {
+	return grim.Transformer{
+		Selector: func(n *element.Node, c *grim.CSS) bool {
 			return n.TagName() == "ul"
 		},
-		Handler: func(n *element.Node, c *cstyle.CSS) *element.Node {
+		Handler: func(n *element.Node, c *grim.CSS) *element.Node {
 			// !TODO: make ul/ol stylable
 			for i, v := range n.Children {
 				if v.TagName() != "li" {

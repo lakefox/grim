@@ -2,7 +2,7 @@ package crop
 
 import (
 	"fmt"
-	"grim/cstyle"
+	"grim"
 	"grim/element"
 	"grim/utils"
 )
@@ -151,7 +151,7 @@ func Init() cstyle.Plugin {
 	}
 }
 
-func updateChildren(n *element.Node, c *cstyle.CSS, offsetY, offsetX int) {
+func updateChildren(n *element.Node, c *grim.CSS, offsetY, offsetX int) {
 	self := c.State[n.Properties.Id]
 	self.X -= float32(offsetX)
 	self.Y -= float32(offsetY)

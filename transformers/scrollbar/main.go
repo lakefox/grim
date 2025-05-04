@@ -1,15 +1,15 @@
 package scrollbar
 
 import (
-	"grim/cstyle"
+	"grim"
 	"grim/element"
 	"strconv"
 	"strings"
 )
 
-func Init() cstyle.Transformer {
-	return cstyle.Transformer{
-		Selector: func(n *element.Node, c *cstyle.CSS) bool {
+func Init() grim.Transformer {
+	return grim.Transformer{
+		Selector: func(n *element.Node, c *grim.CSS) bool {
 			style := n.ComputedStyle
 			if style["overflow"] != "" || style["overflow-x"] != "" || style["overflow-y"] != "" {
 				return true
@@ -17,7 +17,7 @@ func Init() cstyle.Transformer {
 				return false
 			}
 		},
-		Handler: func(n *element.Node, c *cstyle.CSS) *element.Node {
+		Handler: func(n *element.Node, c *grim.CSS) *element.Node {
 			style := n.ComputedStyle
 			top, left := n.GetScroll()
 			overflowProps := strings.Split(style["overflow"], " ")

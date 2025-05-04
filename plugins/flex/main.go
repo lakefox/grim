@@ -1,20 +1,20 @@
 package flex
 
 import (
-	"grim/cstyle"
-	"grim/cstyle/plugins/inline"
+	"grim"
+	"grim/plugins/inline"
 	"grim/element"
 	"grim/utils"
 	"sort"
 	"strings"
 )
 
-func Init() cstyle.Plugin {
-	return cstyle.Plugin{
-		Selector: func(n *element.Node, c *cstyle.CSS) bool {
+func Init() grim.Plugin {
+	return grim.Plugin{
+		Selector: func(n *element.Node, c *grim.CSS) bool {
 			return n.ComputedStyle["display"] == "flex"
 		},
-		Handler: func(n *element.Node, c *cstyle.CSS) {
+		Handler: func(n *element.Node, c *grim.CSS) {
 			self := c.State[n.Properties.Id]
 			if len(n.Children) == 0 {
 				return
@@ -420,7 +420,7 @@ func Init() cstyle.Plugin {
 	}
 }
 
-func applyBlock(n *element.Node, c *cstyle.CSS) {
+func applyBlock(n *element.Node, c *grim.CSS) {
 	if len(n.Children) > 0 {
 		accum := float32(0)
 		inlineOffset := float32(0)
@@ -443,7 +443,7 @@ func applyBlock(n *element.Node, c *cstyle.CSS) {
 	}
 }
 
-func deInline(n *element.Node, c *cstyle.CSS) {
+func deInline(n *element.Node, c *grim.CSS) {
 	// self := c.State[n.Properties.Id]
 	baseX := float32(-1)
 	baseY := float32(-1)
@@ -472,7 +472,7 @@ func deInline(n *element.Node, c *cstyle.CSS) {
 
 }
 
-func applyInline(n *element.Node, c *cstyle.CSS) {
+func applyInline(n *element.Node, c *grim.CSS) {
 	pl := inline.Init()
 	for i := 0; i < len(n.Children); i++ {
 		v := n.Children[i]
@@ -487,7 +487,7 @@ func applyInline(n *element.Node, c *cstyle.CSS) {
 	}
 }
 
-func propagateOffsets(n *element.Node, prevx, prevy, newx, newy float32, c *cstyle.CSS) {
+func propagateOffsets(n *element.Node, prevx, prevy, newx, newy float32, c *grim.CSS) {
 	for _, v := range n.Children {
 		vState := c.State[v.Properties.Id]
 		xStore := (vState.X - prevx) + newx
@@ -526,7 +526,7 @@ func countText(n *element.Node) int {
 	return groups[0]
 }
 
-func minHeight(n *element.Node, c *cstyle.CSS, prev float32) float32 {
+func minHeight(n *element.Node, c *grim.CSS, prev float32) float32 {
 	self := c.State[n.Properties.Id]
 	if n.ComputedStyle["min-height"] != "" {
 		mw := utils.ConvertToPixels(n.ComputedStyle["min-height"], self.EM, c.State[n.Parent().Properties.Id].Width)
@@ -537,7 +537,7 @@ func minHeight(n *element.Node, c *cstyle.CSS, prev float32) float32 {
 
 }
 
-func getMinHeight(n *element.Node, c *cstyle.CSS) float32 {
+func getMinHeight(n *element.Node, c *grim.CSS) float32 {
 	self := c.State[n.Properties.Id]
 	selfHeight := float32(0)
 
@@ -557,7 +557,7 @@ func getMinHeight(n *element.Node, c *cstyle.CSS) float32 {
 	return selfHeight
 }
 
-func getMinWidth(n *element.Node, c *cstyle.CSS) float32 {
+func getMinWidth(n *element.Node, c *grim.CSS) float32 {
 	self := c.State[n.Properties.Id]
 	selfWidth := float32(0)
 
@@ -576,7 +576,7 @@ func getMinWidth(n *element.Node, c *cstyle.CSS) float32 {
 	selfWidth += self.Padding.Left + self.Padding.Right
 	return selfWidth
 }
-func getMaxWidth(n *element.Node, c *cstyle.CSS) float32 {
+func getMaxWidth(n *element.Node, c *grim.CSS) float32 {
 	self := c.State[n.Properties.Id]
 	selfWidth := float32(0)
 
@@ -599,7 +599,7 @@ func getMaxWidth(n *element.Node, c *cstyle.CSS) float32 {
 	return selfWidth
 }
 
-func getNodeWidth(n *element.Node, c *cstyle.CSS) float32 {
+func getNodeWidth(n *element.Node, c *grim.CSS) float32 {
 	self := c.State[n.Properties.Id]
 	w := float32(0)
 	w += self.Padding.Left
@@ -619,7 +619,7 @@ func getNodeWidth(n *element.Node, c *cstyle.CSS) float32 {
 	return w
 }
 
-func setWidth(n *element.Node, c *cstyle.CSS, width float32) float32 {
+func setWidth(n *element.Node, c *grim.CSS, width float32) float32 {
 	self := c.State[n.Properties.Id]
 	prid := n.Parent().Properties.Id
 
@@ -641,7 +641,7 @@ func setWidth(n *element.Node, c *cstyle.CSS, width float32) float32 {
 	return utils.Max(minWidth, utils.Min(width, maxWidth))
 }
 
-func setHeight(n *element.Node, c *cstyle.CSS, height float32) float32 {
+func setHeight(n *element.Node, c *grim.CSS, height float32) float32 {
 	self := c.State[n.Properties.Id]
 	prid := n.Parent().Properties.Id
 
@@ -661,7 +661,7 @@ func setHeight(n *element.Node, c *cstyle.CSS, height float32) float32 {
 	return utils.Max(minHeight, utils.Min(height, maxHeight))
 }
 
-func getNodeHeight(n *element.Node, c *cstyle.CSS) float32 {
+func getNodeHeight(n *element.Node, c *grim.CSS) float32 {
 	self := c.State[n.Properties.Id]
 	h := float32(0)
 	h += self.Padding.Top
@@ -681,7 +681,7 @@ func getNodeHeight(n *element.Node, c *cstyle.CSS) float32 {
 	return h
 }
 
-func getInnerSize(n *element.Node, c *cstyle.CSS) (float32, float32) {
+func getInnerSize(n *element.Node, c *grim.CSS) (float32, float32) {
 	self := c.State[n.Properties.Id]
 
 	minx := float32(10e10)
@@ -729,7 +729,7 @@ func add2d(arr [][]float32, index int) float32 {
 	return sum
 }
 
-func colReverse(cols [][]int, n *element.Node, c *cstyle.CSS) {
+func colReverse(cols [][]int, n *element.Node, c *grim.CSS) {
 	for _, col := range cols {
 		tempNodes := []*element.Node{}
 		tempStates := []element.State{}
@@ -753,7 +753,7 @@ func colReverse(cols [][]int, n *element.Node, c *cstyle.CSS) {
 	}
 }
 
-func rowReverse(rows [][]int, n *element.Node, c *cstyle.CSS) {
+func rowReverse(rows [][]int, n *element.Node, c *grim.CSS) {
 	for _, row := range rows {
 		tempNodes := []*element.Node{}
 		tempStates := []element.State{}
@@ -793,7 +793,7 @@ func rowReverse(rows [][]int, n *element.Node, c *cstyle.CSS) {
 	}
 }
 
-func justifyRow(rows [][]int, n *element.Node, c *cstyle.CSS, justify string, reversed bool) {
+func justifyRow(rows [][]int, n *element.Node, c *grim.CSS, justify string, reversed bool) {
 	for _, row := range rows {
 
 		if (justify == "flex-end" || justify == "end" || justify == "right") && !reversed {
@@ -966,7 +966,7 @@ func justifyRow(rows [][]int, n *element.Node, c *cstyle.CSS, justify string, re
 	}
 }
 
-func alignRow(rows [][]int, n *element.Node, c *cstyle.CSS, align, content string) {
+func alignRow(rows [][]int, n *element.Node, c *grim.CSS, align, content string) {
 	// !ISSUE: Baseline isn't properly impleamented
 	self := c.State[n.Properties.Id]
 
@@ -1088,7 +1088,7 @@ func alignRow(rows [][]int, n *element.Node, c *cstyle.CSS, align, content strin
 	}
 }
 
-func justifyCols(cols [][]int, n *element.Node, c *cstyle.CSS, justify string, reversed bool) {
+func justifyCols(cols [][]int, n *element.Node, c *grim.CSS, justify string, reversed bool) {
 	self := c.State[n.Properties.Id]
 
 	selfHeight := (self.Height) - (self.Padding.Top + self.Padding.Bottom)
@@ -1179,7 +1179,7 @@ func justifyCols(cols [][]int, n *element.Node, c *cstyle.CSS, justify string, r
 	}
 }
 
-func alignCols(cols [][]int, n *element.Node, c *cstyle.CSS, align, content string, minWidths [][]float32) {
+func alignCols(cols [][]int, n *element.Node, c *grim.CSS, align, content string, minWidths [][]float32) {
 	self := c.State[n.Properties.Id]
 
 	if (align == "stretch" && content == "stretch") || (align == "stretch" && content == "normal") || (align == "normal" && content == "stretch") {

@@ -1,7 +1,7 @@
 package text
 
 import (
-	"grim/cstyle"
+	"grim"
 	"grim/element"
 	"html"
 	"strings"
@@ -15,16 +15,16 @@ var nonRenderTags = map[string]bool{
 	"style": true,
 }
 
-func Init() cstyle.Transformer {
-	return cstyle.Transformer{
-		Selector: func(n *element.Node, c *cstyle.CSS) bool {
+func Init() grim.Transformer {
+	return grim.Transformer{
+		Selector: func(n *element.Node, c *grim.CSS) bool {
 			if len(strings.TrimSpace(n.InnerText())) > 0 && !element.ChildrenHaveText(n) {
 				return true
 			} else {
 				return false
 			}
 		},
-		Handler: func(n *element.Node, c *cstyle.CSS) *element.Node {
+		Handler: func(n *element.Node, c *grim.CSS) *element.Node {
 			if nonRenderTags[n.TagName()] {
 				return n
 			}

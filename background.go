@@ -1,4 +1,4 @@
-package cstyle
+package grim 
 
 import (
 	"bytes"

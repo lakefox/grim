@@ -2,21 +2,21 @@ package ol
 
 import (
 	"fmt"
-	"grim/cstyle"
+	"grim"
 	"grim/element"
-	"grim/font"
+	"grim"
 	"grim/utils"
 	"strconv"
 
 	"github.com/golang/freetype/truetype"
 )
 
-func Init() cstyle.Transformer {
-	return cstyle.Transformer{
-		Selector: func(n *element.Node, c *cstyle.CSS) bool {
+func Init() grim.Transformer {
+	return grim.Transformer{
+		Selector: func(n *element.Node, c *grim.CSS) bool {
 			return n.TagName() == "ol"
 		},
-		Handler: func(n *element.Node, c *cstyle.CSS) *element.Node {
+		Handler: func(n *element.Node, c *grim.CSS) *element.Node {
 			tN := n.CreateElement(n.TagName())
 			var maxOS int
 			var widths []int
@@ -55,7 +55,7 @@ func Init() cstyle.Transformer {
 				fnt, ok := c.Fonts[fid]
 
 				if !ok {
-					f, err := font.LoadFont(n.ComputedStyle["font-family"], int(em), n.ComputedStyle["font-weight"], italic, &c.Adapter.FileSystem)
+					f, err := grim.LoadFont(n.ComputedStyle["font-family"], int(em), n.ComputedStyle["font-weight"], italic, &c.Adapter.FileSystem)
 
 					if err != nil {
 						panic(err)

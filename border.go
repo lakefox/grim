@@ -1,7 +1,6 @@
-package border
+package grim 
 
 import (
-	adapter "grim/adapters"
 	"grim/canvas"
 	"grim/color"
 	"grim/element"
@@ -12,7 +11,7 @@ import (
 	"strings"
 )
 
-func Parse(cssProperties map[string]string, self, parent element.State) (element.Border, error) {
+func ParseBorder(cssProperties map[string]string, self, parent element.State) (element.Border, error) {
 	// Define default values
 	defaultWidth := "0px"
 	defaultStyle := "solid"
@@ -165,7 +164,7 @@ func Parse(cssProperties map[string]string, self, parent element.State) (element
 	}, nil
 }
 
-func Draw(self *element.State, a *adapter.Adapter, id string) {
+func DrawBorder(self *element.State, a *Adapter, id string) {
 	// lastChange := time.Now()
 	if self.Border.Top.Width > 0 ||
 		self.Border.Right.Width > 0 ||

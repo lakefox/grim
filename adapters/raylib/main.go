@@ -2,7 +2,7 @@ package raylib
 
 import (
 	rl "github.com/gen2brain/raylib-go/raylib"
-	adapter "grim/adapters"
+	"grim"
 	"grim/element"
 	"image"
 	"os"
@@ -11,9 +11,9 @@ import (
 	"slices"
 )
 
-func Init() *adapter.Adapter {
+func Init() *grim.Adapter {
 	rl.SetTraceLogLevel(rl.LogNone)
-	a := adapter.Adapter{}
+	a := grim.Adapter{}
 	a.AddEventListener("cursor", handleCursorEvent)
 
 	wm := NewWindowManager(&a)

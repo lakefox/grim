@@ -1,16 +1,16 @@
 package textAlign
 
 import (
-	"grim/cstyle"
+	"grim"
 	"grim/element"
 )
 
-func Init() cstyle.Plugin {
-	return cstyle.Plugin{
-		Selector: func(n *element.Node, c *cstyle.CSS) bool {
+func Init() grim.Plugin {
+	return grim.Plugin{
+		Selector: func(n *element.Node, c *grim.CSS) bool {
 			return n.ComputedStyle["text-align"] != ""
 		},
-		Handler: func(n *element.Node, c *cstyle.CSS) {
+		Handler: func(n *element.Node, c *grim.CSS) {
 			self := c.State[n.Properties.Id]
 			minX := float32(9e15)
 			maxXW := float32(0)

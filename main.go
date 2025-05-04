@@ -3,23 +3,9 @@ package grim
 import (
 	_ "embed"
 	"fmt"
-	adapter "grim/adapters"
-	"grim/cstyle"
-	"grim/cstyle/plugins/crop"
-	"grim/cstyle/plugins/flex"
-	"grim/cstyle/plugins/inline"
-	"grim/cstyle/plugins/textAlign"
-	"grim/cstyle/transformers/banda"
 	"time"
 
-	marginblock "grim/cstyle/transformers/margin-block"
-	"grim/cstyle/transformers/ol"
-	"grim/cstyle/transformers/scrollbar"
-	"grim/cstyle/transformers/text"
-	"grim/cstyle/transformers/ul"
 	"grim/element"
-	"grim/events"
-	"grim/font"
 	"grim/scripts"
 	"grim/scripts/a"
 	"grim/utils"
@@ -36,7 +22,7 @@ import (
 var mastercss string
 
 type Window struct {
-	CSS        cstyle.CSS
+	CSS        CSS
 	document   element.Node
 	Styles     element.Styles
 	Scripts    scripts.Scripts
@@ -69,13 +55,13 @@ func (window *Window) Path(path string) {
 	open(window)
 }
 
-func New(adapterFunction *adapter.Adapter, width, height int) Window {
+func New(adapterFunction *Adapter, width, height int) Window {
 	w := Window{}
 	w.Styles = element.Styles{
 		PsuedoStyles: map[string]map[string]map[string]string{},
 		StyleMap:     map[string][]*element.StyleMap{},
 	}
-	css := cstyle.CSS{
+	css := CSS{
 		Width:   float32(width),
 		Height:  float32(height),
 		Adapter: adapterFunction,
@@ -83,17 +69,7 @@ func New(adapterFunction *adapter.Adapter, width, height int) Window {
 
 	w.Styles.StyleTag(mastercss)
 	// This is still apart of computestyle
-	css.AddPlugin(inline.Init())
-	css.AddPlugin(textAlign.Init())
-	css.AddPlugin(flex.Init())
-	css.AddPlugin(crop.Init())
 
-	css.AddTransformer(text.Init())
-	css.AddTransformer(banda.Init())
-	css.AddTransformer(scrollbar.Init())
-	css.AddTransformer(marginblock.Init())
-	css.AddTransformer(ul.Init())
-	css.AddTransformer(ol.Init())
 
 	el := element.Node{}
 	document := el.CreateElement("ROOT")
@@ -107,6 +83,19 @@ func New(adapterFunction *adapter.Adapter, width, height int) Window {
 	w.document = document
 
 	return w
+}
+
+
+func (w *Window) Plugins(values ...Plugin) {
+	for _, v := range values {
+		w.CSS.AddPlugin(v)
+	}
+}
+
+func (w *Window) Transformers(values ...Transformer) {
+	for _, v := range values {
+		w.CSS.AddTransformer(v)
+	}
 }
 
 // !ISSUE: This should be a adapter function
@@ -148,15 +137,15 @@ func open(data *Window) {
 	}
 	fid := "Georgia 16px false false"
 	if data.CSS.Fonts[fid] == nil {
-		f, _ := font.LoadFont("Georgia", 16, "", false, &data.CSS.Adapter.FileSystem)
+		f, _ := LoadFont("Georgia", 16, "", false, &data.CSS.Adapter.FileSystem)
 		data.CSS.Fonts[fid] = f
 	}
 
-	monitor := events.Monitor{
+	monitor := Monitor{
 		EventMap: make(map[string]element.Event),
 		Adapter:  data.CSS.Adapter,
 		CSS:      &data.CSS,
-		Focus: events.Focus{
+		Focus: Focus{
 			Nodes:               []string{},
 			Selected:            -1,
 			SoftFocused:         "",
@@ -179,12 +168,12 @@ func open(data *Window) {
 		data.shouldStop = true
 	})
 
-	currentEvent := events.EventData{}
+	currentEvent := EventData{}
 
 	data.CSS.Adapter.AddEventListener("keydown", func(e element.Event) {
 		currentEvent.Key = e.Data.(int)
 		currentEvent.KeyState = true
-		currentEvent.Modifiers = events.Modifiers{
+		currentEvent.Modifiers = Modifiers{
 			CtrlKey:  e.CtrlKey,
 			ShiftKey: e.ShiftKey,
 			MetaKey:  e.MetaKey,
@@ -196,7 +185,7 @@ func open(data *Window) {
 	data.CSS.Adapter.AddEventListener("keyup", func(e element.Event) {
 		currentEvent.Key = 0
 		currentEvent.KeyState = false
-		currentEvent.Modifiers = events.Modifiers{
+		currentEvent.Modifiers = Modifiers{
 			CtrlKey:  e.CtrlKey,
 			ShiftKey: e.ShiftKey,
 			MetaKey:  e.MetaKey,
@@ -253,7 +242,7 @@ func open(data *Window) {
 }
 
 // !TODO: This need to be better implemented but rn just testing
-func getRenderData(data *Window, monitor *events.Monitor) {
+func getRenderData(data *Window, monitor *Monitor) {
 	data.CSS.State["ROOT"] = element.State{
 		Width:  float32(data.CSS.Width),
 		Height: float32(data.CSS.Height),
@@ -284,7 +273,7 @@ func getRenderData(data *Window, monitor *events.Monitor) {
 	}
 
 	for k, self := range s {
-		key := cstyle.BackgroundKey(self)
+		key := BackgroundKey(self)
 		if _, found := keysSet[k]; !found {
 			for t := range data.CSS.Adapter.Textures[k] {
 				data.CSS.Adapter.UnloadTexture(k, t)
@@ -292,7 +281,7 @@ func getRenderData(data *Window, monitor *events.Monitor) {
 			delete(s, k)
 		} else {
 			if data.CSS.Adapter.Textures[k]["background"] != key {
-				img := cstyle.GenerateBackground(data.CSS, self)
+				img := GenerateBackground(data.CSS, self)
 				data.CSS.Adapter.UnloadTexture(k, "background")
 				data.CSS.Adapter.LoadTexture(k, "background", key, img)
 				if self.Textures == nil {
@@ -337,19 +326,20 @@ func createNode(node *html.Node, parent *element.Node, stylesheets *element.Styl
 					newNode.ClassList.Add(class)
 				}
 			case "id":
-				newNode.SetId(attr.Val)
+				newNode.Id(attr.Val)
 			case "contenteditable":
 				if attr.Val == "" || attr.Val == "true" {
-					newNode.ContentEditable = true
+					newNode.ContentEditable(true)
 				}
 			case "href":
-				newNode.SetHref(attr.Val)
+				newNode.Href(attr.Val)
 			case "src":
-				newNode.SetSrc(attr.Val)
+				newNode.Src(attr.Val)
 			case "title":
-				newNode.SetTitle(attr.Val)
+				newNode.Title(attr.Val)
 			case "tabindex":
-				newNode.TabIndex, _ = strconv.Atoi(attr.Val)
+				val, _ := strconv.Atoi(attr.Val)
+				newNode.TabIndex(val)
 			case "disabled":
 				newNode.Disabled = true
 			case "required":
@@ -361,7 +351,7 @@ func createNode(node *html.Node, parent *element.Node, stylesheets *element.Styl
 			}
 		}
 
-		newNode.SetInnerText(strings.TrimSpace(utils.GetInnerText(node)))
+		newNode.InnerText(strings.TrimSpace(utils.GetInnerText(node)))
 		parent.AppendChild(&newNode)
 		parent.StyleSheets.GetStyles(&newNode)
 		// Recursively traverse child nodes
@@ -380,7 +370,7 @@ func createNode(node *html.Node, parent *element.Node, stylesheets *element.Styl
 	}
 }
 
-func parseHTMLFromFile(path string, fs adapter.FileSystem) ([]string, []string, *html.Node) {
+func parseHTMLFromFile(path string, fs FileSystem) ([]string, []string, *html.Node) {
 	file, _ := fs.ReadFile(path)
 
 	doc, _ := html.Parse(strings.NewReader(string(file)))
