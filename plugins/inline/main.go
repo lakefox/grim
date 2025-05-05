@@ -2,16 +2,15 @@ package inline
 
 import (
 	"grim"
-	"grim/element"
 	"math"
 )
 
 func Init() grim.Plugin {
 	return grim.Plugin{
-		Selector: func(n *element.Node, c *grim.CSS) bool {
+		Selector: func(n *grim.Node, c *grim.CSS) bool {
 			return n.ComputedStyle["display"] == "inline"
 		},
-		Handler: func(n *element.Node, c *grim.CSS) {
+		Handler: func(n *grim.Node, c *grim.CSS) {
 			self := c.State[n.Properties.Id]
 			p := n.Parent()
 			parent := c.State[p.Properties.Id]
@@ -85,7 +84,7 @@ func Init() grim.Plugin {
 	}
 }
 
-func propagateOffsets(n *element.Node, copyOfX, copyOfY float32, self element.State, c *grim.CSS) {
+func propagateOffsets(n *grim.Node, copyOfX, copyOfY float32, self grim.State, c *grim.CSS) {
 	for _, v := range n.Children {
 		vState := c.State[v.Properties.Id]
 		vState.X += self.X - copyOfX

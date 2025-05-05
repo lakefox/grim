@@ -2,14 +2,13 @@ package scrollbar
 
 import (
 	"grim"
-	"grim/element"
 	"strconv"
 	"strings"
 )
 
 func Init() grim.Transformer {
 	return grim.Transformer{
-		Selector: func(n *element.Node, c *grim.CSS) bool {
+		Selector: func(n *grim.Node, c *grim.CSS) bool {
 			style := n.ComputedStyle
 			if style["overflow"] != "" || style["overflow-x"] != "" || style["overflow-y"] != "" {
 				return true
@@ -17,7 +16,7 @@ func Init() grim.Transformer {
 				return false
 			}
 		},
-		Handler: func(n *element.Node, c *grim.CSS) *element.Node {
+		Handler: func(n *grim.Node, c *grim.CSS) *grim.Node {
 			style := n.ComputedStyle
 			top, left := n.GetScroll()
 			overflowProps := strings.Split(style["overflow"], " ")
@@ -103,7 +102,7 @@ func Init() grim.Transformer {
 					thumb.ComputedStyle[k] = v
 				}
 
-				scrollbar.Properties.Id = element.GenerateUniqueId(n, scrollbar.TagName())
+				scrollbar.Properties.Id = grim.GenerateUniqueId(n, scrollbar.TagName())
 				scrollbar.AppendChild(&thumb)
 				n.AppendChild(&scrollbar)
 			}
@@ -151,7 +150,7 @@ func Init() grim.Transformer {
 
 				// !NOTE: This need to be here because at this point scrollbar hasn't been added to the parent
 				// + ,so it doesn't have a prid to build off of
-				scrollbar.Properties.Id = element.GenerateUniqueId(n, scrollbar.TagName())
+				scrollbar.Properties.Id = grim.GenerateUniqueId(n, scrollbar.TagName())
 				scrollbar.AppendChild(&thumb)
 
 				// !NOTE: This prevents recursion

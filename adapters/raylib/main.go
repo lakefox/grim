@@ -3,7 +3,6 @@ package raylib
 import (
 	rl "github.com/gen2brain/raylib-go/raylib"
 	"grim"
-	"grim/element"
 	"image"
 	"os"
 	"path/filepath"
@@ -33,9 +32,9 @@ func Init() *grim.Adapter {
 			delete(wm.Textures, key)
 		}
 	}
-	a.Render = func(state []element.State) {
+	a.Render = func(state []grim.State) {
 		if rl.WindowShouldClose() {
-			a.DispatchEvent(element.Event{Name: "close"})
+			a.DispatchEvent(grim.Event{Name: "close"})
 		}
 		wm.Draw(state)
 	}
@@ -55,7 +54,7 @@ func Init() *grim.Adapter {
 }
 
 // handleCursorEvent sets the mouse cursor based on the event data
-func handleCursorEvent(e element.Event) {
+func handleCursorEvent(e grim.Event) {
 	cursorMap := map[string]rl.MouseCursor{
 		"":            rl.MouseCursorArrow,
 		"text":        rl.MouseCursorIBeam,
@@ -112,7 +111,7 @@ func (wm *WindowManager) OpenWindow(width, height int32) {
 }
 
 // Draw draws all nodes on the window
-func (wm *WindowManager) Draw(nodes []element.State) {
+func (wm *WindowManager) Draw(nodes []grim.State) {
 	indexes := []float32{0}
 	rl.BeginDrawing()
 	wm.GetEvents()
@@ -190,7 +189,7 @@ func (wm *WindowManager) GetEvents() {
 	cw := rl.GetScreenWidth()
 	ch := rl.GetScreenHeight()
 	if cw != int(wm.Width) || ch != int(wm.Height) {
-		e := element.Event{
+		e := grim.Event{
 			Name: "windowresize",
 			Data: map[string]int{"width": cw, "height": ch},
 		}
@@ -231,7 +230,7 @@ func (wm *WindowManager) GetEvents() {
 		isDown := rl.IsKeyDown(int32(i))
 		if wm.CurrentEvents[i] != isDown {
 			if isDown {
-				keydown := element.Event{
+				keydown := grim.Event{
 					Name:     "keydown",
 					Data:     i,
 					CtrlKey:  CtrlKey,
@@ -243,7 +242,7 @@ func (wm *WindowManager) GetEvents() {
 				wm.CurrentEvents[i] = true
 				wm.Adapter.DispatchEvent(keydown)
 			} else {
-				keyup := element.Event{
+				keyup := grim.Event{
 					Name:     "keyup",
 					Data:     i,
 					CtrlKey:  CtrlKey,
@@ -260,7 +259,7 @@ func (wm *WindowManager) GetEvents() {
 
 	mp := rl.GetMousePosition()
 	if wm.MousePosition[0] != int(mp.X) || wm.MousePosition[1] != int(mp.Y) {
-		wm.Adapter.DispatchEvent(element.Event{
+		wm.Adapter.DispatchEvent(grim.Event{
 			Name: "mousemove",
 			Data: []int{int(mp.X), int(mp.Y)},
 		})
@@ -270,12 +269,12 @@ func (wm *WindowManager) GetEvents() {
 	md := rl.IsMouseButtonDown(rl.MouseLeftButton)
 	if md != wm.MouseState {
 		if md {
-			wm.Adapter.DispatchEvent(element.Event{
+			wm.Adapter.DispatchEvent(grim.Event{
 				Name: "mousedown",
 			})
 			wm.MouseState = true
 		} else {
-			wm.Adapter.DispatchEvent(element.Event{
+			wm.Adapter.DispatchEvent(grim.Event{
 				Name: "mouseup",
 			})
 			wm.MouseState = false
@@ -285,12 +284,12 @@ func (wm *WindowManager) GetEvents() {
 	cs := rl.IsMouseButtonPressed(rl.MouseRightButton)
 	if cs != wm.ContextState {
 		if cs {
-			wm.Adapter.DispatchEvent(element.Event{
+			wm.Adapter.DispatchEvent(grim.Event{
 				Name: "contextmenudown",
 			})
 			wm.ContextState = true
 		} else {
-			wm.Adapter.DispatchEvent(element.Event{
+			wm.Adapter.DispatchEvent(grim.Event{
 				Name: "contextmenuup",
 			})
 			wm.ContextState = false
@@ -300,7 +299,7 @@ func (wm *WindowManager) GetEvents() {
 	wd := rl.GetMouseWheelMove()
 
 	if wd != 0 {
-		wm.Adapter.DispatchEvent(element.Event{
+		wm.Adapter.DispatchEvent(grim.Event{
 			Name: "scroll",
 			Data: int(wd * 6),
 		})

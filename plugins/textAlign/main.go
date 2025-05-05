@@ -2,20 +2,19 @@ package textAlign
 
 import (
 	"grim"
-	"grim/element"
 )
 
 func Init() grim.Plugin {
 	return grim.Plugin{
-		Selector: func(n *element.Node, c *grim.CSS) bool {
+		Selector: func(n *grim.Node, c *grim.CSS) bool {
 			return n.ComputedStyle["text-align"] != ""
 		},
-		Handler: func(n *element.Node, c *grim.CSS) {
+		Handler: func(n *grim.Node, c *grim.CSS) {
 			self := c.State[n.Properties.Id]
 			minX := float32(9e15)
 			maxXW := float32(0)
 
-			nChildren := []*element.Node{}
+			nChildren := []*grim.Node{}
 			for _, v := range n.Children {
 				// This prevents using absolutely positionioned elements in the alignment of text
 				// + Will need to add the other styles

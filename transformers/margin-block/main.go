@@ -2,16 +2,15 @@ package marginblock
 
 import (
 	"grim"
-	"grim/element"
 	"strings"
 )
 
 func Init() grim.Transformer {
 	return grim.Transformer{
-		Selector: func(n *element.Node, c *grim.CSS) bool {
+		Selector: func(n *grim.Node, c *grim.CSS) bool {
 			return n.ComputedStyle["margin-block"] != "" || n.ComputedStyle["margin-block-start"] != "" || n.ComputedStyle["margin-block-end"] != ""
 		},
-		Handler: func(n *element.Node, c *grim.CSS) *element.Node {
+		Handler: func(n *grim.Node, c *grim.CSS) *grim.Node {
 
 			writingMode := n.ComputedStyle["writing-mode"]
 			mb := parseMarginBlock(n.ComputedStyle["margin-block"])

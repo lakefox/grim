@@ -2,12 +2,11 @@ package banda
 
 import (
 	"grim"
-	"grim/element"
 )
 
 func Init() grim.Transformer {
 	return grim.Transformer{
-		Selector: func(n *element.Node, c *grim.CSS) bool {
+		Selector: func(n *grim.Node, c *grim.CSS) bool {
 			ps := n.StyleSheets.PsuedoStyles[n.Properties.Id]
 			if ps["::before"] != nil || ps["::after"] != nil {
 				return true
@@ -15,7 +14,7 @@ func Init() grim.Transformer {
 				return false
 			}
 		},
-		Handler: func(n *element.Node, c *grim.CSS) *element.Node {
+		Handler: func(n *grim.Node, c *grim.CSS) *grim.Node {
 			ps := n.StyleSheets.PsuedoStyles[n.Properties.Id]
 			if ps["::before"] != nil {
 				before := n.CreateElement("before")

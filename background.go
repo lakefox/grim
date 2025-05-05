@@ -1,13 +1,11 @@
-package grim 
+package grim
 
 import (
 	"bytes"
 	"golang.org/x/image/draw"
 	"grim/canvas"
 	"grim/color"
-	"grim/element"
 	"grim/gg"
-	"grim/utils"
 	"image"
 	ic "image/color"
 	_ "image/gif"  // Enable GIF support
@@ -41,12 +39,12 @@ var backgroundProps = []string{
 	// "background-color",
 }
 
-func ParseBackground(style map[string]string) []element.Background {
+func ParseBackground(style map[string]string) []Background {
 	splitProps := map[string][]string{}
 
 	amount := 0
 	for _, v := range backgroundProps {
-		s := utils.SplitByComma(style[v])
+		s := SplitByComma(style[v])
 		f := []string{}
 		for _, b := range s {
 			if strings.TrimSpace(b) != "" {
@@ -62,9 +60,9 @@ func ParseBackground(style map[string]string) []element.Background {
 	if amount == 0 {
 		amount = 1
 	}
-	bgs := []element.Background{}
+	bgs := []Background{}
 	for i := range amount {
-		bg := element.Background{}
+		bg := Background{}
 		if style["background-color"] != "" {
 			bg.Color, _ = color.ParseRGBA(style["background-color"])
 		}
@@ -113,7 +111,7 @@ func ParseBackground(style map[string]string) []element.Background {
 	return bgs
 }
 
-func BackgroundKey(self element.State) string {
+func BackgroundKey(self State) string {
 	key := strconv.Itoa(int(self.Width)) + strconv.Itoa(int(self.Height)) + strconv.Itoa(len(self.Background))
 
 	for _, v := range self.Background {
@@ -131,7 +129,7 @@ func BackgroundKey(self element.State) string {
 }
 
 // !NOTE: background-clip and background-blend-mode are not supported
-func GenerateBackground(c CSS, self element.State) image.Image {
+func GenerateBackground(c CSS, self State) image.Image {
 	wbw := int(self.Width + self.Border.Left.Width + self.Border.Right.Width)
 	hbw := int(self.Height + self.Border.Top.Width + self.Border.Bottom.Width)
 
@@ -189,11 +187,11 @@ func GenerateBackground(c CSS, self element.State) image.Image {
 						parts := strings.Split(bg.Size, " ")
 						if len(parts) == 2 {
 							var w, h float32
-							w = utils.ConvertToPixels(parts[0], self.EM, sWidth)
+							w = ConvertToPixels(parts[0], self.EM, sWidth)
 
 							wAuto := parts[0] == "auto"
 
-							h = utils.ConvertToPixels(parts[1], self.EM, sHeight)
+							h = ConvertToPixels(parts[1], self.EM, sHeight)
 							hAuto := parts[1] == "auto"
 
 							if wAuto && hAuto {
@@ -225,7 +223,7 @@ func GenerateBackground(c CSS, self element.State) image.Image {
 								width = int(float32(width) * s)
 								height = int(float32(height) * s)
 							} else {
-								s = utils.ConvertToPixels(parts[0], self.EM, sWidth)
+								s = ConvertToPixels(parts[0], self.EM, sWidth)
 								height = int(s * float32(height/width))
 								width = int(s)
 							}
@@ -276,10 +274,10 @@ func GenerateBackground(c CSS, self element.State) image.Image {
 
 					if len(parts) == 2 {
 						if parts[0] == "left" {
-							d := int(utils.ConvertToPixels(parts[1], self.EM, self.Width))
+							d := int(ConvertToPixels(parts[1], self.EM, self.Width))
 							x += d
 						} else if parts[0] == "right" {
-							d := int(utils.ConvertToPixels(parts[1], self.EM, self.Width))
+							d := int(ConvertToPixels(parts[1], self.EM, self.Width))
 							x += int(sWidth) - (width + d)
 
 						}
@@ -290,7 +288,7 @@ func GenerateBackground(c CSS, self element.State) image.Image {
 						} else if parts[0] == "center" {
 							x += int(sWidth/2) - (width / 2)
 						} else {
-							d := int(utils.ConvertToPixels(parts[0], self.EM, self.Width))
+							d := int(ConvertToPixels(parts[0], self.EM, self.Width))
 							x += d
 						}
 					}
@@ -300,10 +298,10 @@ func GenerateBackground(c CSS, self element.State) image.Image {
 
 					if len(parts) == 2 {
 						if parts[0] == "top" {
-							d := int(utils.ConvertToPixels(parts[1], self.EM, self.Height))
+							d := int(ConvertToPixels(parts[1], self.EM, self.Height))
 							y += d
 						} else if parts[0] == "bottom" {
-							d := int(utils.ConvertToPixels(parts[1], self.EM, self.Height))
+							d := int(ConvertToPixels(parts[1], self.EM, self.Height))
 							y += int(sHeight) - (height + d)
 						}
 					} else if len(parts) == 1 {
@@ -313,7 +311,7 @@ func GenerateBackground(c CSS, self element.State) image.Image {
 						} else if parts[0] == "center" {
 							y += int(sHeight/2) - (height / 2)
 						} else {
-							d := int(utils.ConvertToPixels(parts[0], self.EM, self.Height))
+							d := int(ConvertToPixels(parts[0], self.EM, self.Height))
 							y += d
 						}
 					}
@@ -511,12 +509,12 @@ func GenerateBackground(c CSS, self element.State) image.Image {
 					} else {
 						parts := strings.Split(bg.Size, " ")
 						if len(parts) == 2 {
-							w := utils.ConvertToPixels(parts[0], self.EM, sWidth)
-							h := utils.ConvertToPixels(parts[1], self.EM, sHeight)
+							w := ConvertToPixels(parts[0], self.EM, sWidth)
+							h := ConvertToPixels(parts[1], self.EM, sHeight)
 							width = int(w)
 							height = int(h)
 						} else if len(parts) == 1 {
-							s := utils.ConvertToPixels(parts[0], self.EM, sWidth)
+							s := ConvertToPixels(parts[0], self.EM, sWidth)
 							height = int(s) * (height / width)
 							width = int(s)
 						}
@@ -566,10 +564,10 @@ func GenerateBackground(c CSS, self element.State) image.Image {
 
 					if len(parts) == 2 {
 						if parts[0] == "left" {
-							d := int(utils.ConvertToPixels(parts[1], self.EM, self.Width))
+							d := int(ConvertToPixels(parts[1], self.EM, self.Width))
 							x += d
 						} else if parts[0] == "right" {
-							d := int(utils.ConvertToPixels(parts[1], self.EM, self.Width))
+							d := int(ConvertToPixels(parts[1], self.EM, self.Width))
 							x += int(sWidth) - (width + d)
 
 						}
@@ -580,7 +578,7 @@ func GenerateBackground(c CSS, self element.State) image.Image {
 						} else if parts[0] == "center" {
 							x += int(sWidth/2) - (width / 2)
 						} else {
-							d := int(utils.ConvertToPixels(parts[0], self.EM, self.Width))
+							d := int(ConvertToPixels(parts[0], self.EM, self.Width))
 							x += d
 						}
 					}
@@ -591,10 +589,10 @@ func GenerateBackground(c CSS, self element.State) image.Image {
 
 					if len(parts) == 2 {
 						if parts[0] == "top" {
-							d := int(utils.ConvertToPixels(parts[1], self.EM, self.Height))
+							d := int(ConvertToPixels(parts[1], self.EM, self.Height))
 							y += d
 						} else if parts[0] == "bottom" {
-							d := int(utils.ConvertToPixels(parts[1], self.EM, self.Height))
+							d := int(ConvertToPixels(parts[1], self.EM, self.Height))
 							y += int(sHeight) - (height + d)
 						}
 					} else if len(parts) == 1 {
@@ -604,7 +602,7 @@ func GenerateBackground(c CSS, self element.State) image.Image {
 						} else if parts[0] == "center" {
 							y += int(sHeight/2) - (height / 2)
 						} else {
-							d := int(utils.ConvertToPixels(parts[0], self.EM, self.Height))
+							d := int(ConvertToPixels(parts[0], self.EM, self.Height))
 							y += d
 						}
 					}
@@ -822,7 +820,7 @@ func parseLinearGradient(width, height int, em float32, lg string) LinearGradien
 	lg = strings.TrimPrefix(lg, "linear-gradient(")
 	lg = strings.TrimSuffix(lg, ")")
 
-	parts := element.Token('(', ')', ',', lg)
+	parts := Token('(', ')', ',', lg)
 	var x1, y1, x2, y2 float64
 	var col ic.RGBA
 	var dist float32
@@ -877,7 +875,7 @@ func parseLinearGradient(width, height int, em float32, lg string) LinearGradien
 					for _, q := range p {
 						steps = append(steps, step{
 							color:  col,
-							offset: float64(utils.ConvertToPixels(q, em, dist) / dist),
+							offset: float64(ConvertToPixels(q, em, dist) / dist),
 						})
 					}
 				}
@@ -885,7 +883,7 @@ func parseLinearGradient(width, height int, em float32, lg string) LinearGradien
 				// just 10%
 				steps = append(steps, step{
 					color:  col,
-					offset: float64(utils.ConvertToPixels(v, em, dist) / dist),
+					offset: float64(ConvertToPixels(v, em, dist) / dist),
 				})
 			}
 		}
@@ -955,7 +953,7 @@ func parseRadialGradient(width, height int, em float32, rg string) RadialGradien
 	rg = strings.TrimPrefix(rg, "radial-gradient(")
 	rg = strings.TrimSuffix(rg, ")")
 
-	parts := element.Token('(', ')', ',', rg)
+	parts := Token('(', ')', ',', rg)
 
 	var x1, y1, r1,
 		x2, y2, r2 float64
@@ -1046,7 +1044,7 @@ func parseRadialGradient(width, height int, em float32, rg string) RadialGradien
 				for _, q := range vs {
 					steps = append(steps, step{
 						color:  col,
-						offset: float64(utils.ConvertToPixels(q, em, dist) / dist),
+						offset: float64(ConvertToPixels(q, em, dist) / dist),
 					})
 				}
 			}
@@ -1054,7 +1052,7 @@ func parseRadialGradient(width, height int, em float32, rg string) RadialGradien
 			// just 10%
 			steps = append(steps, step{
 				color:  col,
-				offset: float64(utils.ConvertToPixels(v, em, dist) / dist),
+				offset: float64(ConvertToPixels(v, em, dist) / dist),
 			})
 		}
 	}
@@ -1107,9 +1105,9 @@ func getPosition(position string, width, height int, em float32, part string) fl
 		}
 	default:
 		if part == "x" {
-			return float64(utils.ConvertToPixels(position, em, float32(width)))
+			return float64(ConvertToPixels(position, em, float32(width)))
 		} else if part == "y" {
-			return float64(utils.ConvertToPixels(position, em, float32(height)))
+			return float64(ConvertToPixels(position, em, float32(height)))
 		}
 	}
 	return 0
@@ -1177,9 +1175,9 @@ func getSize(size string, width, height float64, em float32, x, y float64) float
 	default:
 		// !NOTE: This is the corrent way to do it for circles not ellipses (but ellipses aren't supported)
 		if width < height {
-			res = float64(utils.ConvertToPixels(size, em, float32(width)))
+			res = float64(ConvertToPixels(size, em, float32(width)))
 		} else {
-			res = float64(utils.ConvertToPixels(size, em, float32(height)))
+			res = float64(ConvertToPixels(size, em, float32(height)))
 		}
 	}
 	return res

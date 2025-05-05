@@ -1,16 +1,14 @@
-package scripts
-
-import "grim/element"
+package grim
 
 type Scripts struct {
 	scripts []Script
 }
 
 type Script struct {
-	Call func(*element.Node)
+	Call func(*Node)
 }
 
-func (s *Scripts) Run(n *element.Node) {
+func (s *Scripts) Run(n *Node) {
 	for _, v := range s.scripts {
 		v.Call(n)
 	}

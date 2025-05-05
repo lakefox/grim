@@ -5,10 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"grim/element"
-	"grim/scripts"
-	"grim/scripts/a"
-	"grim/utils"
 	"net/url"
 	"path/filepath"
 	"strconv"
@@ -23,15 +19,15 @@ var mastercss string
 
 type Window struct {
 	CSS        CSS
-	document   element.Node
-	Styles     element.Styles
-	Scripts    scripts.Scripts
-	RenderData []element.State
+	document   Node
+	Styles     Styles
+	Script    Scripts
+	RenderData []State
 	Rerender   bool
 	shouldStop bool
 }
 
-func (w *Window) Document() *element.Node {
+func (w *Window) Document() *Node {
 	return &w.document
 }
 
@@ -57,9 +53,9 @@ func (window *Window) Path(path string) {
 
 func New(adapterFunction *Adapter, width, height int) Window {
 	w := Window{}
-	w.Styles = element.Styles{
+	w.Styles = Styles{
 		PsuedoStyles: map[string]map[string]map[string]string{},
-		StyleMap:     map[string][]*element.StyleMap{},
+		StyleMap:     map[string][]*StyleMap{},
 	}
 	css := CSS{
 		Width:   float32(width),
@@ -70,21 +66,18 @@ func New(adapterFunction *Adapter, width, height int) Window {
 	w.Styles.StyleTag(mastercss)
 	// This is still apart of computestyle
 
-
-	el := element.Node{}
+	el := Node{}
 	document := el.CreateElement("ROOT")
 	document.Properties.Id = "ROOT"
 	document.StyleSheets = &w.Styles
-	s := scripts.Scripts{}
-	s.Add(a.Init())
+	
 
 	w.CSS = css
-	w.Scripts = s
+	w.Script = Scripts{}
 	w.document = document
 
 	return w
 }
-
 
 func (w *Window) Plugins(values ...Plugin) {
 	for _, v := range values {
@@ -98,6 +91,12 @@ func (w *Window) Transformers(values ...Transformer) {
 	}
 }
 
+func (w *Window) Scripts(values ...Script) {
+	for _, v := range values {
+		s.Add(v)
+	}
+}
+
 // !ISSUE: This should be a adapter function
 func (w *Window) Open() {
 	for !w.shouldStop {
@@ -105,8 +104,8 @@ func (w *Window) Open() {
 	}
 }
 
-func flatten(n *element.Node) []*element.Node {
-	var nodes []*element.Node
+func flatten(n *Node) []*Node {
+	var nodes []*Node
 	nodes = append(nodes, n)
 
 	children := n.Children
@@ -125,8 +124,8 @@ func open(data *Window) {
 
 	data.CSS.Adapter.Init(int(data.CSS.Width), int(data.CSS.Height))
 
-	data.CSS.State = map[string]element.State{}
-	data.CSS.State["ROOT"] = element.State{
+	data.CSS.State = map[string]State{}
+	data.CSS.State["ROOT"] = State{
 		Width:  float32(data.CSS.Width),
 		Height: float32(data.CSS.Height),
 	}
@@ -142,7 +141,7 @@ func open(data *Window) {
 	}
 
 	monitor := Monitor{
-		EventMap: make(map[string]element.Event),
+		EventMap: make(map[string]Event),
 		Adapter:  data.CSS.Adapter,
 		CSS:      &data.CSS,
 		Focus: Focus{
@@ -153,7 +152,7 @@ func open(data *Window) {
 		},
 	}
 
-	data.CSS.Adapter.AddEventListener("windowresize", func(e element.Event) {
+	data.CSS.Adapter.AddEventListener("windowresize", func(e Event) {
 		wh := e.Data.(map[string]int)
 
 		data.CSS.Width = float32(wh["width"])
@@ -164,13 +163,13 @@ func open(data *Window) {
 		getRenderData(data, &monitor)
 	})
 
-	data.CSS.Adapter.AddEventListener("close", func(e element.Event) {
+	data.CSS.Adapter.AddEventListener("close", func(e Event) {
 		data.shouldStop = true
 	})
 
 	currentEvent := EventData{}
 
-	data.CSS.Adapter.AddEventListener("keydown", func(e element.Event) {
+	data.CSS.Adapter.AddEventListener("keydown", func(e Event) {
 		currentEvent.Key = e.Data.(int)
 		currentEvent.KeyState = true
 		currentEvent.Modifiers = Modifiers{
@@ -182,7 +181,7 @@ func open(data *Window) {
 		monitor.GetEvents(&currentEvent)
 		getRenderData(data, &monitor)
 	})
-	data.CSS.Adapter.AddEventListener("keyup", func(e element.Event) {
+	data.CSS.Adapter.AddEventListener("keyup", func(e Event) {
 		currentEvent.Key = 0
 		currentEvent.KeyState = false
 		currentEvent.Modifiers = Modifiers{
@@ -195,7 +194,7 @@ func open(data *Window) {
 		getRenderData(data, &monitor)
 	})
 
-	data.CSS.Adapter.AddEventListener("mousemove", func(e element.Event) {
+	data.CSS.Adapter.AddEventListener("mousemove", func(e Event) {
 		pos := e.Data.([]int)
 		if pos[0] > 0 && pos[1] > 0 {
 			if pos[0] < int(data.CSS.Width) && pos[1] < int(data.CSS.Height) {
@@ -206,32 +205,32 @@ func open(data *Window) {
 		}
 	})
 
-	data.CSS.Adapter.AddEventListener("scroll", func(e element.Event) {
+	data.CSS.Adapter.AddEventListener("scroll", func(e Event) {
 		currentEvent.ScrollY = e.Data.(int)
 		monitor.GetEvents(&currentEvent)
 		currentEvent.ScrollY = 0
 		getRenderData(data, &monitor)
 	})
 
-	data.CSS.Adapter.AddEventListener("mousedown", func(e element.Event) {
+	data.CSS.Adapter.AddEventListener("mousedown", func(e Event) {
 		currentEvent.Click = true
 		monitor.GetEvents(&currentEvent)
 		getRenderData(data, &monitor)
 	})
 
-	data.CSS.Adapter.AddEventListener("mouseup", func(e element.Event) {
+	data.CSS.Adapter.AddEventListener("mouseup", func(e Event) {
 		currentEvent.Click = false
 		monitor.GetEvents(&currentEvent)
 		getRenderData(data, &monitor)
 	})
 
-	data.CSS.Adapter.AddEventListener("contextmenudown", func(e element.Event) {
+	data.CSS.Adapter.AddEventListener("contextmenudown", func(e Event) {
 		currentEvent.Context = true
 		monitor.GetEvents(&currentEvent)
 		getRenderData(data, &monitor)
 	})
 
-	data.CSS.Adapter.AddEventListener("contextmenuup", func(e element.Event) {
+	data.CSS.Adapter.AddEventListener("contextmenuup", func(e Event) {
 		currentEvent.Context = true
 		monitor.GetEvents(&currentEvent)
 		getRenderData(data, &monitor)
@@ -243,7 +242,7 @@ func open(data *Window) {
 
 // !TODO: This need to be better implemented but rn just testing
 func getRenderData(data *Window, monitor *Monitor) {
-	data.CSS.State["ROOT"] = element.State{
+	data.CSS.State["ROOT"] = State{
 		Width:  float32(data.CSS.Width),
 		Height: float32(data.CSS.Height),
 	}
@@ -251,13 +250,13 @@ func getRenderData(data *Window, monitor *Monitor) {
 
 	monitor.RunEvents(data.document.Children[0])
 	start := time.Now()
-	newDoc := element.CopyDocument(data.document.Children[0], &data.document)
+	newDoc := CopyDocument(data.document.Children[0], &data.document)
 
 	data.CSS.ComputeNodeStyle(newDoc)
 
 	flatDoc := flatten(newDoc)
 
-	rd := []element.State{}
+	rd := []State{}
 
 	keys := []string{}
 	s := data.CSS.State
@@ -296,7 +295,7 @@ func getRenderData(data *Window, monitor *Monitor) {
 
 	addScroll(&data.document, s)
 
-	data.Scripts.Run(&data.document)
+	data.Script.Run(&data.document)
 
 	// !TODO: Should return effected node, then render those specific
 	// + I think have node.ComputeNodeStyle would make this nice
@@ -306,7 +305,7 @@ func getRenderData(data *Window, monitor *Monitor) {
 	(data.CSS.State) = s
 }
 
-func addScroll(n *element.Node, s map[string]element.State) {
+func addScroll(n *Node, s map[string]State) {
 	// !NOTE: This is the only spot you can pierce the vale
 	n.ScrollHeight = s[n.Properties.Id].ScrollHeight
 	n.ScrollWidth = s[n.Properties.Id].ScrollWidth
@@ -315,7 +314,7 @@ func addScroll(n *element.Node, s map[string]element.State) {
 	}
 }
 
-func createNode(node *html.Node, parent *element.Node, stylesheets *element.Styles) {
+func createNode(node *html.Node, parent *Node, stylesheets *Styles) {
 	if node.Type == html.ElementNode {
 		newNode := parent.CreateElement(node.Data)
 		for _, attr := range node.Attr {

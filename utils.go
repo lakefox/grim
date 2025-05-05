@@ -1,8 +1,7 @@
-package utils
+package grim
 
 import (
 	"fmt"
-	"grim/element"
 	ic "image/color"
 	"strconv"
 	"strings"
@@ -10,7 +9,7 @@ import (
 	"golang.org/x/net/html"
 )
 
-func GetXY(n element.Node, state map[string]element.State) (float32, float32) {
+func GetXY(n Node, state map[string]State) (float32, float32) {
 	s := state
 	// self := s[n.Properties.Id]
 
@@ -31,10 +30,10 @@ type BoxSizing struct {
 	Height float32
 }
 
-func FindBounds(n element.Node, style map[string]string, state *map[string]element.State) (BoxSizing, element.BoxSpacing, element.BoxSpacing) {
+func FindBounds(n Node, style map[string]string, state *map[string]State) (BoxSizing, BoxSpacing, BoxSpacing) {
 	s := *state
 	self := s[n.Properties.Id]
-	var parent element.State
+	var parent State
 
 	fs := self.EM
 
@@ -110,11 +109,11 @@ func FindBounds(n element.Node, style map[string]string, state *map[string]eleme
 	return wh, m, padding
 }
 
-func getMP(n element.Node, style map[string]string, wh BoxSizing, state *map[string]element.State, t string) element.BoxSpacing {
+func getMP(n Node, style map[string]string, wh BoxSizing, state *map[string]State, t string) BoxSpacing {
 	s := *state
 	self := s[n.Properties.Id]
 	fs := self.EM
-	m := element.BoxSpacing{}
+	m := BoxSpacing{}
 
 	// Cache style properties
 	leftKey, rightKey, topKey, bottomKey := t+"-left", t+"-right", t+"-top", t+"-bottom"

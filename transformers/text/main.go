@@ -2,7 +2,6 @@ package text
 
 import (
 	"grim"
-	"grim/element"
 	"html"
 	"strings"
 )
@@ -17,14 +16,14 @@ var nonRenderTags = map[string]bool{
 
 func Init() grim.Transformer {
 	return grim.Transformer{
-		Selector: func(n *element.Node, c *grim.CSS) bool {
-			if len(strings.TrimSpace(n.InnerText())) > 0 && !element.ChildrenHaveText(n) {
+		Selector: func(n *grim.Node, c *grim.CSS) bool {
+			if len(strings.TrimSpace(n.InnerText())) > 0 && !grim.ChildrenHaveText(n) {
 				return true
 			} else {
 				return false
 			}
 		},
-		Handler: func(n *element.Node, c *grim.CSS) *element.Node {
+		Handler: func(n *grim.Node, c *grim.CSS) *grim.Node {
 			if nonRenderTags[n.TagName()] {
 				return n
 			}
@@ -40,7 +39,7 @@ func Init() grim.Transformer {
 						el.InnerText(words[a])
 						// !CHECK: Idk if this breaks text
 						// el.Parent = n
-						// element.QuickStyles(&el)
+						// grim.QuickStyles(&el)
 						el.ComputedStyle["display"] = "inline"
 						el.ComputedStyle["font-size"] = "1em"
 						n.Parent().InsertAfter(&el, n)
@@ -53,7 +52,7 @@ func Init() grim.Transformer {
 						el := n.CreateElement("text")
 						el.InnerText(words[i])
 						// el.Parent = n
-						// element.QuickStyles(&el)
+						// grim.QuickStyles(&el)
 						el.ComputedStyle["display"] = "inline"
 						el.ComputedStyle["font-size"] = "1em"
 						n.AppendChild(&el)

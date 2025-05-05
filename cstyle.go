@@ -1,10 +1,8 @@
-package grim 
+package grim
 
 import (
 	"fmt"
 	"github.com/golang/freetype/truetype"
-	"grim/element"
-	"grim/utils"
 	"image"
 	"strconv"
 	"strings"
@@ -13,13 +11,13 @@ import (
 )
 
 type Plugin struct {
-	Selector func(*element.Node, *CSS) bool
-	Handler  func(*element.Node, *CSS)
+	Selector func(*Node, *CSS) bool
+	Handler  func(*Node, *CSS)
 }
 
 type Transformer struct {
-	Selector func(*element.Node, *CSS) bool
-	Handler  func(*element.Node, *CSS) *element.Node
+	Selector func(*Node, *CSS) bool
+	Handler  func(*Node, *CSS) *Node
 }
 
 type CSS struct {
@@ -30,7 +28,7 @@ type CSS struct {
 	Fonts        map[string]*truetype.Font
 	Adapter      *Adapter
 	Path         string
-	State        map[string]element.State
+	State        map[string]State
 }
 
 func (c *CSS) AddPlugin(plugin Plugin) {
@@ -49,7 +47,7 @@ var nonRenderTags = map[string]bool{
 	"style": true,
 }
 
-func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
+func (c *CSS) ComputeNodeStyle(n *Node) State {
 	// Head is not renderable
 	s := c.State
 	self := s[n.Properties.Id]
@@ -86,7 +84,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 	if style["font-size"] == "" {
 		n.ComputedStyle["font-size"] = "1em"
 	}
-	fs := utils.ConvertToPixels(n.ComputedStyle["font-size"], parent.EM, parent.Width)
+	fs := ConvertToPixels(n.ComputedStyle["font-size"], parent.EM, parent.Width)
 	self.EM = fs
 
 	if style["display"] == "none" {
@@ -109,7 +107,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 	self.Background = ParseBackground(style)
 
 	c.State[n.Properties.Id] = self
-	wh, m, p := utils.FindBounds(*n, style, &c.State)
+	wh, m, p := FindBounds(*n, style, &c.State)
 
 	self.Margin = m
 	self.Padding = p
@@ -119,7 +117,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 	c.State[n.Properties.Id] = self
 
 	x, y := parent.X, parent.Y
-	offsetX, offsetY := utils.GetXY(*n, c.State)
+	offsetX, offsetY := GetXY(*n, c.State)
 	x += offsetX
 	y += offsetY
 
@@ -127,7 +125,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 	if style["position"] == "absolute" {
 		// !DEVMAN: Properties.Id is the ancestory of an element with colons seperating them
 		// + if we split them up we can check the parents without recursion or a while (for true) loop
-		// + NOTE: See utils.GenerateUnqineId to see how they are made
+		// + NOTE: See GenerateUnqineId to see how they are made
 		ancestors := strings.Split(n.Properties.Id, ":")
 
 		offsetNode := n
@@ -142,19 +140,19 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 
 		base := s[offsetNode.Properties.Id]
 		if topVal := style["top"]; topVal != "" {
-			y = utils.ConvertToPixels(topVal, self.EM, parent.Width) + base.Y
+			y = ConvertToPixels(topVal, self.EM, parent.Width) + base.Y
 			top = true
 		}
 		if leftVal := style["left"]; leftVal != "" {
-			x = utils.ConvertToPixels(leftVal, self.EM, parent.Width) + base.X
+			x = ConvertToPixels(leftVal, self.EM, parent.Width) + base.X
 			left = true
 		}
 		if rightVal := style["right"]; rightVal != "" {
-			x = base.X + ((base.Width - self.Width) - utils.ConvertToPixels(rightVal, self.EM, parent.Width))
+			x = base.X + ((base.Width - self.Width) - ConvertToPixels(rightVal, self.EM, parent.Width))
 			right = true
 		}
 		if bottomVal := style["bottom"]; bottomVal != "" {
-			y = base.Y + ((base.Height - self.Height) - utils.ConvertToPixels(bottomVal, self.EM, parent.Width))
+			y = base.Y + ((base.Height - self.Height) - ConvertToPixels(bottomVal, self.EM, parent.Width))
 			bottom = true
 		}
 	} else {
@@ -205,7 +203,7 @@ func (c *CSS) ComputeNodeStyle(n *element.Node) element.State {
 
 	c.State[n.Properties.Id] = self
 	innerText := n.InnerText()
-	if !element.ChildrenHaveText(n) && len(innerText) > 0 {
+	if !ChildrenHaveText(n) && len(innerText) > 0 {
 		n.InnerText(strings.TrimSpace(innerText))
 		italic := false
 

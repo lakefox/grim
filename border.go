@@ -1,17 +1,15 @@
-package grim 
+package grim
 
 import (
 	"grim/canvas"
 	"grim/color"
-	"grim/element"
-	"grim/utils"
 	"image"
 	"math"
 	"strconv"
 	"strings"
 )
 
-func ParseBorder(cssProperties map[string]string, self, parent element.State) (element.Border, error) {
+func ParseBorder(cssProperties map[string]string, self, parent State) (Border, error) {
 	// Define default values
 	defaultWidth := "0px"
 	defaultStyle := "solid"
@@ -47,7 +45,7 @@ func ParseBorder(cssProperties map[string]string, self, parent element.State) (e
 		if value == "" {
 			value = defaultRadius
 		}
-		return utils.ConvertToPixels(value, self.EM, parent.Width)
+		return ConvertToPixels(value, self.EM, parent.Width)
 	}
 
 	// Parse individual border sides
@@ -101,10 +99,10 @@ func ParseBorder(cssProperties map[string]string, self, parent element.State) (e
 	}
 
 	// Convert to pixels
-	topWidthPx := utils.ConvertToPixels(topWidth, self.EM, parent.Width)
-	rightWidthPx := utils.ConvertToPixels(rightWidth, self.EM, parent.Width)
-	bottomWidthPx := utils.ConvertToPixels(bottomWidth, self.EM, parent.Width)
-	leftWidthPx := utils.ConvertToPixels(leftWidth, self.EM, parent.Width)
+	topWidthPx := ConvertToPixels(topWidth, self.EM, parent.Width)
+	rightWidthPx := ConvertToPixels(rightWidth, self.EM, parent.Width)
+	bottomWidthPx := ConvertToPixels(bottomWidth, self.EM, parent.Width)
+	leftWidthPx := ConvertToPixels(leftWidth, self.EM, parent.Width)
 
 	// Parse colors
 	topParsedColor, _ := color.Color(topColor)
@@ -134,28 +132,28 @@ func ParseBorder(cssProperties map[string]string, self, parent element.State) (e
 		}
 	}
 
-	return element.Border{
-		Top: element.BorderSide{
+	return Border{
+		Top: BorderSide{
 			Width: topWidthPx,
 			Style: topStyle,
 			Color: topParsedColor,
 		},
-		Right: element.BorderSide{
+		Right: BorderSide{
 			Width: rightWidthPx,
 			Style: rightStyle,
 			Color: rightParsedColor,
 		},
-		Bottom: element.BorderSide{
+		Bottom: BorderSide{
 			Width: bottomWidthPx,
 			Style: bottomStyle,
 			Color: bottomParsedColor,
 		},
-		Left: element.BorderSide{
+		Left: BorderSide{
 			Width: leftWidthPx,
 			Style: leftStyle,
 			Color: leftParsedColor,
 		},
-		Radius: element.BorderRadius{
+		Radius: BorderRadius{
 			TopLeft:     topLeftRadius,
 			TopRight:    topRightRadius,
 			BottomLeft:  bottomLeftRadius,
@@ -164,7 +162,7 @@ func ParseBorder(cssProperties map[string]string, self, parent element.State) (e
 	}, nil
 }
 
-func DrawBorder(self *element.State, a *Adapter, id string) {
+func DrawBorder(self *State, a *Adapter, id string) {
 	// lastChange := time.Now()
 	if self.Border.Top.Width > 0 ||
 		self.Border.Right.Width > 0 ||
@@ -174,7 +172,7 @@ func DrawBorder(self *element.State, a *Adapter, id string) {
 		// Format: widthheightborderdatatopleftbottomright
 		// borderdata: widthstylecolorradius
 		// 50020020solid#fff520solid#fff520solid#fff520solid#fff520solid#fff
-		key := strconv.Itoa(int(self.Width)) + strconv.Itoa(int(self.Height)) + (strconv.Itoa(int(self.Border.Top.Width)) + self.Border.Top.Style + utils.RGBAtoString(self.Border.Top.Color) + strconv.Itoa(int(self.Border.Radius.TopLeft))) + (strconv.Itoa(int(self.Border.Left.Width)) + self.Border.Left.Style + utils.RGBAtoString(self.Border.Left.Color) + strconv.Itoa(int(self.Border.Radius.BottomLeft))) + (strconv.Itoa(int(self.Border.Bottom.Width)) + self.Border.Bottom.Style + utils.RGBAtoString(self.Border.Bottom.Color) + strconv.Itoa(int(self.Border.Radius.BottomRight))) + (strconv.Itoa(int(self.Border.Right.Width)) + self.Border.Right.Style + utils.RGBAtoString(self.Border.Right.Color) + strconv.Itoa(int(self.Border.Radius.TopRight)))
+		key := strconv.Itoa(int(self.Width)) + strconv.Itoa(int(self.Height)) + (strconv.Itoa(int(self.Border.Top.Width)) + self.Border.Top.Style + RGBAtoString(self.Border.Top.Color) + strconv.Itoa(int(self.Border.Radius.TopLeft))) + (strconv.Itoa(int(self.Border.Left.Width)) + self.Border.Left.Style + RGBAtoString(self.Border.Left.Color) + strconv.Itoa(int(self.Border.Radius.BottomLeft))) + (strconv.Itoa(int(self.Border.Bottom.Width)) + self.Border.Bottom.Style + RGBAtoString(self.Border.Bottom.Color) + strconv.Itoa(int(self.Border.Radius.BottomRight))) + (strconv.Itoa(int(self.Border.Right.Width)) + self.Border.Right.Style + RGBAtoString(self.Border.Right.Color) + strconv.Itoa(int(self.Border.Radius.TopRight)))
 
 		m, exists := a.Textures[id]["border"]
 
@@ -208,7 +206,7 @@ func DrawBorder(self *element.State, a *Adapter, id string) {
 
 }
 
-func drawBorderSide(ctx *canvas.Canvas, side string, border element.BorderSide, s *element.State, style string) {
+func drawBorderSide(ctx *canvas.Canvas, side string, border BorderSide, s *State, style string) {
 	if style == "" {
 		style = "solid"
 	}
@@ -351,7 +349,7 @@ func isWidthComponent(component string, suffixes []string) bool {
 	return false
 }
 
-func genSolidBorder(ctx *canvas.Canvas, width float64, v1, v2 float64, border, side1, side2 element.BorderSide) {
+func genSolidBorder(ctx *canvas.Canvas, width float64, v1, v2 float64, border, side1, side2 BorderSide) {
 	s1w := math.Max(float64(side1.Width), 1)
 	s2w := math.Max(float64(side2.Width), 1)
 
@@ -410,7 +408,7 @@ func genSolidBorder(ctx *canvas.Canvas, width float64, v1, v2 float64, border, s
 	ctx.ClosePath()
 }
 
-func genDashedBorder(ctx *canvas.Canvas, width float64, v1, v2 float64, border, side1, side2 element.BorderSide) {
+func genDashedBorder(ctx *canvas.Canvas, width float64, v1, v2 float64, border, side1, side2 BorderSide) {
 	s1w := math.Max(float64(side1.Width), 1)
 	s2w := math.Max(float64(side2.Width), 1)
 
@@ -426,7 +424,7 @@ func genDashedBorder(ctx *canvas.Canvas, width float64, v1, v2 float64, border, 
 	ctx.Stroke()
 }
 
-func genDottedBorder(ctx *canvas.Canvas, width float64, v1, v2 float64, border, side1, side2 element.BorderSide) {
+func genDottedBorder(ctx *canvas.Canvas, width float64, v1, v2 float64, border, side1, side2 BorderSide) {
 	s1w := math.Max(float64(side1.Width), 1)
 	s2w := math.Max(float64(side2.Width), 1)
 
@@ -440,7 +438,7 @@ func genDottedBorder(ctx *canvas.Canvas, width float64, v1, v2 float64, border, 
 	ctx.Stroke()
 }
 
-func genDoubleBorder(ctx *canvas.Canvas, width float64, v1, v2 float64, border, side1, side2 element.BorderSide) {
+func genDoubleBorder(ctx *canvas.Canvas, width float64, v1, v2 float64, border, side1, side2 BorderSide) {
 	s1w := math.Max(float64(side1.Width), 1)
 	s2w := math.Max(float64(side2.Width), 1)
 
@@ -481,7 +479,7 @@ func genDoubleBorder(ctx *canvas.Canvas, width float64, v1, v2 float64, border, 
 
 }
 
-func genRidgeBorder(ctx *canvas.Canvas, width float64, v1, v2 float64, border, side1, side2 element.BorderSide, side string) {
+func genRidgeBorder(ctx *canvas.Canvas, width float64, v1, v2 float64, border, side1, side2 BorderSide, side string) {
 	red, g, b := CalculateGrooveColor(border.Color.R, border.Color.G, border.Color.B)
 	br := border
 	br.Width = br.Width / 2
@@ -515,7 +513,7 @@ func genRidgeBorder(ctx *canvas.Canvas, width float64, v1, v2 float64, border, s
 	ctx.Reset()
 }
 
-func genGrooveBorder(ctx *canvas.Canvas, width float64, v1, v2 float64, border, side1, side2 element.BorderSide, side string) {
+func genGrooveBorder(ctx *canvas.Canvas, width float64, v1, v2 float64, border, side1, side2 BorderSide, side string) {
 	red, g, b := CalculateGrooveColor(border.Color.R, border.Color.G, border.Color.B)
 	br := border
 	br.Width = br.Width / 2
@@ -549,7 +547,7 @@ func genGrooveBorder(ctx *canvas.Canvas, width float64, v1, v2 float64, border, 
 	ctx.Reset()
 }
 
-func genInsetBorder(ctx *canvas.Canvas, width float64, v1, v2 float64, border, side1, side2 element.BorderSide, side string) {
+func genInsetBorder(ctx *canvas.Canvas, width float64, v1, v2 float64, border, side1, side2 BorderSide, side string) {
 	red, g, b := CalculateGrooveColor(border.Color.R, border.Color.G, border.Color.B)
 
 	if side == "top" || side == "left" {
@@ -562,7 +560,7 @@ func genInsetBorder(ctx *canvas.Canvas, width float64, v1, v2 float64, border, s
 	ctx.Fill()
 }
 
-func genOutsetBorder(ctx *canvas.Canvas, width float64, v1, v2 float64, border, side1, side2 element.BorderSide, side string) {
+func genOutsetBorder(ctx *canvas.Canvas, width float64, v1, v2 float64, border, side1, side2 BorderSide, side string) {
 	red, g, b := CalculateGrooveColor(border.Color.R, border.Color.G, border.Color.B)
 
 	if side == "top" || side == "left" {

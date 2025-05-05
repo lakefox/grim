@@ -3,9 +3,6 @@ package ol
 import (
 	"fmt"
 	"grim"
-	"grim/element"
-	"grim"
-	"grim/utils"
 	"strconv"
 
 	"github.com/golang/freetype/truetype"
@@ -13,10 +10,10 @@ import (
 
 func Init() grim.Transformer {
 	return grim.Transformer{
-		Selector: func(n *element.Node, c *grim.CSS) bool {
+		Selector: func(n *grim.Node, c *grim.CSS) bool {
 			return n.TagName() == "ol"
 		},
-		Handler: func(n *element.Node, c *grim.CSS) *element.Node {
+		Handler: func(n *grim.Node, c *grim.CSS) *grim.Node {
 			tN := n.CreateElement(n.TagName())
 			var maxOS int
 			var widths []int
@@ -48,7 +45,7 @@ func Init() grim.Transformer {
 					c.Fonts = map[string]*truetype.Font{}
 				}
 
-				fs := utils.ConvertToPixels(n.ComputedStyle["font-size"], 16, c.Width)
+				fs := grim.ConvertToPixels(n.ComputedStyle["font-size"], 16, c.Width)
 				em := fs
 
 				fid := n.ComputedStyle["font-family"] + fmt.Sprint(em, n.ComputedStyle["font-weight"], italic)

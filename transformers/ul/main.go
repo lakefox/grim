@@ -2,15 +2,14 @@ package ul
 
 import (
 	"grim"
-	"grim/element"
 )
 
 func Init() grim.Transformer {
 	return grim.Transformer{
-		Selector: func(n *element.Node, c *grim.CSS) bool {
+		Selector: func(n *grim.Node, c *grim.CSS) bool {
 			return n.TagName() == "ul"
 		},
-		Handler: func(n *element.Node, c *grim.CSS) *element.Node {
+		Handler: func(n *grim.Node, c *grim.CSS) *grim.Node {
 			// !TODO: make ul/ol stylable
 			for i, v := range n.Children {
 				if v.TagName() != "li" {
@@ -21,7 +20,7 @@ func Init() grim.Transformer {
 				v.ComputedStyle["display"] = "flex"
 				v.ComputedStyle["align-items"] = "center"
 				// !CHECK: this too
-				element.QuickStyles(&dot)
+				grim.QuickStyles(&dot)
 				dot.ComputedStyle["background-color"] = "#000"
 				dot.ComputedStyle["border-radius"] = "100px"
 				dot.ComputedStyle["width"] = "5px"

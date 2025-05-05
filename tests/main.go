@@ -8,6 +8,7 @@ import (
 	"grim/plugins/flex"
 	"grim/plugins/inline"
 	"grim/plugins/textAlign"
+	"grim/scripts/a"
 	"grim/transformers/banda"
 
 	marginblock "grim/transformers/margin-block"
@@ -50,6 +51,7 @@ func main() {
 
 	window.Plugins(inline.Iint(), textAlign.Init(), flex.Init(), crop.Init())
 	window.Transformers(text.Init(), banda.Init(), scrollbar.Init(), marginblock.Init(), ul.Init(), ol.Init())
+	window.Scripts(a.Init())
 
 	window.Path("./src/index.html")
 	document := window.Document()

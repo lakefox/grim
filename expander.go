@@ -1,22 +1,10 @@
-package element
+package grim
 
 import (
 	"grim/color"
 	"strconv"
 	"strings"
 )
-
-var backgroundProps = []string{
-	"background-image",
-	"background-position-x",
-	"background-position-y",
-	"background-size",
-	"background-repeat",
-	"background-attachment",
-	"background-origin",
-	"background-clip",
-	"background-color",
-}
 
 func Expander(styles map[string]string) map[string]string {
 	// !TODO: modify to expand all attributes not just the background element

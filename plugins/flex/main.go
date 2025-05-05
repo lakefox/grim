@@ -3,18 +3,16 @@ package flex
 import (
 	"grim"
 	"grim/plugins/inline"
-	"grim/element"
-	"grim/utils"
 	"sort"
 	"strings"
 )
 
 func Init() grim.Plugin {
 	return grim.Plugin{
-		Selector: func(n *element.Node, c *grim.CSS) bool {
+		Selector: func(n *grim.Node, c *grim.CSS) bool {
 			return n.ComputedStyle["display"] == "flex"
 		},
-		Handler: func(n *element.Node, c *grim.CSS) {
+		Handler: func(n *grim.Node, c *grim.CSS) {
 			self := c.State[n.Properties.Id]
 			if len(n.Children) == 0 {
 				return
@@ -149,8 +147,8 @@ func Init() grim.Plugin {
 						applyInline(v, c)
 						applyBlock(v, c)
 						_, h := getInnerSize(v, c)
-						h = utils.Max(h, vState.Height)
-						maxH = utils.Max(maxH, h)
+						h = grim.Max(h, vState.Height)
+						maxH = grim.Max(maxH, h)
 					}
 					// When not wrapping everything will be on the same row
 					rows = append(rows, []int{0, len(n.Children), int(maxH)})
@@ -220,8 +218,8 @@ func Init() grim.Plugin {
 						applyInline(v, c)
 						applyBlock(v, c)
 						_, h := getInnerSize(v, c)
-						h = utils.Max(h, vState.Height)
-						maxH = utils.Max(maxH, h)
+						h = grim.Max(h, vState.Height)
+						maxH = grim.Max(maxH, h)
 						vState.Height = minHeight(v, c, h)
 						c.State[v.Properties.Id] = vState
 					}
@@ -298,11 +296,11 @@ func Init() grim.Plugin {
 						if v.ComputedStyle["min-height"] != "" {
 							selfHeight -= vState.Height + vState.Margin.Top + vState.Margin.Bottom + (vState.Border.Top.Width + vState.Border.Bottom.Width)
 							fixedHeightElements++
-							maxH = utils.Max(maxH, vState.Height)
+							maxH = grim.Max(maxH, vState.Height)
 						} else {
 							// accoutn for element min height
 							totalHeight += minHeights[i] + vState.Margin.Top + vState.Margin.Bottom + (vState.Border.Top.Width + vState.Border.Bottom.Width)
-							maxH = utils.Max(maxH, minHeights[i])
+							maxH = grim.Max(maxH, minHeights[i])
 						}
 					}
 
@@ -365,8 +363,8 @@ func Init() grim.Plugin {
 					for _, col := range cols {
 						var maxWidth, maxHeight float32
 						for _, element := range col {
-							maxHeight = utils.Max(utils.Max(element[1], minHeights[int(element[0])]), maxHeight)
-							maxWidth = utils.Max(element[2], maxWidth)
+							maxHeight = grim.Max(grim.Max(element[1], minHeights[int(element[0])]), maxHeight)
+							maxWidth = grim.Max(element[2], maxWidth)
 						}
 						rows = append(rows, []int{int(col[0][0]), int(col[len(col)-1][0]), int(maxHeight)})
 						totalMaxWidth += maxWidth
@@ -420,7 +418,7 @@ func Init() grim.Plugin {
 	}
 }
 
-func applyBlock(n *element.Node, c *grim.CSS) {
+func applyBlock(n *grim.Node, c *grim.CSS) {
 	if len(n.Children) > 0 {
 		accum := float32(0)
 		inlineOffset := float32(0)
@@ -443,7 +441,7 @@ func applyBlock(n *element.Node, c *grim.CSS) {
 	}
 }
 
-func deInline(n *element.Node, c *grim.CSS) {
+func deInline(n *grim.Node, c *grim.CSS) {
 	// self := c.State[n.Properties.Id]
 	baseX := float32(-1)
 	baseY := float32(-1)
@@ -472,7 +470,7 @@ func deInline(n *element.Node, c *grim.CSS) {
 
 }
 
-func applyInline(n *element.Node, c *grim.CSS) {
+func applyInline(n *grim.Node, c *grim.CSS) {
 	pl := inline.Init()
 	for i := 0; i < len(n.Children); i++ {
 		v := n.Children[i]
@@ -487,7 +485,7 @@ func applyInline(n *element.Node, c *grim.CSS) {
 	}
 }
 
-func propagateOffsets(n *element.Node, prevx, prevy, newx, newy float32, c *grim.CSS) {
+func propagateOffsets(n *grim.Node, prevx, prevy, newx, newy float32, c *grim.CSS) {
 	for _, v := range n.Children {
 		vState := c.State[v.Properties.Id]
 		xStore := (vState.X - prevx) + newx
@@ -503,7 +501,7 @@ func propagateOffsets(n *element.Node, prevx, prevy, newx, newy float32, c *grim
 
 }
 
-func countText(n *element.Node) int {
+func countText(n *grim.Node) int {
 	count := 0
 	groups := []int{}
 	for _, v := range n.Children {
@@ -526,57 +524,57 @@ func countText(n *element.Node) int {
 	return groups[0]
 }
 
-func minHeight(n *element.Node, c *grim.CSS, prev float32) float32 {
+func minHeight(n *grim.Node, c *grim.CSS, prev float32) float32 {
 	self := c.State[n.Properties.Id]
 	if n.ComputedStyle["min-height"] != "" {
-		mw := utils.ConvertToPixels(n.ComputedStyle["min-height"], self.EM, c.State[n.Parent().Properties.Id].Width)
-		return utils.Max(prev, mw)
+		mw := grim.ConvertToPixels(n.ComputedStyle["min-height"], self.EM, c.State[n.Parent().Properties.Id].Width)
+		return grim.Max(prev, mw)
 	} else {
 		return prev
 	}
 
 }
 
-func getMinHeight(n *element.Node, c *grim.CSS) float32 {
+func getMinHeight(n *grim.Node, c *grim.CSS) float32 {
 	self := c.State[n.Properties.Id]
 	selfHeight := float32(0)
 
 	if len(n.Children) > 0 {
 		for _, v := range n.Children {
-			selfHeight = utils.Max(selfHeight, getNodeHeight(v, c))
+			selfHeight = grim.Max(selfHeight, getNodeHeight(v, c))
 		}
 	} else {
 		selfHeight = self.Height
 	}
 	if n.ComputedStyle["min-height"] != "" {
-		mh := utils.ConvertToPixels(n.ComputedStyle["min-height"], self.EM, c.State[n.Parent().Properties.Id].Width)
-		selfHeight = utils.Max(mh, selfHeight)
+		mh := grim.ConvertToPixels(n.ComputedStyle["min-height"], self.EM, c.State[n.Parent().Properties.Id].Width)
+		selfHeight = grim.Max(mh, selfHeight)
 	}
 
 	selfHeight += self.Padding.Top + self.Padding.Bottom
 	return selfHeight
 }
 
-func getMinWidth(n *element.Node, c *grim.CSS) float32 {
+func getMinWidth(n *grim.Node, c *grim.CSS) float32 {
 	self := c.State[n.Properties.Id]
 	selfWidth := float32(0)
 
 	if len(n.Children) > 0 {
 		for _, v := range n.Children {
-			selfWidth = utils.Max(selfWidth, getNodeWidth(v, c))
+			selfWidth = grim.Max(selfWidth, getNodeWidth(v, c))
 		}
 	} else {
 		selfWidth = self.Width
 	}
 	if n.ComputedStyle["min-width"] != "" {
-		mw := utils.ConvertToPixels(n.ComputedStyle["min-width"], self.EM, c.State[n.Parent().Properties.Id].Width)
-		selfWidth = utils.Max(mw, selfWidth)
+		mw := grim.ConvertToPixels(n.ComputedStyle["min-width"], self.EM, c.State[n.Parent().Properties.Id].Width)
+		selfWidth = grim.Max(mw, selfWidth)
 	}
 
 	selfWidth += self.Padding.Left + self.Padding.Right
 	return selfWidth
 }
-func getMaxWidth(n *element.Node, c *grim.CSS) float32 {
+func getMaxWidth(n *grim.Node, c *grim.CSS) float32 {
 	self := c.State[n.Properties.Id]
 	selfWidth := float32(0)
 
@@ -586,11 +584,11 @@ func getMaxWidth(n *element.Node, c *grim.CSS) float32 {
 		for _, v := range n.Children {
 			rowWidth += getNodeWidth(v, c)
 			if v.ComputedStyle["display"] != "inline" {
-				maxRowWidth = utils.Max(rowWidth, maxRowWidth)
+				maxRowWidth = grim.Max(rowWidth, maxRowWidth)
 				rowWidth = 0
 			}
 		}
-		selfWidth = utils.Max(rowWidth, maxRowWidth)
+		selfWidth = grim.Max(rowWidth, maxRowWidth)
 	} else {
 		selfWidth = self.Width
 	}
@@ -599,7 +597,7 @@ func getMaxWidth(n *element.Node, c *grim.CSS) float32 {
 	return selfWidth
 }
 
-func getNodeWidth(n *element.Node, c *grim.CSS) float32 {
+func getNodeWidth(n *grim.Node, c *grim.CSS) float32 {
 	self := c.State[n.Properties.Id]
 	w := float32(0)
 	w += self.Padding.Left
@@ -613,55 +611,55 @@ func getNodeWidth(n *element.Node, c *grim.CSS) float32 {
 	w += self.Border.Left.Width + self.Border.Right.Width
 
 	for _, v := range n.Children {
-		w = utils.Max(w, getNodeWidth(v, c))
+		w = grim.Max(w, getNodeWidth(v, c))
 	}
 
 	return w
 }
 
-func setWidth(n *element.Node, c *grim.CSS, width float32) float32 {
+func setWidth(n *grim.Node, c *grim.CSS, width float32) float32 {
 	self := c.State[n.Properties.Id]
 	prid := n.Parent().Properties.Id
 
 	if n.ComputedStyle["width"] != "" {
-		return utils.ConvertToPixels(n.ComputedStyle["width"], self.EM, c.State[prid].Width) + self.Padding.Left + self.Padding.Right
+		return grim.ConvertToPixels(n.ComputedStyle["width"], self.EM, c.State[prid].Width) + self.Padding.Left + self.Padding.Right
 	}
 
 	var maxWidth, minWidth float32
 	maxWidth = 10e9
 	if n.ComputedStyle["min-width"] != "" {
-		minWidth = utils.ConvertToPixels(n.ComputedStyle["min-width"], self.EM, c.State[prid].Width)
+		minWidth = grim.ConvertToPixels(n.ComputedStyle["min-width"], self.EM, c.State[prid].Width)
 		minWidth += self.Padding.Left + self.Padding.Right
 	}
 	if n.ComputedStyle["max-width"] != "" {
-		maxWidth = utils.ConvertToPixels(n.ComputedStyle["min-width"], self.EM, c.State[prid].Width)
+		maxWidth = grim.ConvertToPixels(n.ComputedStyle["min-width"], self.EM, c.State[prid].Width)
 		maxWidth += self.Padding.Left + self.Padding.Right
 	}
 
-	return utils.Max(minWidth, utils.Min(width, maxWidth))
+	return grim.Max(minWidth, grim.Min(width, maxWidth))
 }
 
-func setHeight(n *element.Node, c *grim.CSS, height float32) float32 {
+func setHeight(n *grim.Node, c *grim.CSS, height float32) float32 {
 	self := c.State[n.Properties.Id]
 	prid := n.Parent().Properties.Id
 
 	if n.ComputedStyle["height"] != "" {
-		return utils.ConvertToPixels(n.ComputedStyle["height"], self.EM, c.State[prid].Height)
+		return grim.ConvertToPixels(n.ComputedStyle["height"], self.EM, c.State[prid].Height)
 	}
 
 	var maxHeight, minHeight float32
 	maxHeight = 10e9
 	if n.ComputedStyle["min-height"] != "" {
-		minHeight = utils.ConvertToPixels(n.ComputedStyle["min-height"], self.EM, c.State[prid].Height)
+		minHeight = grim.ConvertToPixels(n.ComputedStyle["min-height"], self.EM, c.State[prid].Height)
 	}
 	if n.ComputedStyle["max-height"] != "" {
-		maxHeight = utils.ConvertToPixels(n.ComputedStyle["min-height"], self.EM, c.State[prid].Height)
+		maxHeight = grim.ConvertToPixels(n.ComputedStyle["min-height"], self.EM, c.State[prid].Height)
 	}
 
-	return utils.Max(minHeight, utils.Min(height, maxHeight))
+	return grim.Max(minHeight, grim.Min(height, maxHeight))
 }
 
-func getNodeHeight(n *element.Node, c *grim.CSS) float32 {
+func getNodeHeight(n *grim.Node, c *grim.CSS) float32 {
 	self := c.State[n.Properties.Id]
 	h := float32(0)
 	h += self.Padding.Top
@@ -675,13 +673,13 @@ func getNodeHeight(n *element.Node, c *grim.CSS) float32 {
 	h += self.Border.Top.Width + self.Border.Bottom.Width
 
 	for _, v := range n.Children {
-		h = utils.Max(h, getNodeHeight(v, c))
+		h = grim.Max(h, getNodeHeight(v, c))
 	}
 
 	return h
 }
 
-func getInnerSize(n *element.Node, c *grim.CSS) (float32, float32) {
+func getInnerSize(n *grim.Node, c *grim.CSS) (float32, float32) {
 	self := c.State[n.Properties.Id]
 
 	minx := float32(10e10)
@@ -690,13 +688,13 @@ func getInnerSize(n *element.Node, c *grim.CSS) (float32, float32) {
 	maxh := float32(0)
 	for _, v := range n.Children {
 		vState := c.State[v.Properties.Id]
-		minx = utils.Min(vState.X, minx)
-		miny = utils.Min(vState.Y-vState.Margin.Top, miny)
+		minx = grim.Min(vState.X, minx)
+		miny = grim.Min(vState.Y-vState.Margin.Top, miny)
 		// Don't add the top or left because the x&y values already take that into account
 		hOffset := (vState.Border.Bottom.Width) + vState.Margin.Bottom
 		wOffset := (vState.Border.Right.Width) + vState.Margin.Right
-		maxw = utils.Max(vState.X+vState.Width+wOffset, maxw)
-		maxh = utils.Max(vState.Y+vState.Height+hOffset, maxh)
+		maxw = grim.Max(vState.X+vState.Width+wOffset, maxw)
+		maxh = grim.Max(vState.Y+vState.Height+hOffset, maxh)
 	}
 	w := maxw - minx
 	h := maxh - miny
@@ -729,10 +727,10 @@ func add2d(arr [][]float32, index int) float32 {
 	return sum
 }
 
-func colReverse(cols [][]int, n *element.Node, c *grim.CSS) {
+func colReverse(cols [][]int, n *grim.Node, c *grim.CSS) {
 	for _, col := range cols {
-		tempNodes := []*element.Node{}
-		tempStates := []element.State{}
+		tempNodes := []*grim.Node{}
+		tempStates := []grim.State{}
 
 		for i := col[1]; i >= col[0]; i-- {
 			tempNodes = append(tempNodes, n.Children[i])
@@ -753,10 +751,10 @@ func colReverse(cols [][]int, n *element.Node, c *grim.CSS) {
 	}
 }
 
-func rowReverse(rows [][]int, n *element.Node, c *grim.CSS) {
+func rowReverse(rows [][]int, n *grim.Node, c *grim.CSS) {
 	for _, row := range rows {
-		tempNodes := []*element.Node{}
-		tempStates := []element.State{}
+		tempNodes := []*grim.Node{}
+		tempStates := []grim.State{}
 
 		for i := row[1] - 1; i >= row[0]; i-- {
 			tempNodes = append(tempNodes, n.Children[i])
@@ -793,7 +791,7 @@ func rowReverse(rows [][]int, n *element.Node, c *grim.CSS) {
 	}
 }
 
-func justifyRow(rows [][]int, n *element.Node, c *grim.CSS, justify string, reversed bool) {
+func justifyRow(rows [][]int, n *grim.Node, c *grim.CSS, justify string, reversed bool) {
 	for _, row := range rows {
 
 		if (justify == "flex-end" || justify == "end" || justify == "right") && !reversed {
@@ -966,7 +964,7 @@ func justifyRow(rows [][]int, n *element.Node, c *grim.CSS, justify string, reve
 	}
 }
 
-func alignRow(rows [][]int, n *element.Node, c *grim.CSS, align, content string) {
+func alignRow(rows [][]int, n *grim.Node, c *grim.CSS, align, content string) {
 	// !ISSUE: Baseline isn't properly impleamented
 	self := c.State[n.Properties.Id]
 
@@ -982,7 +980,7 @@ func alignRow(rows [][]int, n *element.Node, c *grim.CSS, align, content string)
 			h = setHeight(v, c, h)
 			vState.Height = h
 			h += vState.Margin.Top + vState.Margin.Bottom + (vState.Border.Top.Width + vState.Border.Bottom.Width)
-			maxH = utils.Max(maxH, h)
+			maxH = grim.Max(maxH, h)
 			c.State[v.Properties.Id] = vState
 		}
 		maxes = append(maxes, maxH)
@@ -1088,7 +1086,7 @@ func alignRow(rows [][]int, n *element.Node, c *grim.CSS, align, content string)
 	}
 }
 
-func justifyCols(cols [][]int, n *element.Node, c *grim.CSS, justify string, reversed bool) {
+func justifyCols(cols [][]int, n *grim.Node, c *grim.CSS, justify string, reversed bool) {
 	self := c.State[n.Properties.Id]
 
 	selfHeight := (self.Height) - (self.Padding.Top + self.Padding.Bottom)
@@ -1179,7 +1177,7 @@ func justifyCols(cols [][]int, n *element.Node, c *grim.CSS, justify string, rev
 	}
 }
 
-func alignCols(cols [][]int, n *element.Node, c *grim.CSS, align, content string, minWidths [][]float32) {
+func alignCols(cols [][]int, n *grim.Node, c *grim.CSS, align, content string, minWidths [][]float32) {
 	self := c.State[n.Properties.Id]
 
 	if (align == "stretch" && content == "stretch") || (align == "stretch" && content == "normal") || (align == "normal" && content == "stretch") {
@@ -1196,7 +1194,7 @@ func alignCols(cols [][]int, n *element.Node, c *grim.CSS, align, content string
 			v := n.Children[i]
 			vState := c.State[v.Properties.Id]
 			vState.Width = setWidth(v, c, minWidths[i][0])
-			maxWidth = utils.Max(maxWidth, vState.Width+vState.Margin.Left+vState.Margin.Right+(vState.Border.Left.Width+vState.Border.Right.Width))
+			maxWidth = grim.Max(maxWidth, vState.Width+vState.Margin.Left+vState.Margin.Right+(vState.Border.Left.Width+vState.Border.Right.Width))
 			c.State[v.Properties.Id] = vState
 		}
 		colWidths = append(colWidths, maxWidth)

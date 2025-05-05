@@ -1,11 +1,9 @@
-package grim 
+package grim
 
 import (
 	"errors"
 	"golang.org/x/image/math/fixed"
 	"grim/canvas"
-	"grim/element"
-	"grim/utils"
 	"image"
 	"image/color"
 	"path/filepath"
@@ -200,12 +198,12 @@ func MeasureSpace(t *MetaData) int {
 }
 
 func FontKey(text *MetaData) string {
-	key := text.Text + utils.RGBAtoString(text.Color) + utils.RGBAtoString(text.DecorationColor) + text.Align + text.WordBreak + strconv.Itoa(text.WordSpacing) + strconv.Itoa(text.LetterSpacing) + text.WhiteSpace + strconv.Itoa(text.DecorationThickness) + strconv.Itoa(text.EM)
+	key := text.Text + RGBAtoString(text.Color) + RGBAtoString(text.DecorationColor) + text.Align + text.WordBreak + strconv.Itoa(text.WordSpacing) + strconv.Itoa(text.LetterSpacing) + text.WhiteSpace + strconv.Itoa(text.DecorationThickness) + strconv.Itoa(text.EM)
 	key += strconv.FormatBool(text.Overlined) + strconv.FormatBool(text.Underlined) + strconv.FormatBool(text.LineThrough) + text.FontFamily
 	return key
 }
 
-func GetMetaData(n *element.Node, style map[string]string, state *map[string]element.State, font *truetype.Font) *MetaData {
+func GetMetaData(n *Node, style map[string]string, state *map[string]State, font *truetype.Font) *MetaData {
 	s := *state
 	self := s[n.Properties.Id]
 	parent := s[n.Parent().Properties.Id]
@@ -231,10 +229,10 @@ func GetMetaData(n *element.Node, style map[string]string, state *map[string]ele
 	text := MetaData{}
 	text.Font = font
 	text.FontFamily = style["font-family"]
-	letterSpacing := utils.ConvertToPixels(style["letter-spacing"], self.EM, parent.Width)
-	wordSpacing := utils.ConvertToPixels(style["word-spacing"], self.EM, parent.Width)
-	lineHeight := utils.ConvertToPixels(style["line-height"], self.EM, parent.Width)
-	underlineoffset := utils.ConvertToPixels(style["text-underline-offset"], self.EM, parent.Width)
+	letterSpacing := ConvertToPixels(style["letter-spacing"], self.EM, parent.Width)
+	wordSpacing := ConvertToPixels(style["word-spacing"], self.EM, parent.Width)
+	lineHeight := ConvertToPixels(style["line-height"], self.EM, parent.Width)
+	underlineoffset := ConvertToPixels(style["text-underline-offset"], self.EM, parent.Width)
 
 	if lineHeight == 0 {
 		lineHeight = self.EM + 3
@@ -258,7 +256,7 @@ func GetMetaData(n *element.Node, style map[string]string, state *map[string]ele
 	if style["text-decoration-thickness"] == "auto" || style["text-decoration-thickness"] == "" {
 		dt = self.EM / 7
 	} else {
-		dt = utils.ConvertToPixels(style["text-decoration-thickness"], self.EM, parent.Width)
+		dt = ConvertToPixels(style["text-decoration-thickness"], self.EM, parent.Width)
 	}
 
 	col, err := cc.ParseRGBA(style["color"])

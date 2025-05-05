@@ -3,24 +3,22 @@ package crop
 import (
 	"fmt"
 	"grim"
-	"grim/element"
-	"grim/utils"
 )
 
 func Init() cstyle.Plugin {
 	return cstyle.Plugin{
-		Selector: func(n *element.Node, c *cstyle.CSS) bool {
+		Selector: func(n *grim.Node, c *cstyle.CSS) bool {
 			if n.ComputedStyle["overflow"] != "" || n.ComputedStyle["overflow-x"] != "" || n.ComputedStyle["overflow-y"] != "" {
 				return true
 			} else {
 				return false
 			}
 		},
-		Handler: func(n *element.Node, c *cstyle.CSS) {
+		Handler: func(n *grim.Node, c *cstyle.CSS) {
 			self := c.State[n.Properties.Id]
 
 			scrollTop, scrollLeft := findScroll(n)
-			fmt.Println(n.Properties.Id,scrollTop, scrollLeft)
+			fmt.Println(n.Properties.Id, scrollTop, scrollLeft)
 
 			containerHeight := self.Height
 			contentHeight := float32(self.ScrollHeight)
@@ -66,7 +64,7 @@ func Init() cstyle.Plugin {
 							p = c.State[v.Children[0].Properties.Id]
 							p.Hidden = false
 
-							containerHeight -= utils.ConvertToPixels(v.ComputedStyle["height"], self.EM, self.Width)
+							containerHeight -= grim.ConvertToPixels(v.ComputedStyle["height"], self.EM, self.Width)
 
 							p.Width = (containerWidth / contentWidth) * containerWidth
 
@@ -135,7 +133,7 @@ func Init() cstyle.Plugin {
 						width = int(child.Width) - int(diff)
 					}
 
-					child.Crop = element.Crop{
+					child.Crop = grim.Crop{
 						X:      xCrop,
 						Y:      yCrop,
 						Width:  width,
@@ -151,7 +149,7 @@ func Init() cstyle.Plugin {
 	}
 }
 
-func updateChildren(n *element.Node, c *grim.CSS, offsetY, offsetX int) {
+func updateChildren(n *grim.Node, c *grim.CSS, offsetY, offsetX int) {
 	self := c.State[n.Properties.Id]
 	self.X -= float32(offsetX)
 	self.Y -= float32(offsetY)
@@ -161,7 +159,7 @@ func updateChildren(n *element.Node, c *grim.CSS, offsetY, offsetX int) {
 	}
 }
 
-func findScroll(n *element.Node) (int, int) {
+func findScroll(n *grim.Node) (int, int) {
 	left, top := n.GetScroll()
 	if top != 0 || left != 0 {
 		return top, left

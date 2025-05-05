@@ -1,20 +1,19 @@
 package a
 
 import (
-	"grim/element"
-	"grim/scripts"
+	"grim"
 	"os/exec"
 	"runtime"
 )
 
-func Init() scripts.Script {
-	return scripts.Script{
-		Call: func(document *element.Node) {
+func Init() grim.Script {
+	return grim.Script{
+		Call: func(document *grim.Node) {
 			// links := document.QuerySelectorAll("a")
 
 			// for i := range *links {
 			// 	v := *links
-			// 	v[i].AddEventListener("click", func(e element.Event) {
+			// 	v[i].AddEventListener("click", func(e Event) {
 			// 		open(v[i].Href)
 			// 	})
 			// }

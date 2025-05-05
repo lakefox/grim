@@ -1,7 +1,6 @@
-package grim 
+package grim
 
 import (
-	"grim/element"
 	"sort"
 	"strconv"
 	"strings"
@@ -28,7 +27,7 @@ type Modifiers struct {
 
 type Monitor struct {
 	Adapter  *Adapter
-	EventMap map[string]element.Event
+	EventMap map[string]Event
 	CSS      *CSS
 	Focus    Focus
 	Drag     Drag
@@ -54,7 +53,7 @@ type Focus struct {
 // + reomve m.EventMap after done if possible
 // + for k,v := range m.EventMap
 // + prob storing computed styles should be first bc then you can tell if the event matters
-func (m *Monitor) RunEvents(n *element.Node) bool {
+func (m *Monitor) RunEvents(n *Node) bool {
 	var scrolled bool
 	for _, v := range n.Children {
 		r := m.RunEvents(v)
@@ -135,7 +134,7 @@ func (m *Monitor) RunEvents(n *element.Node) bool {
 		} else {
 			n.Hovered = false
 		}
-		element.ConditionalStyleHandler(n, map[string]string{})
+		ConditionalStyleHandler(n, map[string]string{})
 	}
 
 	if len(m.Focus.Nodes) > 0 && m.Focus.Selected > -1 {
@@ -307,7 +306,7 @@ func (m *Monitor) GetEvents(data *EventData) {
 		evt, ok := m.EventMap[k]
 
 		if !ok {
-			evt = element.Event{}
+			evt = Event{}
 		}
 
 		boxLeft := self.X - self.Border.Left.Width
@@ -528,7 +527,7 @@ func (m *Monitor) GetEvents(data *EventData) {
 				evt.MouseLeave = false
 
 				// Let the adapter know the cursor has changed
-				m.Adapter.DispatchEvent(element.Event{
+				m.Adapter.DispatchEvent(Event{
 					Name: "cursor",
 					Data: self.Cursor,
 				})
@@ -568,7 +567,7 @@ func (m *Monitor) GetEvents(data *EventData) {
 }
 
 // ProcessText processes key events for text entry.
-func ProcessText(self element.State, key int) {
+func ProcessText(self State, key int) {
 	// Handle key events for text entry
 	switch key {
 	case 8:
