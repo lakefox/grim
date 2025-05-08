@@ -60,7 +60,7 @@ func Init() grim.Transformer {
 					c.Fonts[fid] = f
 				}
 
-				w := font.MeasureText(&font.MetaData{Font: fnt}, strconv.Itoa(i+1)+".")
+				w := grim.MeasureText(&grim.MetaData{Font: fnt}, strconv.Itoa(i+1)+".")
 				widths = append(widths, w)
 				if w > maxOS {
 					maxOS = w

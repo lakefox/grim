@@ -15,7 +15,7 @@ func GetXY(n Node, state map[string]State) (float32, float32) {
 
 	offsetX := float32(0)
 	offsetY := float32(0)
-	p := n.Parent()
+	p := n.parent
 	if p != nil {
 		parent := s[p.Properties.Id]
 		offsetX += parent.Border.Left.Width + parent.Padding.Left
@@ -37,7 +37,7 @@ func FindBounds(n Node, style map[string]string, state *map[string]State) (BoxSi
 
 	fs := self.EM
 
-	p := n.Parent()
+	p := n.parent
 	var pwh BoxSizing
 	if p != nil {
 		parent = s[p.Properties.Id]
@@ -135,7 +135,7 @@ func getMP(n Node, style map[string]string, wh BoxSizing, state *map[string]Stat
 		m.Bottom = ConvertToPixels(bottomStyle, fs, wh.Height)
 	}
 
-	p := n.Parent()
+	p := n.parent
 
 	if t == "margin" {
 		siblingMargin := float32(0)

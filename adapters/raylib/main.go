@@ -39,7 +39,7 @@ func Init() *grim.Adapter {
 		wm.Draw(state)
 	}
 
-	fs := adapter.FileSystem{}
+	fs := grim.FileSystem{}
 	fs.ReadFile = func(path string) ([]byte, error) {
 		data, err := os.ReadFile(path)
 		return data, err
@@ -84,11 +84,11 @@ type WindowManager struct {
 	MousePosition []int
 	MouseState    bool
 	ContextState  bool
-	Adapter       *adapter.Adapter
+	Adapter       *grim.Adapter
 }
 
 // NewWindowManager creates a new WindowManager instance
-func NewWindowManager(a *adapter.Adapter) *WindowManager {
+func NewWindowManager(a *grim.Adapter) *WindowManager {
 
 	mp := rl.GetMousePosition()
 	return &WindowManager{
@@ -306,7 +306,7 @@ func (wm *WindowManager) GetEvents() {
 	}
 }
 
-func getSystemFonts(fs *adapter.FileSystem) {
+func getSystemFonts(fs *grim.FileSystem) {
 
 	switch runtime.GOOS {
 	case "windows":
@@ -329,7 +329,7 @@ func getSystemFonts(fs *adapter.FileSystem) {
 	}
 }
 
-func AddDir(path string, fs *adapter.FileSystem) error {
+func AddDir(path string, fs *grim.FileSystem) error {
 	// Walk through the directory and collect all file paths
 	fs.Sources = append(fs.Sources, path)
 	err := filepath.Walk(path, func(filePath string, info os.FileInfo, err error) error {

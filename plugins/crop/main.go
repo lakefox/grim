@@ -5,16 +5,16 @@ import (
 	"grim"
 )
 
-func Init() cstyle.Plugin {
-	return cstyle.Plugin{
-		Selector: func(n *grim.Node, c *cstyle.CSS) bool {
+func Init() grim.Plugin {
+	return grim.Plugin{
+		Selector: func(n *grim.Node, c *grim.CSS) bool {
 			if n.ComputedStyle["overflow"] != "" || n.ComputedStyle["overflow-x"] != "" || n.ComputedStyle["overflow-y"] != "" {
 				return true
 			} else {
 				return false
 			}
 		},
-		Handler: func(n *grim.Node, c *cstyle.CSS) {
+		Handler: func(n *grim.Node, c *grim.CSS) {
 			self := c.State[n.Properties.Id]
 
 			scrollTop, scrollLeft := findScroll(n)

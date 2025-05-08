@@ -206,7 +206,7 @@ func FontKey(text *MetaData) string {
 func GetMetaData(n *Node, style map[string]string, state *map[string]State, font *truetype.Font) *MetaData {
 	s := *state
 	self := s[n.Properties.Id]
-	parent := s[n.Parent().Properties.Id]
+	parent := s[n.parent.Properties.Id]
 
 	// !DEVMAN: In some cases like a span the width will be unset. In that case
 	// + find the closest parent that has a width greater than 0
@@ -282,7 +282,7 @@ func GetMetaData(n *Node, style map[string]string, state *map[string]State, font
 	text.LineThrough = style["text-decoration"] == "line-through"
 	text.EM = int(self.EM)
 	text.Width = int(parent.Width)
-	text.Text = n.InnerText()
+	text.Text = n.innerText
 	text.UnderlineOffset = int(underlineoffset)
 
 	if style["text-underline-offset"] == "" {

@@ -128,27 +128,27 @@ func (m *Monitor) RunEvents(n *Node) bool {
 		eventListeners = append(eventListeners, "mousemove")
 	}
 
-	if evt.Hover != n.Hovered {
+	if evt.Hover != n.hovered {
 		if evt.Hover {
-			n.Hovered = true
+			n.hovered = true
 		} else {
-			n.Hovered = false
+			n.hovered = false
 		}
 		ConditionalStyleHandler(n, map[string]string{})
 	}
 
 	if len(m.Focus.Nodes) > 0 && m.Focus.Selected > -1 {
 		if m.Focus.Nodes[m.Focus.Selected] == n.Properties.Id {
-			if n.Focused == false {
+			if n.focused == false {
 				n.Focus()
 			}
 		} else {
-			if n.Focused == true {
+			if n.focused == true {
 				n.Blur()
 			}
 		}
 	} else {
-		if n.Focused == true {
+		if n.focused == true {
 			n.Blur()
 		}
 	}
@@ -164,8 +164,8 @@ func (m *Monitor) RunEvents(n *Node) bool {
 
 			left += evt.ScrollX
 
-			if (int((float32(int(left))/((containerWidth/float32(n.ScrollWidth))*containerWidth))*containerWidth) + int(containerWidth)) >= n.ScrollWidth {
-				left = (((n.ScrollWidth) - int(containerWidth)) * int(containerWidth)) / n.ScrollWidth
+			if (int((float32(int(left))/((containerWidth/float32(n.scrollWidth))*containerWidth))*containerWidth) + int(containerWidth)) >= n.scrollWidth {
+				left = (((n.scrollWidth) - int(containerWidth)) * int(containerWidth)) / n.scrollWidth
 			}
 
 			if left <= 0 {
@@ -191,8 +191,8 @@ func (m *Monitor) RunEvents(n *Node) bool {
 			top -= evt.ScrollY
 
 			// This is the scroll scaling equation if it is less than the scroll height then let it add the next scroll amount
-			if (int((float32(int(top))/((containerHeight/float32(n.ScrollHeight))*containerHeight))*containerHeight) + int(containerHeight)) >= n.ScrollHeight {
-				top = (((n.ScrollHeight) - int(containerHeight)) * int(containerHeight)) / n.ScrollHeight
+			if (int((float32(int(top))/((containerHeight/float32(n.scrollHeight))*containerHeight))*containerHeight) + int(containerHeight)) >= n.scrollHeight {
+				top = (((n.scrollHeight) - int(containerHeight)) * int(containerHeight)) / n.scrollHeight
 			}
 
 			if top <= 0 {

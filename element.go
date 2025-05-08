@@ -41,12 +41,12 @@ type Node struct {
 
 	// !NOTE: ScrollHeight is the amount of scroll left, not the total amount of scroll
 	// + if you  want the same scrollHeight like js the add the height of the element to it
-	ScrollHeight   int // nm
-	ScrollWidth    int // nm
+	scrollHeight   int // nm
+	scrollWidth    int // nm
 	Canvas         *canvas.Canvas
 	PseudoElements map[string]map[string]string // nm
 
-	Value         string // m
+	value         string // m
 	OnClick       func(Event)
 	OnContextMenu func(Event)
 	OnMouseDown   func(Event)
@@ -304,7 +304,7 @@ func (n *Node) CreateElement(name string) Node {
 		ComputedStyle:     make(map[string]string),
 		ConditionalStyles: make(map[string]map[string]string),
 		style:             make(map[string]string),
-		Value:             "",
+		value:             "",
 		tabIndex:          ti,
 		contentEditable:   false,
 		StyleSheets:       n.StyleSheets,

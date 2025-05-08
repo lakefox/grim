@@ -55,7 +55,7 @@ func (c *CSS) ComputeNodeStyle(n *Node) State {
 		self.Textures = map[string]string{}
 	}
 
-	if nonRenderTags[n.TagName()] {
+	if nonRenderTags[n.tagName] {
 		return self
 	}
 
@@ -66,7 +66,7 @@ func (c *CSS) ComputeNodeStyle(n *Node) State {
 	}
 
 	plugins := c.Plugins
-	parentNode := n.Parent()
+	parentNode := n.parent
 	parent := s[parentNode.Properties.Id]
 	// Cache the style map
 	style := n.ComputedStyle
@@ -131,7 +131,7 @@ func (c *CSS) ComputeNodeStyle(n *Node) State {
 		offsetNode := n
 		// Should skip the current element and the ROOT
 		for i := len(ancestors) - 2; i > 0; i-- {
-			offsetNode = offsetNode.Parent()
+			offsetNode = offsetNode.parent
 			pos := offsetNode.ComputedStyle["position"]
 			if pos == "relative" || pos == "absolute" {
 				break
@@ -199,12 +199,12 @@ func (c *CSS) ComputeNodeStyle(n *Node) State {
 	self.X = x
 	self.Y = y
 
-	self.ContentEditable = n.ContentEditable()
+	self.ContentEditable = n.contentEditable
 
 	c.State[n.Properties.Id] = self
-	innerText := n.InnerText()
+	innerText := n.innerText
 	if !ChildrenHaveText(n) && len(innerText) > 0 {
-		n.InnerText(strings.TrimSpace(innerText))
+		n.innerText = strings.TrimSpace(innerText)
 		italic := false
 
 		if style["font-style"] == "italic" {
@@ -243,7 +243,7 @@ func (c *CSS) ComputeNodeStyle(n *Node) State {
 		}
 		self.Textures["text"] = key
 
-		if (style["height"] == "" && style["min-height"] == "") || n.TagName() == "text" {
+		if (style["height"] == "" && style["min-height"] == "") || n.tagName == "text" {
 			self.Height = float32(metadata.LineHeight)
 			n.ComputedStyle["height"] = strconv.Itoa(int(self.Height)) + "px"
 		}
@@ -255,7 +255,7 @@ func (c *CSS) ComputeNodeStyle(n *Node) State {
 	}
 
 	// Load canvas into textures
-	if n.TagName() == "canvas" {
+	if n.tagName == "canvas" {
 		if n.Canvas != nil {
 			key := n.Properties.Id + "canvas"
 
@@ -273,8 +273,8 @@ func (c *CSS) ComputeNodeStyle(n *Node) State {
 		}
 	}
 
-	self.Value = n.InnerText()
-	self.TabIndex = n.TabIndex()
+	self.Value = n.innerText
+	self.TabIndex = n.tabIndex
 	c.State[n.Properties.Id] = self
 	c.State[parentNode.Properties.Id] = parent
 
@@ -295,7 +295,7 @@ func (c *CSS) ComputeNodeStyle(n *Node) State {
 
 		sh := int((cState.Y + cState.Height) - self.Y)
 		if self.ScrollHeight < sh {
-			if n.Children[i].TagName() != "grim-track" {
+			if n.Children[i].tagName != "grim-track" {
 				self.ScrollHeight = sh
 				self.ScrollHeight += int(cState.Margin.Top + cState.Margin.Bottom + cState.Padding.Top + cState.Padding.Bottom + cState.Border.Top.Width + cState.Border.Bottom.Width)
 
@@ -305,7 +305,7 @@ func (c *CSS) ComputeNodeStyle(n *Node) State {
 		sw := int((cState.X + cState.Width) - self.X)
 
 		if self.ScrollWidth < sw {
-			if n.Children[i].TagName() != "grim-track" {
+			if n.Children[i].tagName != "grim-track" {
 				self.ScrollWidth = sw
 			}
 		}

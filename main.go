@@ -93,7 +93,7 @@ func (w *Window) Transformers(values ...Transformer) {
 
 func (w *Window) Scripts(values ...Script) {
 	for _, v := range values {
-		s.Add(v)
+		w.Script.Add(v)
 	}
 }
 
@@ -307,8 +307,8 @@ func getRenderData(data *Window, monitor *Monitor) {
 
 func addScroll(n *Node, s map[string]State) {
 	// !NOTE: This is the only spot you can pierce the vale
-	n.ScrollHeight = s[n.Properties.Id].ScrollHeight
-	n.ScrollWidth = s[n.Properties.Id].ScrollWidth
+	n.scrollHeight = s[n.Properties.Id].ScrollHeight
+	n.scrollWidth = s[n.Properties.Id].ScrollWidth
 	for i := range n.Children {
 		addScroll(n.Children[i], s)
 	}
@@ -325,32 +325,32 @@ func createNode(node *html.Node, parent *Node, stylesheets *Styles) {
 					newNode.ClassList.Add(class)
 				}
 			case "id":
-				newNode.Id(attr.Val)
+				newNode.id = attr.Val
 			case "contenteditable":
 				if attr.Val == "" || attr.Val == "true" {
-					newNode.ContentEditable(true)
+					newNode.contentEditable = true
 				}
 			case "href":
-				newNode.Href(attr.Val)
+				newNode.href = attr.Val
 			case "src":
-				newNode.Src(attr.Val)
+				newNode.src = attr.Val
 			case "title":
-				newNode.Title(attr.Val)
+				newNode.title = attr.Val
 			case "tabindex":
 				val, _ := strconv.Atoi(attr.Val)
-				newNode.TabIndex(val)
+				newNode.tabIndex = val
 			case "disabled":
-				newNode.Disabled = true
+				newNode.disabled = true
 			case "required":
-				newNode.Required = true
+				newNode.required = true
 			case "checked":
-				newNode.Checked = true
+				newNode.checked = true
 			default:
 				newNode.SetAttribute(attr.Key, attr.Val)
 			}
 		}
 
-		newNode.InnerText(strings.TrimSpace(utils.GetInnerText(node)))
+		newNode.innerText = strings.TrimSpace(GetInnerText(node))
 		parent.AppendChild(&newNode)
 		parent.StyleSheets.GetStyles(&newNode)
 		// Recursively traverse child nodes

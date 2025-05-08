@@ -49,7 +49,7 @@ func main() {
 	// !ISSUE: Flex2 doesn't work anymore
 	window := grim.New(raylib.Init(), 850, 400)
 
-	window.Plugins(inline.Iint(), textAlign.Init(), flex.Init(), crop.Init())
+	window.Plugins(inline.Init(), textAlign.Init(), flex.Init(), crop.Init())
 	window.Transformers(text.Init(), banda.Init(), scrollbar.Init(), marginblock.Init(), ul.Init(), ol.Init())
 	window.Scripts(a.Init())
 
@@ -57,7 +57,7 @@ func main() {
 	document := window.Document()
 
 	// qsa := document.QuerySelectorAll(`:where(h1, h2, h3)`)
-	qsa := document.QuerySelector(`.box`)
+	qsa := document.QuerySelector(".box")
 	fmt.Println("Classlist: ", qsa.ClassList)
 
 	window.Open()
