@@ -71,11 +71,11 @@ func (c *CSS) ComputeNodeStyle(n *Node) State {
 	// Cache the style map
 	style := n.ComputedStyle
 
-	for k, v := range n.Styles() {
+	for k, v := range n.style {
 		style[k] = v
 	}
 
-	self.Border, _ = ParseBorder(style, self, parent)
+	self.Border, _ = parseBorder(style, self, parent)
 	// Remove border if its 0
 	if self.Border.Top.Width+self.Border.Right.Width+self.Border.Left.Width+self.Border.Bottom.Width == 0 {
 		self.Textures["border"] = ""
@@ -104,7 +104,7 @@ func (c *CSS) ComputeNodeStyle(n *Node) State {
 
 	c.State[n.Properties.Id] = self
 
-	self.Background = ParseBackground(style)
+	self.Background = parseBackground(style)
 
 	c.State[n.Properties.Id] = self
 	wh, m, p := FindBounds(*n, style, &c.State)
@@ -325,7 +325,7 @@ func (c *CSS) ComputeNodeStyle(n *Node) State {
 	}
 	c.State[n.Properties.Id] = self
 
-	DrawBorder(&self, c.Adapter, n.Properties.Id)
+	drawBorder(&self, c.Adapter, n.Properties.Id)
 	c.State[n.Properties.Id] = self
 
 	for _, v := range plugins {

@@ -1,7 +1,6 @@
 package crop
 
 import (
-	"fmt"
 	"grim"
 )
 
@@ -18,7 +17,6 @@ func Init() grim.Plugin {
 			self := c.State[n.Properties.Id]
 
 			scrollTop, scrollLeft := findScroll(n)
-			fmt.Println(n.Properties.Id, scrollTop, scrollLeft)
 
 			containerHeight := self.Height
 			contentHeight := float32(self.ScrollHeight)

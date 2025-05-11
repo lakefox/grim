@@ -17,17 +17,6 @@ import (
 	"strings"
 )
 
-// type Background struct {
-// 	Color      ic.RGBA
-// 	Image      string
-// 	PositionX  string
-// 	PositionY  string
-// 	Size       string
-// 	Repeat     string
-// 	Origin     string
-// 	Attachment string
-// }
-
 var backgroundProps = []string{
 	"background-image",
 	"background-position-x",
@@ -36,10 +25,10 @@ var backgroundProps = []string{
 	"background-repeat",
 	"background-attachment",
 	"background-origin",
-	// "background-color",
+	"background-color",
 }
 
-func ParseBackground(style map[string]string) []Background {
+func parseBackground(style map[string]string) []Background {
 	splitProps := map[string][]string{}
 
 	amount := 0
@@ -111,7 +100,7 @@ func ParseBackground(style map[string]string) []Background {
 	return bgs
 }
 
-func BackgroundKey(self State) string {
+func backgroundKey(self State) string {
 	key := strconv.Itoa(int(self.Width)) + strconv.Itoa(int(self.Height)) + strconv.Itoa(len(self.Background))
 
 	for _, v := range self.Background {
@@ -129,7 +118,7 @@ func BackgroundKey(self State) string {
 }
 
 // !NOTE: background-clip and background-blend-mode are not supported
-func GenerateBackground(c CSS, self State) image.Image {
+func generateBackground(c CSS, self State) image.Image {
 	wbw := int(self.Width + self.Border.Left.Width + self.Border.Right.Width)
 	hbw := int(self.Height + self.Border.Top.Width + self.Border.Bottom.Width)
 

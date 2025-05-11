@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func ParseBorder(cssProperties map[string]string, self, parent State) (Border, error) {
+func parseBorder(cssProperties map[string]string, self, parent State) (Border, error) {
 	// Define default values
 	defaultWidth := "0px"
 	defaultStyle := "solid"
@@ -162,7 +162,7 @@ func ParseBorder(cssProperties map[string]string, self, parent State) (Border, e
 	}, nil
 }
 
-func DrawBorder(self *State, a *Adapter, id string) {
+func drawBorder(self *State, a *Adapter, id string) {
 	// lastChange := time.Now()
 	if self.Border.Top.Width > 0 ||
 		self.Border.Right.Width > 0 ||
@@ -368,23 +368,23 @@ func genSolidBorder(ctx *canvas.Canvas, width float64, v1, v2 float64, border, s
 
 	d := (math.Abs(float64(border.Width)-s2w) / 2) + min
 
-	xe, ye := EndPointFromMidpoint(width-(s2w/10), float64(border.Width/10), sprX, sprY, d, true)
+	xe, ye := endPointFromMidpoint(width-(s2w/10), float64(border.Width/10), sprX, sprY, d, true)
 
 	ctx.LineTo(xe, ye)
 
 	// Ellipse right
 
-	xr, yr := CalculateInnerRadii(v2, s2w, float64(border.Width))
+	xr, yr := calculateInnerRadii(v2, s2w, float64(border.Width))
 
-	sa := AngleInRadians(width-(s2w+xr), float64(border.Width)+yr, xe, ye)
+	sa := degToRad(width-(s2w+xr), float64(border.Width)+yr, xe, ye)
 
 	ctx.Ellipse(width-(s2w+xr), float64(border.Width)+yr, xr, yr, 0, sa, -math.Pi/2, false)
 
 	// Find top of left ellipse to draw line to
 
-	xr, yr = CalculateInnerRadii(v1, s1w, float64(border.Width))
+	xr, yr = calculateInnerRadii(v1, s1w, float64(border.Width))
 
-	ellipseEndX, ellipseEndY := EllipsePoint(s1w+xr, float64(border.Width)+yr, xr, yr, 0, -math.Pi/2)
+	ellipseEndX, ellipseEndY := ellipsePoint(s1w+xr, float64(border.Width)+yr, xr, yr, 0, -math.Pi/2)
 
 	// Bottom Line
 	ctx.LineTo(ellipseEndX, ellipseEndY)
@@ -396,9 +396,9 @@ func genSolidBorder(ctx *canvas.Canvas, width float64, v1, v2 float64, border, s
 	}
 
 	d = (math.Abs(float64(border.Width)-s1w) / 2) + min
-	xe, ye = EndPointFromMidpoint((s1w / 10), float64(border.Width/10), splX, splY, d, true)
+	xe, ye = endPointFromMidpoint((s1w / 10), float64(border.Width/10), splX, splY, d, true)
 
-	sa = AngleInRadians(s1w+xr, float64(border.Width)+yr, xe, ye)
+	sa = degToRad(s1w+xr, float64(border.Width)+yr, xe, ye)
 
 	// Ellipse left
 	ctx.Ellipse(s1w+xr, float64(border.Width)+yr, xr, yr, 0, -math.Pi/2, sa, false)
@@ -480,7 +480,7 @@ func genDoubleBorder(ctx *canvas.Canvas, width float64, v1, v2 float64, border, 
 }
 
 func genRidgeBorder(ctx *canvas.Canvas, width float64, v1, v2 float64, border, side1, side2 BorderSide, side string) {
-	red, g, b := CalculateGrooveColor(border.Color.R, border.Color.G, border.Color.B)
+	red, g, b := calculateGrooveColor(border.Color.R, border.Color.G, border.Color.B)
 	br := border
 	br.Width = br.Width / 2
 	s1 := side1
@@ -514,7 +514,7 @@ func genRidgeBorder(ctx *canvas.Canvas, width float64, v1, v2 float64, border, s
 }
 
 func genGrooveBorder(ctx *canvas.Canvas, width float64, v1, v2 float64, border, side1, side2 BorderSide, side string) {
-	red, g, b := CalculateGrooveColor(border.Color.R, border.Color.G, border.Color.B)
+	red, g, b := calculateGrooveColor(border.Color.R, border.Color.G, border.Color.B)
 	br := border
 	br.Width = br.Width / 2
 	s1 := side1
@@ -548,7 +548,7 @@ func genGrooveBorder(ctx *canvas.Canvas, width float64, v1, v2 float64, border, 
 }
 
 func genInsetBorder(ctx *canvas.Canvas, width float64, v1, v2 float64, border, side1, side2 BorderSide, side string) {
-	red, g, b := CalculateGrooveColor(border.Color.R, border.Color.G, border.Color.B)
+	red, g, b := calculateGrooveColor(border.Color.R, border.Color.G, border.Color.B)
 
 	if side == "top" || side == "left" {
 		ctx.SetFillStyle(red, g, b, border.Color.A)
@@ -561,7 +561,7 @@ func genInsetBorder(ctx *canvas.Canvas, width float64, v1, v2 float64, border, s
 }
 
 func genOutsetBorder(ctx *canvas.Canvas, width float64, v1, v2 float64, border, side1, side2 BorderSide, side string) {
-	red, g, b := CalculateGrooveColor(border.Color.R, border.Color.G, border.Color.B)
+	red, g, b := calculateGrooveColor(border.Color.R, border.Color.G, border.Color.B)
 
 	if side == "top" || side == "left" {
 		ctx.SetFillStyle(border.Color.R, border.Color.G, border.Color.B, border.Color.A)
@@ -583,7 +583,7 @@ func genTopLine(ctx *canvas.Canvas, s1w, s2w, borderWidth, v1, v2, width, o1, o2
 	)
 	ctx.Arc(v1, v1, v1-o1, startAngleLeft[0]-math.Pi, -math.Pi/2)
 	// Reversed to get startpoint
-	splX, splY := PointAtAngle(v1, v1, v1-o1, startAngleLeft[0]-math.Pi)
+	splX, splY := pointAtAngle(v1, v1, v1-o1, startAngleLeft[0]-math.Pi)
 	// top line
 	ctx.LineTo(width-v2-o2, o2)
 
@@ -595,7 +595,7 @@ func genTopLine(ctx *canvas.Canvas, s1w, s2w, borderWidth, v1, v2, width, o1, o2
 		v2-o2,
 	)
 	ctx.Arc(width-v2, v2, v2-o2, -math.Pi/2, startAngleRight[0]-math.Pi)
-	sprX, sprY := PointAtAngle(width-v2, v2, v2-o2, startAngleRight[0]-math.Pi)
+	sprX, sprY := pointAtAngle(width-v2, v2, v2-o2, startAngleRight[0]-math.Pi)
 	return splX, splY, sprX, sprY
 }
 
@@ -608,7 +608,7 @@ func getHeight(s1w, s2w, borderWidth, v1, v2, width, o1, o2 float64) float64 {
 		v1-o1,
 	)
 	// Reversed to get startpoint
-	_, splY := PointAtAngle(v1, v1, v1-o1, startAngleLeft[0]-math.Pi)
+	_, splY := pointAtAngle(v1, v1, v1-o1, startAngleLeft[0]-math.Pi)
 	// top line
 
 	// Top-right corner arc
@@ -618,7 +618,7 @@ func getHeight(s1w, s2w, borderWidth, v1, v2, width, o1, o2 float64) float64 {
 		image.Point{X: int(width - v2), Y: int(v2)},
 		v2-o2,
 	)
-	_, sprY := PointAtAngle(width-v2, v2, v2-o2, startAngleRight[0]-math.Pi)
+	_, sprY := pointAtAngle(width-v2, v2, v2-o2, startAngleRight[0]-math.Pi)
 
 	if splY > sprY {
 		return splY
@@ -632,7 +632,7 @@ func FindBorderStopAngle(origin, crossPoint, circleCenter image.Point, radius fl
 	dy := float64(origin.Y - crossPoint.Y)
 
 	angle := math.Atan2(dy, dx)
-	points := LineCircleIntersection(origin, angle, circleCenter, radius)
+	points := lineCircleIntersection(origin, angle, circleCenter, radius)
 
 	// Validate points
 	if len(points) < 2 {
@@ -651,7 +651,7 @@ func FindBorderStopAngle(origin, crossPoint, circleCenter image.Point, radius fl
 	return result
 }
 
-func LineCircleIntersection(lineStart image.Point, angle float64, circleCenter image.Point, radius float64) []image.Point {
+func lineCircleIntersection(lineStart image.Point, angle float64, circleCenter image.Point, radius float64) []image.Point {
 	cosTheta := math.Cos(angle)
 	sinTheta := math.Sin(angle)
 
@@ -697,7 +697,7 @@ func LineCircleIntersection(lineStart image.Point, angle float64, circleCenter i
 	}
 }
 
-func EndPointFromMidpoint(x1, y1, xm, ym, distance float64, reverse bool) (xe, ye float64) {
+func endPointFromMidpoint(x1, y1, xm, ym, distance float64, reverse bool) (xe, ye float64) {
 	// Compute direction vector from midpoint to the reference point
 	dx := (x1 - xm)
 	dy := (y1 - ym)
@@ -728,8 +728,8 @@ func EndPointFromMidpoint(x1, y1, xm, ym, distance float64, reverse bool) (xe, y
 	return
 }
 
-// CalculateInnerRadii calculates the inner radii of a box corner given the outer radii and border widths.
-func CalculateInnerRadii(outerRadius, borderWidthLeft, borderWidthTop float64) (float64, float64) {
+// calculateInnerRadii calculates the inner radii of a box corner given the outer radii and border widths.
+func calculateInnerRadii(outerRadius, borderWidthLeft, borderWidthTop float64) (float64, float64) {
 	innerRadiusX := outerRadius - borderWidthLeft
 	innerRadiusY := outerRadius - borderWidthTop
 
@@ -744,8 +744,8 @@ func CalculateInnerRadii(outerRadius, borderWidthLeft, borderWidthTop float64) (
 	return innerRadiusX, innerRadiusY
 }
 
-// AngleInRadians calculates the angle from one point to another in radians
-func AngleInRadians(p1X, p1Y, p2X, p2Y float64) float64 {
+// degToRad calculates the angle from one point to another in radians
+func degToRad(p1X, p1Y, p2X, p2Y float64) float64 {
 	// Calculate the differences in x and y
 	dx := p2X - p1X
 	dy := p2Y - p1Y
@@ -754,7 +754,7 @@ func AngleInRadians(p1X, p1Y, p2X, p2Y float64) float64 {
 	return math.Atan2(dy, dx)
 }
 
-func EllipsePoint(x, y, radiusX, radiusY, rotation, angle float64) (float64, float64) {
+func ellipsePoint(x, y, radiusX, radiusY, rotation, angle float64) (float64, float64) {
 	// Calculate the point on the ellipse without rotation
 	ellipseX := radiusX * math.Cos(angle)
 	ellipseY := radiusY * math.Sin(angle)
@@ -770,7 +770,7 @@ func EllipsePoint(x, y, radiusX, radiusY, rotation, angle float64) (float64, flo
 	return finalX, finalY
 }
 
-func PointAtAngle(x, y, radius, endAngle float64) (float64, float64) {
+func pointAtAngle(x, y, radius, endAngle float64) (float64, float64) {
 	// Calculate the endpoint coordinates
 	endX := x + radius*math.Cos(endAngle)
 	endY := y + radius*math.Sin(endAngle)
@@ -778,6 +778,6 @@ func PointAtAngle(x, y, radius, endAngle float64) (float64, float64) {
 	return endX, endY
 }
 
-func CalculateGrooveColor(r, g, b uint8) (uint8, uint8, uint8) {
+func calculateGrooveColor(r, g, b uint8) (uint8, uint8, uint8) {
 	return uint8(float64(r) * 0.5), uint8(float64(g) * 0.5), uint8(float64(b) * 0.5)
 }

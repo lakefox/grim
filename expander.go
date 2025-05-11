@@ -8,8 +8,7 @@ import (
 
 func Expander(styles map[string]string) map[string]string {
 	// !TODO: modify to expand all attributes not just the background element
-	parsed := parseBackground(styles["background"])
-
+	parsed := parseBackgroundString(styles["background"])
 	for _, v := range backgroundProps {
 		for _, bg := range parsed {
 			if bg[v] != "" {
@@ -89,11 +88,10 @@ func convertMarginToIndividualProperties(margin string) (string, string, string,
 }
 
 // parseBackground parses CSS background shorthand into its component properties
-func parseBackground(background string) []map[string]string {
+func parseBackgroundString(background string) []map[string]string {
 	// Split into layers
 	layers := splitLayers(background)
 	result := make([]map[string]string, len(layers))
-
 	for i, layer := range layers {
 		result[i] = parseLayer(layer)
 	}

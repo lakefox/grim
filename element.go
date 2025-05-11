@@ -527,8 +527,7 @@ func NodeToHTML(node *Node) (string, string) {
 		}
 	}
 
-	styles := node.Styles()
-
+	styles := node.style
 	// Add style if present
 	if len(styles) > 0 {
 

@@ -272,7 +272,7 @@ func getRenderData(data *Window, monitor *Monitor) {
 	}
 
 	for k, self := range s {
-		key := BackgroundKey(self)
+		key := backgroundKey(self)
 		if _, found := keysSet[k]; !found {
 			for t := range data.CSS.Adapter.Textures[k] {
 				data.CSS.Adapter.UnloadTexture(k, t)
@@ -280,7 +280,7 @@ func getRenderData(data *Window, monitor *Monitor) {
 			delete(s, k)
 		} else {
 			if data.CSS.Adapter.Textures[k]["background"] != key {
-				img := GenerateBackground(data.CSS, self)
+				img := generateBackground(data.CSS, self)
 				data.CSS.Adapter.UnloadTexture(k, "background")
 				data.CSS.Adapter.LoadTexture(k, "background", key, img)
 				if self.Textures == nil {
