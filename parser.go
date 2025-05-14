@@ -12,7 +12,7 @@ type StyleMap struct {
 	PsuedoStyles map[string]map[string]map[string]string
 }
 
-func ParseCSS(css string) map[string][]*StyleMap {
+func parseCSS(css string) map[string][]*StyleMap {
 	// Remove comments
 	css = removeComments(css)
 

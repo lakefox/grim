@@ -6,47 +6,6 @@ import (
 	"strings"
 )
 
-type Styles struct {
-	StyleMap     map[string][]*StyleMap
-	PsuedoStyles map[string]map[string]map[string]string
-}
-
-func (s Styles) StyleTag(css string) {
-	styleMaps := ParseCSS(css)
-
-	if s.StyleMap == nil {
-		s.StyleMap = map[string][]*StyleMap{}
-	}
-
-	for k, v := range styleMaps {
-		if s.StyleMap[k] == nil {
-			s.StyleMap[k] = []*StyleMap{}
-		}
-		s.StyleMap[k] = append(s.StyleMap[k], v...)
-	}
-}
-
-var inheritedProps = []string{
-	"color",
-	"cursor",
-	"font",
-	"font-family",
-	"font-style",
-	"font-weight",
-	"letter-spacing",
-	"line-height",
-	// "text-align",
-	"text-indent",
-	"text-justify",
-	"text-shadow",
-	"text-transform",
-	"text-decoration",
-	"visibility",
-	"word-spacing",
-	"display",
-	"scrollbar-color",
-}
-
 func QuickStyles(n *Node) {
 	// Inherit styles from parent
 	if n.parent != nil {
@@ -94,6 +53,26 @@ func ConditionalStyleHandler(n *Node, newStyles map[string]string) {
 		for _, v := range n.Children {
 			ConditionalStyleHandler(v, styles)
 		}
+	}
+}
+
+type Styles struct {
+	StyleMap     map[string][]*StyleMap
+	PsuedoStyles map[string]map[string]map[string]string
+}
+
+func (s Styles) StyleTag(css string) {
+	styleMaps := parseCSS(css)
+
+	if s.StyleMap == nil {
+		s.StyleMap = map[string][]*StyleMap{}
+	}
+
+	for k, v := range styleMaps {
+		if s.StyleMap[k] == nil {
+			s.StyleMap[k] = []*StyleMap{}
+		}
+		s.StyleMap[k] = append(s.StyleMap[k], v...)
 	}
 }
 
@@ -228,13 +207,24 @@ func (s Styles) GetStyles(n *Node) {
 		styles["background-size"] = "100% 100%"
 	}
 
+
+	// Used all over, if kept then would need to add getters and setters where a user 
+	// could mess it up
 	n.ComputedStyle = styles
 
+	// only used like twice in the scrollbar
 	n.InitalStyles = map[string]string{}
 	for k, v := range styles {
 		n.InitalStyles[k] = v
+		// i think this is the best method
+		if n.style[k] == "" {
+			n.style[k] = v
+		}
 	}
+
+	// can keep
 	n.ConditionalStyles = conditionalStyles
 
+	// needs to move but can keep
 	s.PsuedoStyles[n.Properties.Id] = pseudoStyles
 }

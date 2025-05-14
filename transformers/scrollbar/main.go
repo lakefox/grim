@@ -9,7 +9,7 @@ import (
 func Init() grim.Transformer {
 	return grim.Transformer{
 		Selector: func(n *grim.Node, c *grim.CSS) bool {
-			style := n.ComputedStyle
+			style := n.Styles()
 			if style["overflow"] != "" || style["overflow-x"] != "" || style["overflow-y"] != "" {
 				return true
 			} else {
@@ -17,39 +17,39 @@ func Init() grim.Transformer {
 			}
 		},
 		Handler: func(n *grim.Node, c *grim.CSS) *grim.Node {
-			style := n.ComputedStyle
+			style := n.Styles()
 			top, left := n.GetScroll()
 			overflowProps := strings.Split(style["overflow"], " ")
-			if n.ComputedStyle["overflow-y"] == "" {
+			if n.GetStyle("overflow-y") == "" {
 				val := overflowProps[0]
 				if len(overflowProps) >= 2 {
 					val = overflowProps[1]
 				}
-				n.ComputedStyle["overflow-y"] = val
+				n.SetStyle("overflow-y", val)
 			}
 			if style["overflow-x"] == "" {
-				n.ComputedStyle["overflow-x"] = overflowProps[0]
+				n.SetStyle("overflow-x", overflowProps[0])
 			}
 
 			if style["position"] == "" {
-				n.ComputedStyle["position"] = "relative"
+				n.SetStyle("position", "relative")
 			}
 
 			trackWidth := "14px"
 			thumbWidth := "8px"
 			thumbMargin := "3px"
-			if n.ComputedStyle["scrollbar-width"] == "thin" {
+			if n.GetStyle("scrollbar-width") == "thin" {
 				trackWidth = "10px"
 				thumbWidth = "6px"
 				thumbMargin = "2px"
 			}
-			if n.ComputedStyle["scrollbar-width"] == "none" {
+			if n.GetStyle("scrollbar-width") == "none" {
 				return n
 			}
 
 			ps := n.StyleSheets.PsuedoStyles[n.Properties.Id]
 
-			splitStr := strings.Split(n.ComputedStyle["scrollbar-color"], " ")
+			splitStr := strings.Split(n.GetStyle("scrollbar-color"), " ")
 
 			// Initialize the variables
 			var backgroundColor, thumbColor string
@@ -66,8 +66,9 @@ func Init() grim.Transformer {
 			}
 
 			// X scrollbar
-			if n.ComputedStyle["overflow-x"] == "scroll" || n.ComputedStyle["overflow-x"] == "auto" {
+			if n.GetStyle("overflow-x") == "scroll" || n.GetStyle("overflow-x") == "auto" {
 				scrollbar := n.CreateElement("grim-track")
+				n.AppendChild(&scrollbar)
 
 				scrollbar.SetStyle("position", "absolute")
 				scrollbar.SetStyle("bottom", "0px")
@@ -79,38 +80,37 @@ func Init() grim.Transformer {
 				scrollbar.SetAttribute("direction", "x")
 
 				thumb := n.CreateElement("grim-thumbx")
-				thumb.ComputedStyle["position"] = "absolute"
-				thumb.ComputedStyle["left"] = strconv.Itoa(left) + "px"
-				thumb.ComputedStyle["top"] = thumbMargin
-				thumb.ComputedStyle["height"] = thumbWidth
-				thumb.ComputedStyle["width"] = "20px"
-				thumb.ComputedStyle["background-color"] = thumbColor
-				thumb.ComputedStyle["cursor"] = "pointer"
-				thumb.ComputedStyle["border-radius"] = "10px"
-				thumb.ComputedStyle["z-index"] = "99999"
+				scrollbar.AppendChild(&thumb)
+
+				thumb.SetStyle("position", "absolute")
+				thumb.SetStyle("left", strconv.Itoa(left) + "px")
+				thumb.SetStyle("top", thumbMargin)
+				thumb.SetStyle("height", thumbWidth)
+				thumb.SetStyle("width", "20px")
+				thumb.SetStyle("background-color", thumbColor)
+				thumb.SetStyle("cursor", "pointer")
+				thumb.SetStyle("border-radius", "10px")
+				thumb.SetStyle("z-index", "99999")
 
 				for k, v := range ps["::-webkit-scrollbar"] {
-					scrollbar.ComputedStyle[k] = v
-					thumb.ComputedStyle[k] = v
+					scrollbar.SetStyle(k, v)
+					thumb.SetStyle(k, v)
 				}
 
 				for k, v := range ps["::-webkit-scrollbar-track"] {
-					scrollbar.ComputedStyle[k] = v
+					scrollbar.SetStyle(k, v)
 				}
 
 				for k, v := range ps["::-webkit-scrollbar-thumb"] {
-					thumb.ComputedStyle[k] = v
+					thumb.SetStyle(k, v)
 				}
-
-				scrollbar.Properties.Id = grim.GenerateUniqueId(n, scrollbar.TagName())
-				scrollbar.AppendChild(&thumb)
-				n.AppendChild(&scrollbar)
 			}
 
 			// Y scrollbar
 
-			if n.ComputedStyle["overflow-y"] == "scroll" || n.ComputedStyle["overflow-y"] == "auto" {
+			if n.GetStyle("overflow-y") == "scroll" || n.GetStyle("overflow-y") == "auto" {
 				scrollbar := n.CreateElement("grim-track")
+				n.AppendChild(&scrollbar)
 
 				scrollbar.SetStyle("position", "absolute")
 				scrollbar.SetStyle("top", "0")
@@ -122,52 +122,47 @@ func Init() grim.Transformer {
 				scrollbar.SetAttribute("direction", "y")
 
 				thumb := n.CreateElement("grim-thumby")
+				scrollbar.AppendChild(&thumb)
 
-				thumb.ComputedStyle["position"] = "absolute"
-				thumb.ComputedStyle["top"] = strconv.Itoa(top) + "px"
+				thumb.SetStyle("position", "absolute")
+				thumb.SetStyle("top", strconv.Itoa(top) + "px")
 				// !ISSUE: parse the string then calculate the offset for thin and normal
-				thumb.ComputedStyle["right"] = "3px"
-				thumb.ComputedStyle["width"] = thumbWidth
-				thumb.ComputedStyle["height"] = "20px"
-				thumb.ComputedStyle["background-color"] = thumbColor
-				thumb.ComputedStyle["cursor"] = "pointer"
-				thumb.ComputedStyle["margin-left"] = thumbMargin
-				thumb.ComputedStyle["border-radius"] = "10px"
-				thumb.ComputedStyle["z-index"] = "99999"
+				thumb.SetStyle("right", "3px")
+				thumb.SetStyle("width", thumbWidth)
+				thumb.SetStyle("height", "20px")
+				thumb.SetStyle("background-color", thumbColor)
+				thumb.SetStyle("cursor", "pointer")
+				thumb.SetStyle("margin-left", thumbMargin)
+				thumb.SetStyle("border-radius", "10px")
+				thumb.SetStyle("z-index", "99999")
 
 				for k, v := range ps["::-webkit-scrollbar"] {
-					scrollbar.ComputedStyle[k] = v
-					thumb.ComputedStyle[k] = v
+					scrollbar.SetStyle(k, v)
+					thumb.SetStyle(k, v)
 				}
 
 				for k, v := range ps["::-webkit-scrollbar-track"] {
-					scrollbar.ComputedStyle[k] = v
+					scrollbar.SetStyle(k, v)
 				}
 
 				for k, v := range ps["::-webkit-scrollbar-thumb"] {
-					thumb.ComputedStyle[k] = v
+					thumb.SetStyle(k, v)
 				}
-
-				// !NOTE: This need to be here because at this point scrollbar hasn't been added to the parent
-				// + ,so it doesn't have a prid to build off of
-				scrollbar.Properties.Id = grim.GenerateUniqueId(n, scrollbar.TagName())
-				scrollbar.AppendChild(&thumb)
 
 				// !NOTE: This prevents recursion
 				if !strings.Contains(style["width"], "calc") {
-					n.ComputedStyle["width"] = "calc(" + style["width"] + "-" + trackWidth + ")"
+					n.SetStyle("width", "calc(" + style["width"] + "-" + trackWidth + ")")
 				}
 
-				pr := n.ComputedStyle["padding-right"]
-				// !ISSUE: remove appendchild
-				if pr == "" && n.ComputedStyle["padding"] != "" {
-					n.ComputedStyle["padding-right"] = "calc(" + n.InitalStyles["padding"] + " + " + trackWidth + ")"
+				pr := n.GetStyle("padding-right")
+				// !ISSUE: calc() should not be used
+				if pr == "" && n.GetStyle("padding") != "" {
+					n.SetStyle("padding-right", "calc(" + n.InitalStyles["padding"] + " + " + trackWidth + ")")
 				} else if pr != "" {
-					n.ComputedStyle["padding-right"] = "calc(" + n.InitalStyles["padding-right"] + " + " + trackWidth + ")"
+					n.SetStyle("padding-right", "calc(" + n.InitalStyles["padding-right"] + " + " + trackWidth + ")")
 				} else {
-					n.ComputedStyle["padding-right"] = trackWidth
+					n.SetStyle("padding-right", trackWidth)
 				}
-				n.AppendChild(&scrollbar)
 			}
 
 			return n

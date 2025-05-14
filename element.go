@@ -12,14 +12,13 @@ import (
 
 // !TODO: Make everything a setter
 // + if things become slow (they should) due to the appendchild, add a compute pause function that skips all check for the internal running,
-// + can add to ComputeNodeStyle at the start and then removed at the end
+// + can add to ComputeNodeState at the start and then removed at the end
 type Node struct {
 	tagName           string            // non modifiable
 	innerText         string            // modifable
 	parent            *Node             // nm
 	Children          []*Node           // m
-	style             map[string]string // nm
-	ComputedStyle     map[string]string // nm
+	style             styles // nm
 	id                string            // m
 	ClassList         ClassList
 	href              string // m
@@ -35,16 +34,13 @@ type Node struct {
 	checked           bool                         // m
 	focused           bool                         // nm
 	hovered           bool                         // nm
-	InitalStyles      map[string]string            // nm
 	StyleSheets       *Styles                      // nm
-	ConditionalStyles map[string]map[string]string // nm
 
 	// !NOTE: ScrollHeight is the amount of scroll left, not the total amount of scroll
 	// + if you  want the same scrollHeight like js the add the height of the element to it
 	scrollHeight   int // nm
 	scrollWidth    int // nm
 	Canvas         *canvas.Canvas
-	PseudoElements map[string]map[string]string // nm
 
 	value         string // m
 	OnClick       func(Event)
@@ -57,6 +53,81 @@ type Node struct {
 	OnMouseMove   func(Event)
 	OnScroll      func(Event)
 	Properties    Properties
+}
+
+var inheritedProps = []string{
+	"color",
+	"cursor",
+	"font",
+	"font-family",
+	"font-style",
+	"font-weight",
+	"letter-spacing",
+	"line-height",
+	// "text-align",
+	"text-indent",
+	"text-justify",
+	"text-shadow",
+	"text-transform",
+	"text-decoration",
+	"visibility",
+	"word-spacing",
+	"display",
+	"scrollbar-color",
+}
+
+type styles {
+	// In order, all CSS style sections that apply to this node
+	styles []map[string]string
+	// Styles the user set to the element and styles set internally
+	inline map[string]string
+	// Styles that sometimes apply and can be computed on init render
+	// like :focus and :hover
+	conditional map[string]map[string]string
+	// Styles for pseudo elements associated with the node
+	pseudo map[string]map[string]string
+}
+
+
+// This function is used to build the styles from scratch
+func (n *Node) GetComputedStyles() map[string]string {
+	styles := map[string]string{}
+
+	// !OPT: This will be slow
+	// Inherit styles from the parent
+	if n.parent != nil {
+		ps := n.parent.GetComputedStyles()
+		for _, prop := range inheritedProps {
+			if value, ok := ps[prop]; ok && value != "" {
+				styles[prop] = value
+			}
+		}
+	}
+
+	// Casscade the styles from the stylesheets
+	for _, s := range n.style.styles {
+		for k, v := range s {
+			styles[k] = v
+		}
+	}
+
+	// Then apply the conditional styles
+	if n.hovered && n.styles.conditional[":hover"] != nil {
+		for k, v := range n.styles.conditional[":hover"] {
+			styles[k] = v
+		}
+	}
+	if n.focused && n.styles.conditional[":focus"] != nil {
+		for k, v := range n.styles.conditional[":focus"] {
+			styles[k] = v
+		}
+	}
+
+	for k, v := range n.styles.inline {
+		styles[k] = v
+	}
+
+	return styles
 }
 
 // !TODO: I would like to remove element.Node.Properties if possible but I don't think it is possible

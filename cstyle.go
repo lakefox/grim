@@ -47,7 +47,7 @@ var nonRenderTags = map[string]bool{
 	"style": true,
 }
 
-func (c *CSS) ComputeNodeStyle(n *Node) State {
+func (c *CSS) ComputeNodeState(n *Node) State {
 	// Head is not renderable
 	s := c.State
 	self := s[n.Properties.Id]
@@ -283,7 +283,7 @@ func (c *CSS) ComputeNodeStyle(n *Node) State {
 	var childYOffset float32
 
 	for i := 0; i < len(n.Children); i++ {
-		cState := c.ComputeNodeStyle(n.Children[i])
+		cState := c.ComputeNodeState(n.Children[i])
 
 		if style["height"] == "" && style["max-height"] == "" {
 			if n.Children[i].ComputedStyle["position"] != "absolute" && cState.Y+cState.Height > childYOffset {

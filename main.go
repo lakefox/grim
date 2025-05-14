@@ -252,7 +252,7 @@ func getRenderData(data *Window, monitor *Monitor) {
 	start := time.Now()
 	newDoc := CopyDocument(data.document.Children[0], &data.document)
 
-	data.CSS.ComputeNodeStyle(newDoc)
+	data.CSS.ComputeNodeState(newDoc)
 
 	flatDoc := flatten(newDoc)
 
@@ -298,7 +298,7 @@ func getRenderData(data *Window, monitor *Monitor) {
 	data.Script.Run(&data.document)
 
 	// !TODO: Should return effected node, then render those specific
-	// + I think have node.ComputeNodeStyle would make this nice
+	// + I think have node.ComputeNodeState would make this nice
 
 	fmt.Println(time.Since(start))
 	data.RenderData = rd
