@@ -19,8 +19,7 @@ func Init() grim.Transformer {
 				v.AppendChild(&dot)
 				v.ComputedStyle["display"] = "flex"
 				v.ComputedStyle["align-items"] = "center"
-				// !CHECK: this too
-				grim.QuickStyles(&dot)
+
 				dot.ComputedStyle["background-color"] = "#000"
 				dot.ComputedStyle["border-radius"] = "100px"
 				dot.ComputedStyle["width"] = "5px"

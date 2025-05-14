@@ -6,18 +6,6 @@ import (
 	"strings"
 )
 
-func QuickStyles(n *Node) {
-	// Inherit styles from parent
-	if n.parent != nil {
-		ps := n.parent.ComputedStyle
-		for _, prop := range inheritedProps {
-			if value, ok := ps[prop]; ok && value != "" {
-				n.ComputedStyle[prop] = value
-			}
-		}
-	}
-}
-
 func ConditionalStyleHandler(n *Node, newStyles map[string]string) {
 	// Reset all styles to inital
 	styles := map[string]string{}
