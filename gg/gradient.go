@@ -28,6 +28,7 @@ func (s stops) Swap(i, j int) {
 	s[i], s[j] = s[j], s[i]
 }
 
+// !TODO: Make a grim Gradient the gg can consume
 type Gradient interface {
 	Pattern
 	AddColorStop(offset float64, color color.Color)

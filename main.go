@@ -338,7 +338,7 @@ func createNode(node *html.Node, parent *Node, stylesheets *Styles) {
 				newNode.title = attr.Val
 			case "tabindex":
 				val, _ := strconv.Atoi(attr.Val)
-				newNode.tabIndex = val
+				newNode.tabIndex = val + 1
 			case "disabled":
 				newNode.disabled = true
 			case "required":
@@ -347,6 +347,26 @@ func createNode(node *html.Node, parent *Node, stylesheets *Styles) {
 				newNode.checked = true
 			default:
 				newNode.SetAttribute(attr.Key, attr.Val)
+			}
+		}
+
+		// We added one to the set tabIndex, if the element doesn't have one then
+		// the tabIndex will now be -1
+		newNode.tabIndex -= 1
+
+		if newNode.tabIndex == -1 {
+			// if we accidentally made one of the elements below non focusable then we correct it here
+			switch node.Data {
+			case "input":
+				newNode.tabIndex = 0
+			case "textarea":
+				newNode.tabIndex = 0
+			case "button":
+				newNode.tabIndex = 0
+			case "select":
+				newNode.tabIndex = 0
+			case "a":
+				newNode.tabIndex = 0
 			}
 		}
 

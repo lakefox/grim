@@ -31,7 +31,6 @@ func (a *Adapter) DispatchEvent(event Event) {
 	}
 }
 
-// !ISSUE: Make a init function
 func (a *Adapter) LoadTexture(id, t, key string, texture image.Image) {
 	a.Load(key, texture)
 	if a.Textures == nil {

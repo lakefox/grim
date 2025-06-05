@@ -126,8 +126,7 @@ func Init() grim.Transformer {
 
 				thumb.SetStyle("position", "absolute")
 				thumb.SetStyle("top", strconv.Itoa(top) + "px")
-				// !ISSUE: parse the string then calculate the offset for thin and normal
-				thumb.SetStyle("right", "3px")
+				thumb.SetStyle("right", thumbMargin)
 				thumb.SetStyle("width", thumbWidth)
 				thumb.SetStyle("height", "20px")
 				thumb.SetStyle("background-color", thumbColor)

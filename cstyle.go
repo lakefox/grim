@@ -199,8 +199,6 @@ func (c *CSS) ComputeNodeState(n *Node) State {
 	self.X = x
 	self.Y = y
 
-	self.ContentEditable = n.contentEditable
-
 	c.State[n.Properties.Id] = self
 	innerText := n.innerText
 	if !ChildrenHaveText(n) && len(innerText) > 0 {

@@ -485,7 +485,6 @@ func generateBackground(c CSS, self State) image.Image {
 					can.DrawImage(resized, float64(x), float64(y))
 				}
 			} else if len(bg.Image) > 18 && (bg.Image[0:16] == "linear-gradient(" || bg.Image[0:16] == "radial-gradient(") {
-				// !ISSUE: GG fills rect completely with gradient
 				var width, height int
 
 				if bg.Size != "" {
